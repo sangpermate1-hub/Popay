@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Popay Wallet - Quyền Lực Trong Tay Bạn</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        popOrange: '#ff5f1f',
+                        darkBg: '#0a0a0a',
+                        cardBg: '#141414',
+                        inputBg: '#1f1f1f'
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        ::-webkit-scrollbar { display: none; }
+        body { -ms-overflow-style: none; scrollbar-width: none; }
+        .glass-nav { background: rgba(20, 20, 20, 0.98); border-top: 1px solid #1f1f1f; }
+        
+        /* Hiệu ứng Toast Notification */
+        .toast-enter { transform: translateY(100%); opacity: 0; }
+        .toast-active { transform: translateY(0); opacity: 1; }
+    </style>
+</head>
+<body class="bg-darkBg text-white font-sans min-h-screen relative pb-24 selection:bg-popOrange selection:text-black">
+
+    <header class="p-5 flex justify-between items-center sticky top-0 z-10 bg-darkBg border-b border-gray-900">
+        <div class="flex items-center gap-3">
+            <img src="logo.png" alt="Popay Logo" class="w-10 h-10 rounded-full border border-popOrange object-cover" onerror="this.src='https://via.placeholder.com/40/ff5f1f/000000?text=P'">
+            <h1 class="text-2xl font-black tracking-widest text-popOrange uppercase">Popay</h1>
+        </div>
+        <div class="w-10 h-10 rounded-full border border-gray-800 flex items-center justify-center cursor-pointer bg-cardBg hover:border-popOrange transition">
+            <i class="fa-solid fa-user text-popOrange"></i>
+        </div>
+    </header>
+
+    <main class="max-w-md mx-auto px-5 mt-4">
+        
+        <div class="bg-cardBg rounded-[2rem] p-7 text-center border border-gray-800 mb-6 relative overflow-hidden">
+            <p class="text-gray-400 text-sm font-medium mb-2 uppercase tracking-wider">Tổng Số Dư</p>
+            <h2 class="text-4xl font-black text-white mb-8 tracking-tight" id="total-balance">$ 0.00</h2>
+            
+            <div class="flex justify-center gap-4 relative z-10">
+                <button onclick="openModal('sendModal')" class="flex-1 bg-popOrange text-black font-bold py-3.5 px-4 rounded-2xl hover:bg-orange-600 transition flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-paper-plane"></i> Gửi
+                </button>
+                <button onclick="openModal('receiveModal')" class="flex-1 bg-transparent border-2 border-popOrange text-popOrange font-bold py-3.5 px-4 rounded-2xl hover:bg-popOrange hover:text-black transition flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-qrcode"></i> Nhận
+                </button>
+            </div>
+        </div>
+
+        <h3 class="text-sm font-bold mb-3 text-gray-400 uppercase tracking-widest pl-1">Tài Sản</h3>
+        <div class="space-y-3 mb-8">
+            <div class="bg-cardBg p-4 rounded-2xl flex justify-between items-center border border-gray-800 hover:border-gray-600 transition cursor-pointer">
+                <div class="flex items-center gap-4">
+                    <img src="https://cryptologos.cc/logos/tether-usdt-logo.png" alt="USDT Logo" class="w-12 h-12 rounded-full bg-white p-1">
+                    <div>
+                        <h4 class="font-bold text-lg">USDT</h4>
+                        <p class="text-xs text-gray-500">Tether</p>
+                    </div>
+                </div>
+                <div class="text-right">
+                    <h4 class="font-bold text-lg" id="usdt-balance">0.00</h4>
+                    <p class="text-xs text-gray-500" id="usdt-value">$ 0.00</p>
+                </div>
+            </div>
+
+            <div class="bg-cardBg p-4 rounded-2xl flex justify-between items-center border border-gray-800 hover:border-popOrange transition cursor-pointer">
+                <div class="flex items-center gap-4">
+                    <img src="logo.png" alt="POPT Logo" class="w-12 h-12 rounded-full border border-popOrange object-cover" onerror="this.src='https://via.placeholder.com/48/ff5f1f/000000?text=P'">
+                    <div>
+                        <h4 class="font-bold text-lg text-popOrange">POPT</h4>
+                        <p class="text-xs text-gray-500">Popay Token</p>
+                    </div>
+                </div>
+                <div class="text-right">
+                    <h4 class="font-bold text-lg" id="popt-balance">0.00</h4>
+                    <p class="text-xs text-popOrange font-medium" id="popt-price">Đang cập nhật giá...</p>
+                </div>
+            </div>
+        </div>
+
+        <h3 class="text-sm font-bold mb-3 text-gray-400 uppercase tracking-widest pl-1">Đối Tác & Giới Thiệu</h3>
+        <div class="bg-cardBg rounded-2xl p-5 border border-gray-800 mb-8">
+            <h3 class="text-md font-bold text-popOrange mb-2">Chia Sẻ & Nhận Thưởng</h3>
+            <ul class="text-sm text-gray-400 mb-4 space-y-2 list-disc pl-4">
+                <li>Nhận ngay <span class="text-popOrange font-bold">1 POPT</span> cho mỗi lượt giới thiệu thành công.</li>
+                <li>Điều kiện: Người được giới thiệu phải đăng ký qua link của bạn và hoàn tất 1 giao dịch bất kỳ.</li>
+            </ul>
+            
+            <div class="flex items-center bg-inputBg rounded-xl border border-gray-700 p-1.5 focus-within:border-popOrange transition">
+                <input type="text" id="ref-link" readonly class="bg-transparent text-sm w-full p-2 text-gray-300 outline-none" value="Đang tải...">
+                <button onclick="copyRefLink()" class="bg-popOrange text-black px-5 py-2 rounded-lg font-bold hover:bg-orange-600 transition text-sm">
+                    Copy
+                </button>
+            </div>
+        </div>
+
+        <div class="flex justify-between items-center mb-3 pl-1">
+            <h3 class="text-sm font-bold text-gray-400 uppercase tracking-widest">Lịch Sử Giao Dịch</h3>
+        </div>
+        <div class="space-y-2 mb-4" id="history-container">
+            <p class="text-center text-gray-600 py-6 text-sm">Đang tải dữ liệu...</p>
+        </div>
+
+    </main>
+
+    <nav class="fixed bottom-0 w-full max-w-md left-1/2 transform -translate-x-1/2 glass-nav flex justify-around items-center px-2 py-3 z-20">
+        <a href="index.html" class="flex flex-col items-center p-2 text-popOrange">
+            <i class="fa-solid fa-wallet text-xl mb-1"></i>
+            <span class="text-[10px] font-bold uppercase tracking-wider">Ví Chính</span>
+        </a>
+        <a href="trade.html" class="flex flex-col items-center p-2 text-gray-500 hover:text-white transition">
+            <i class="fa-solid fa-chart-line text-xl mb-1"></i>
+            <span class="text-[10px] font-bold uppercase tracking-wider">Giao Dịch</span>
+        </a>
+        <a href="settings.html" class="flex flex-col items-center p-2 text-gray-500 hover:text-white transition">
+            <i class="fa-solid fa-gear text-xl mb-1"></i>
+            <span class="text-[10px] font-bold uppercase tracking-wider">Cài Đặt</span>
+        </a>
+    </nav>
+
+    <div id="sendModal" class="fixed inset-0 bg-black/90 hidden flex justify-center items-end sm:items-center z-50 backdrop-blur-sm transition-opacity duration-300 opacity-0">
+        <div class="bg-cardBg w-full sm:w-[400px] rounded-t-[2rem] sm:rounded-[2rem] p-6 border-t sm:border border-gray-800 transform translate-y-full sm:translate-y-0 transition-transform duration-300" id="sendModalBox">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-2xl font-bold text-white">Gửi Tiền</h3>
+                <button onclick="closeModal('sendModal')" class="w-8 h-8 bg-gray-800 rounded-full flex justify-center items-center text-gray-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            
+            <div class="space-y-4">
+                <div>
+                    <label class="text-xs text-gray-400 uppercase tracking-wider pl-1 mb-1 block">Địa chỉ nhận (Popay Address)</label>
+                    <input type="text" id="send-address" placeholder="Bắt đầu bằng POPT..." class="w-full bg-inputBg border border-gray-800 rounded-2xl p-4 text-white focus:border-popOrange outline-none transition font-mono text-sm">
+                </div>
+                
+                <div>
+                    <label class="text-xs text-gray-400 uppercase tracking-wider pl-1 mb-1 block">Tài sản & Mạng lưới</label>
+                    <div onclick="openModal('assetModal')" class="bg-inputBg border border-gray-800 rounded-2xl p-4 flex justify-between items-center cursor-pointer hover:border-popOrange transition">
+                        <div class="flex items-center gap-3" id="selected-asset-display">
+                            <img src="https://cryptologos.cc/logos/tether-usdt-logo.png" class="w-6 h-6 rounded-full bg-white p-0.5">
+                            <div>
+                                <p class="text-white font-bold leading-none">USDT</p>
+                                <p class="text-[10px] text-gray-500 mt-1">Mạng: BEP20</p>
+                            </div>
+                        </div>
+                        <i class="fa-solid fa-chevron-down text-gray-500"></i>
+                    </div>
+                    <input type="hidden" id="send-asset" value="USDT">
+                </div>
+
+                <div>
+                    <label class="text-xs text-gray-400 uppercase tracking-wider pl-1 mb-1 block">Số lượng</label>
+                    <div class="flex gap-2">
+                        <input type="number" id="send-amount" placeholder="0.00" class="flex-1 bg-inputBg border border-gray-800 rounded-2xl p-4 text-white focus:border-popOrange outline-none transition text-lg font-bold">
+                    </div>
+                    <p class="text-xs text-popOrange mt-2 text-right font-bold" id="send-available">Khả dụng: 0.00</p>
+                </div>
+            </div>
+
+            <button onclick="executeSend()" class="w-full bg-popOrange text-black font-black uppercase tracking-wider py-4 rounded-2xl mt-8 hover:bg-orange-600 transition">
+                Xác Nhận Gửi
+            </button>
+        </div>
+    </div>
+
+    <div id="assetModal" class="fixed inset-0 bg-black/90 hidden flex justify-center items-end sm:items-center z-[60] backdrop-blur-sm transition-opacity duration-300 opacity-0">
+        <div class="bg-cardBg w-full sm:w-[400px] rounded-t-[2rem] sm:rounded-[2rem] p-6 border-t sm:border border-gray-800 transform translate-y-full sm:translate-y-0 transition-transform duration-300" id="assetModalBox">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-lg font-bold text-white">Chọn Tài Sản & Mạng</h3>
+                <button onclick="closeModal('assetModal')" class="text-gray-400 hover:text-white"><i class="fa-solid fa-xmark text-xl"></i></button>
+            </div>
+            <div class="space-y-3">
+                <div onclick="selectAsset('USDT', 'BEP20', 'https://cryptologos.cc/logos/tether-usdt-logo.png')" class="p-4 rounded-xl border border-gray-800 bg-inputBg hover:border-popOrange cursor-pointer flex justify-between items-center">
+                    <div class="flex items-center gap-3">
+                        <img src="https://cryptologos.cc/logos/tether-usdt-logo.png" class="w-8 h-8 rounded-full bg-white p-0.5">
+                        <div>
+                            <p class="font-bold text-white">USDT</p>
+                            <p class="text-xs text-gray-400">Mạng: BNB Smart Chain (BEP20)</p>
+                        </div>
+                    </div>
+                </div>
+                <div onclick="selectAsset('POPT', 'Popay Chain', 'logo.png')" class="p-4 rounded-xl border border-gray-800 bg-inputBg hover:border-popOrange cursor-pointer flex justify-between items-center">
+                    <div class="flex items-center gap-3">
+                        <img src="logo.png" class="w-8 h-8 rounded-full border border-popOrange object-cover" onerror="this.src='https://via.placeholder.com/32/ff5f1f/000000?text=P'">
+                        <div>
+                            <p class="font-bold text-popOrange">POPT</p>
+                            <p class="text-xs text-gray-400">Mạng: Popay Native Chain</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="receiveModal" class="fixed inset-0 bg-black/90 hidden flex justify-center items-end sm:items-center z-50 backdrop-blur-sm transition-opacity duration-300 opacity-0">
+        <div class="bg-cardBg w-full sm:w-[400px] rounded-t-[2rem] sm:rounded-[2rem] p-8 border-t sm:border border-gray-800 text-center transform translate-y-full sm:translate-y-0 transition-transform duration-300" id="receiveModalBox">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-xl font-bold text-white">Nhận Tiền</h3>
+                <button onclick="closeModal('receiveModal')" class="text-gray-400 hover:text-white"><i class="fa-solid fa-xmark text-xl"></i></button>
+            </div>
+            <p class="text-sm text-gray-400 mb-6">Quét mã QR để nhận <span class="text-white font-bold">USDT (BEP20)</span> hoặc <span class="text-popOrange font-bold">POPT</span>.</p>
+            
+            <div class="bg-white p-4 rounded-2xl inline-block mb-6">
+                <img id="qr-image" src="" alt="QR Code" class="w-40 h-40">
+            </div>
+            
+            <div class="bg-inputBg border border-gray-800 rounded-2xl p-4 flex justify-between items-center mb-6">
+                <span class="text-sm font-mono text-gray-300 truncate mr-3" id="my-address">Đang tải...</span>
+                <button onclick="copyMyAddress()" class="text-popOrange hover:text-white transition bg-popOrange/10 p-2 rounded-lg"><i class="fa-regular fa-copy"></i></button>
+            </div>
+        </div>
+    </div>
+
+    <div id="successModal" class="fixed inset-0 bg-black/90 hidden flex justify-center items-center z-50 backdrop-blur-md transition-opacity duration-300 opacity-0">
+        <div class="bg-cardBg w-[320px] rounded-[2rem] p-8 text-center border border-gray-800 transform scale-90 transition-transform duration-300" id="successModalBox">
+            <div class="w-24 h-24 mx-auto bg-popOrange/20 rounded-full flex items-center justify-center mb-6 border border-popOrange">
+                <i class="fa-solid fa-check text-5xl text-popOrange"></i>
+            </div>
+            <h3 class="text-2xl font-black mb-2 text-white uppercase tracking-wide">Thành Công</h3>
+            <p class="text-gray-400 mb-8 text-sm leading-relaxed" id="success-msg">Giao dịch hoàn tất.</p>
+            <button onclick="closeModal('successModal')" class="w-full bg-popOrange text-black font-bold uppercase tracking-wider py-3 rounded-xl hover:bg-orange-600 transition">
+                Hoàn Thành
+            </button>
+        </div>
+    </div>
+
+    <div id="toast" class="fixed top-5 left-1/2 transform -translate-x-1/2 bg-cardBg border border-gray-800 text-white px-6 py-3 rounded-full z-[80] flex items-center gap-3 toast-enter transition-all duration-300 pointer-events-none hidden w-max max-w-[90%]">
+        <i class="fa-solid fa-bell text-popOrange"></i>
+        <span id="toast-msg" class="font-bold text-sm">Thông báo</span>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:3000/api'; // Đường dẫn Backend thực tế
+        let currentPoptPrice = 0;
+        let localProfile = {}; // Lưu trữ tạm profile để dùng cho popup
+
+        // --- 1. KHỞI TẠO & KIỂM TRA ĐĂNG NHẬP ---
+        async function initApp() {
+            const token = localStorage.getItem('token');
+            if (!token) {
+                window.location.href = 'login.html'; // Đẩy ra trang login nếu không có token
+                return;
+            }
+            
+            await loadProfile(token);
+            await loadHistory(token);
+            startWebStream();
+        }
+
+        // --- 2. LẤY DỮ LIỆU TỪ SERVER ---
+        async function loadProfile(token) {
+            try {
+                const res = await fetch(`${API_URL}/user/profile`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                
+                if (!res.ok) throw new Error('Phiên đăng nhập hết hạn');
+                const data = await res.json();
+                localProfile = data;
+
+                // Cập nhật số dư
+                document.getElementById('usdt-balance').innerText = parseFloat(data.usdt_balance).toFixed(2);
+                document.getElementById('popt-balance').innerText = parseFloat(data.popt_balance).toFixed(2);
+                
+                // Cập nhật Thông tin Nhận tiền
+                document.getElementById('my-address').innerText = data.wallet_address;
+                document.getElementById('qr-image').src = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${data.wallet_address}`;
+
+                // Cập nhật Link Giới thiệu
+                const currentDomain = window.location.origin + window.location.pathname.replace('index.html','');
+                document.getElementById('ref-link').value = `${currentDomain}login.html?ref=${data.ref_code}`;
+                
+                updateTotalBalance();
+            } catch (error) {
+                console.error(error);
+                localStorage.removeItem('token');
+                window.location.href = 'login.html';
+            }
+        }
+
+        async function loadHistory(token) {
+            try {
+                const res = await fetch(`${API_URL}/user/history`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const transactions = await res.json();
+                
+                const container = document.getElementById('history-container');
+                container.innerHTML = '';
+
+                if (transactions.length === 0) {
+                    container.innerHTML = `<p class="text-center text-gray-600 py-6 text-sm">Chưa có giao dịch nào.</p>`;
+                    return;
+                }
+
+                transactions.forEach(tx => {
+                    const isReceive = tx.type === 'receive';
+                    const color = isReceive ? 'text-[#26A17B]' : 'text-popOrange';
+                    const bgIcon = isReceive ? 'bg-[#26A17B]/10 border-[#26A17B]/50' : 'bg-popOrange/10 border-popOrange/50';
+                    const icon = isReceive ? 'fa-arrow-down' : 'fa-arrow-up';
+                    const sign = isReceive ? '+' : '-';
+                    const dateStr = new Date(tx.created_at).toLocaleString('vi-VN');
+
+                    container.innerHTML += `
+                        <div class="bg-cardBg p-4 rounded-2xl flex justify-between items-center border border-gray-800 hover:border-gray-600 transition">
+                            <div class="flex items-center gap-4">
+                                <div class="w-10 h-10 rounded-full ${bgIcon} flex items-center justify-center border">
+                                    <i class="fa-solid ${icon} ${color}"></i>
+                                </div>
+                                <div>
+                                    <h4 class="font-bold text-sm text-white">${tx.title}</h4>
+                                    <p class="text-[10px] text-gray-500 mt-0.5">${dateStr}</p>
+                                </div>
+                            </div>
+                            <div class="text-right">
+                                <h4 class="font-bold text-sm ${color}">${sign} ${parseFloat(tx.amount).toFixed(2)} ${tx.asset}</h4>
+                            </div>
+                        </div>
+                    `;
+                });
+            } catch (error) {
+                console.error("Lỗi tải lịch sử");
+            }
+        }
+
+        // --- 3. LOGIC GIAO DỊCH GỬI TIỀN (REAL API) ---
+        async function executeSend() {
+            const address = document.getElementById('send-address').value.trim();
+            const amount = document.getElementById('send-amount').value;
+            const asset = document.getElementById('send-asset').value;
+            const token = localStorage.getItem('token');
+
+            if (!address) return showToast('Vui lòng nhập địa chỉ ví nhận!');
+            if (isNaN(amount) || amount <= 0) return showToast('Số lượng không hợp lệ!');
+
+            try {
+                const res = await fetch(`${API_URL}/transaction/send`, {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ receiverAddress: address, amount: amount, asset: asset })
+                });
+                
+                const result = await res.json();
+                
+                if (res.ok) {
+                    closeModal('sendModal');
+                    document.getElementById('send-address').value = '';
+                    document.getElementById('send-amount').value = '';
+                    
+                    document.getElementById('success-msg').innerHTML = `Đã chuyển <span class="text-popOrange font-bold">${amount} ${asset}</span><br>đến ${address.substring(0,8)}...`;
+                    openModal('successModal');
+                    
+                    // Tải lại dữ liệu mới nhất
+                    loadProfile(token);
+                    loadHistory(token);
+                } else {
+                    showToast(result.error || 'Giao dịch thất bại!');
+                }
+            } catch (error) {
+                showToast('Lỗi kết nối tới máy chủ!');
+            }
+        }
+
+        // --- 4. TIỆN ÍCH CHỌN TÀI SẢN (POPUP) ---
+        function selectAsset(asset, network, logoSrc) {
+            // Cập nhật input ẩn cho API
+            document.getElementById('send-asset').value = asset;
+            
+            // Cập nhật Giao diện hiển thị
+            let textColor = asset === 'POPT' ? 'text-popOrange' : 'text-white';
+            document.getElementById('selected-asset-display').innerHTML = `
+                <img src="${logoSrc}" class="w-6 h-6 rounded-full bg-white p-0.5 object-cover">
+                <div>
+                    <p class="${textColor} font-bold leading-none">${asset}</p>
+                    <p class="text-[10px] text-gray-500 mt-1">Mạng: ${network}</p>
+                </div>
+            `;
+            
+            // Cập nhật số dư khả dụng
+            const balance = asset === 'USDT' ? localProfile.usdt_balance : localProfile.popt_balance;
+            document.getElementById('send-available').innerText = `Khả dụng: ${parseFloat(balance).toFixed(2)} ${asset}`;
+            
+            closeModal('assetModal');
+        }
+
+        // --- 5. GIÁ REALTIME (WEBSOCKET BINANCE) ---
+        function startWebStream() {
+            const poptValueEl = document.getElementById('popt-price');
+            const ws = new WebSocket('wss://stream.binance.com:9443/ws/trxusdt@trade');
+            
+            ws.onmessage = (event) => {
+                const data = JSON.parse(event.data);
+                currentPoptPrice = parseFloat(data.p);
+                poptValueEl.innerText = `Giá: $${currentPoptPrice.toFixed(4)}`;
+                updateTotalBalance();
+            };
+        }
+
+        function updateTotalBalance() {
+            if(!localProfile.usdt_balance) return;
+            const usdt = parseFloat(localProfile.usdt_balance);
+            const popt = parseFloat(localProfile.popt_balance);
+            
+            const usdtValue = usdt;
+            const poptValue = popt * currentPoptPrice;
+            const total = usdtValue + poptValue;
+            
+            document.getElementById('usdt-value').innerText = `~ $${usdtValue.toFixed(2)}`;
+            document.getElementById('total-balance').innerText = `$ ${total.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+        }
+
+        // --- 6. UI & COPY LOGIC ---
+        function copyRefLink() {
+            copyToClipboard(document.getElementById('ref-link').value, 'Đã sao chép link giới thiệu Popay!');
+        }
+        function copyMyAddress() {
+            copyToClipboard(document.getElementById('my-address').innerText, 'Đã sao chép địa chỉ ví!');
+        }
+
+        function copyToClipboard(text, successMsg) {
+            navigator.clipboard.writeText(text).then(() => showToast(successMsg))
+            .catch(() => {
+                const input = document.createElement('input');
+                input.value = text;
+                document.body.appendChild(input);
+                input.select();
+                document.execCommand('copy');
+                document.body.removeChild(input);
+                showToast(successMsg);
+            });
+        }
+
+        function openModal(id) {
+            const modal = document.getElementById(id);
+            const box = document.getElementById(id + 'Box');
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                modal.classList.remove('opacity-0');
+                if (id !== 'successModal') box.classList.remove('translate-y-full');
+                else box.classList.remove('scale-90');
+            }, 10);
+
+            // Gán khả dụng ngay khi mở popup Gửi
+            if(id === 'sendModal' && localProfile.usdt_balance) {
+                const currentAsset = document.getElementById('send-asset').value;
+                const balance = currentAsset === 'USDT' ? localProfile.usdt_balance : localProfile.popt_balance;
+                document.getElementById('send-available').innerText = `Khả dụng: ${parseFloat(balance).toFixed(2)} ${currentAsset}`;
+            }
+        }
+
+        function closeModal(id) {
+            const modal = document.getElementById(id);
+            const box = document.getElementById(id + 'Box');
+            modal.classList.add('opacity-0');
+            if (id !== 'successModal') box.classList.add('translate-y-full');
+            else box.classList.add('scale-90');
+            setTimeout(() => modal.classList.add('hidden'), 300);
+        }
+
+        let toastTimeout;
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            document.getElementById('toast-msg').innerText = message;
+            toast.classList.remove('hidden');
+            setTimeout(() => { toast.classList.remove('toast-enter'); toast.classList.add('toast-active'); }, 10);
+            clearTimeout(toastTimeout);
+            toastTimeout = setTimeout(() => {
+                toast.classList.remove('toast-active'); toast.classList.add('toast-enter');
+                setTimeout(() => toast.classList.add('hidden'), 300);
+            }, 3000);
+        }
+
+        // Chạy App
+        window.onload = initApp;
+    </script>
+</body>
+</html>

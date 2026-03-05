@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Popay Settings - Cài Đặt Tài Khoản</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: { popOrange: '#ff5f1f', darkBg: '#0a0a0a', cardBg: '#141414', inputBg: '#1f1f1f', popGreen: '#26A17B', popRed: '#E33E5A' }
+                }
+            }
+        }
+    </script>
+    <style>
+        ::-webkit-scrollbar { display: none; }
+        body { -ms-overflow-style: none; scrollbar-width: none; }
+        .glass-nav { background: rgba(20, 20, 20, 0.98); border-top: 1px solid #1f1f1f; }
+        .toast-enter { transform: translateY(100%); opacity: 0; }
+        .toast-active { transform: translateY(0); opacity: 1; }
+        /* Tùy chỉnh input file */
+        input[type="file"] { display: none; }
+        .file-upload-label { cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; border: 2px dashed #374151; border-radius: 1rem; padding: 2rem; transition: all 0.3s; }
+        .file-upload-label:hover { border-color: #ff5f1f; background: rgba(255, 95, 31, 0.05); }
+    </style>
+</head>
+<body class="bg-darkBg text-white font-sans min-h-screen pb-24 selection:bg-popOrange selection:text-black">
+
+    <header class="p-5 flex justify-between items-center sticky top-0 z-10 bg-darkBg border-b border-gray-900">
+        <h1 class="text-xl font-black tracking-widest text-white uppercase">Hồ Sơ & Cài Đặt</h1>
+        <i class="fa-solid fa-gear text-popOrange text-xl hover:rotate-90 transition duration-500"></i>
+    </header>
+
+    <main class="max-w-md mx-auto px-5 mt-4">
+        
+        <div class="bg-cardBg rounded-[2rem] p-6 border border-gray-800 mb-6 flex items-center gap-5 relative overflow-hidden">
+            <img src="logo.png" alt="Avatar" class="w-16 h-16 rounded-full border-2 border-popOrange object-cover z-10" onerror="this.src='https://via.placeholder.com/64/ff5f1f/000000?text=P'">
+            <div class="z-10">
+                <h2 class="text-lg font-bold text-white mb-1" id="profile-address">Đang tải...</h2>
+                <div id="kyc-badge" class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-gray-800 text-gray-400 border border-gray-700">
+                    <i class="fa-solid fa-spinner fa-spin"></i> Checking
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-cardBg rounded-2xl border border-popOrange/30 mb-8 p-5 relative overflow-hidden">
+            <div class="absolute top-0 right-0 p-3 opacity-10">
+                <i class="fa-solid fa-parachute-box text-6xl text-popOrange"></i>
+            </div>
+            <div class="relative z-10">
+                <h3 class="text-md font-bold text-popOrange mb-1 flex items-center gap-2">
+                    <i class="fa-solid fa-gift"></i> Airdrop Toàn Cầu
+                </h3>
+                <p class="text-xs text-gray-400 mb-4">Điểm danh mỗi ngày để nhận ngay <span class="text-popOrange font-bold">0.2 POPT</span> vào ví.</p>
+                <button onclick="claimAirdrop()" id="btn-airdrop" class="w-full bg-popOrange text-black font-bold py-3 rounded-xl hover:bg-orange-600 transition flex items-center justify-center gap-2">
+                    Nhận Thưởng Hôm Nay
+                </button>
+                <p id="airdrop-status" class="text-[10px] text-center text-gray-500 mt-2 hidden">Bạn đã nhận thưởng hôm nay. Quay lại vào ngày mai!</p>
+            </div>
+        </div>
+
+        <h3 class="text-sm font-bold mb-3 text-gray-400 uppercase tracking-widest pl-1">Bảo Mật & Hỗ Trợ</h3>
+        <div class="bg-cardBg rounded-2xl border border-gray-800 overflow-hidden mb-6">
+            
+            <button onclick="openModal('kycModal')" class="w-full flex items-center justify-between p-4 border-b border-gray-800 hover:bg-inputBg transition group">
+                <div class="flex items-center gap-4">
+                    <div class="w-10 h-10 rounded-full bg-popOrange/10 flex items-center justify-center text-popOrange group-hover:scale-110 transition">
+                        <i class="fa-regular fa-id-card text-lg"></i>
+                    </div>
+                    <div class="text-left">
+                        <h4 class="font-bold text-white text-sm">Xác Minh Danh Tính (KYC)</h4>
+                        <p class="text-[10px] text-gray-500">Nâng hạn mức giao dịch P2P</p>
+                    </div>
+                </div>
+                <i class="fa-solid fa-chevron-right text-gray-600 text-sm"></i>
+            </button>
+
+            <button onclick="openModal('passwordModal')" class="w-full flex items-center justify-between p-4 border-b border-gray-800 hover:bg-inputBg transition group">
+                <div class="flex items-center gap-4">
+                    <div class="w-10 h-10 rounded-full bg-popOrange/10 flex items-center justify-center text-popOrange group-hover:scale-110 transition">
+                        <i class="fa-solid fa-lock text-lg"></i>
+                    </div>
+                    <div class="text-left">
+                        <h4 class="font-bold text-white text-sm">Đổi Mật Khẩu</h4>
+                        <p class="text-[10px] text-gray-500">Bảo vệ an toàn tài sản</p>
+                    </div>
+                </div>
+                <i class="fa-solid fa-chevron-right text-gray-600 text-sm"></i>
+            </button>
+
+            <button onclick="openModal('ticketModal')" class="w-full flex items-center justify-between p-4 hover:bg-inputBg transition group">
+                <div class="flex items-center gap-4">
+                    <div class="w-10 h-10 rounded-full bg-popOrange/10 flex items-center justify-center text-popOrange group-hover:scale-110 transition">
+                        <i class="fa-solid fa-headset text-lg"></i>
+                    </div>
+                    <div class="text-left">
+                        <h4 class="font-bold text-white text-sm">Trung Tâm Hỗ Trợ</h4>
+                        <p class="text-[10px] text-gray-500">Gửi khiếu nại, lỗi giao dịch</p>
+                    </div>
+                </div>
+                <i class="fa-solid fa-chevron-right text-gray-600 text-sm"></i>
+            </button>
+
+        </div>
+
+        <button onclick="handleLogout()" class="w-full bg-transparent border border-popRed text-popRed font-bold py-4 rounded-2xl mt-4 hover:bg-popRed hover:text-white transition flex items-center justify-center gap-2">
+            <i class="fa-solid fa-right-from-bracket"></i> Đăng Xuất Mọi Thiết Bị
+        </button>
+
+    </main>
+
+    <nav class="fixed bottom-0 w-full max-w-md left-1/2 transform -translate-x-1/2 glass-nav flex justify-around items-center px-2 py-3 z-20">
+        <a href="index.html" class="flex flex-col items-center p-2 text-gray-500 hover:text-popOrange transition">
+            <i class="fa-solid fa-wallet text-xl mb-1"></i>
+            <span class="text-[10px] font-bold uppercase tracking-wider">Ví Chính</span>
+        </a>
+        <a href="trade.html" class="flex flex-col items-center p-2 text-gray-500 hover:text-popOrange transition">
+            <i class="fa-solid fa-chart-line text-xl mb-1"></i>
+            <span class="text-[10px] font-bold uppercase tracking-wider">Giao Dịch</span>
+        </a>
+        <a href="settings.html" class="flex flex-col items-center p-2 text-popOrange">
+            <i class="fa-solid fa-gear text-xl mb-1"></i>
+            <span class="text-[10px] font-bold uppercase tracking-wider">Cài Đặt</span>
+        </a>
+    </nav>
+
+    <div id="kycModal" class="fixed inset-0 bg-black/90 hidden flex justify-center items-end sm:items-center z-50 backdrop-blur-sm transition-opacity duration-300 opacity-0">
+        <div class="bg-cardBg w-full sm:w-[400px] rounded-t-[2rem] sm:rounded-[2rem] p-6 border-t sm:border border-gray-800 transform translate-y-full sm:translate-y-0 transition-transform duration-300" id="kycModalBox">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-xl font-bold text-white uppercase">Xác Minh Danh Tính</h3>
+                <button onclick="closeModal('kycModal')" class="w-8 h-8 bg-gray-800 rounded-full flex justify-center items-center text-gray-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            
+            <p class="text-sm text-gray-400 mb-4">Vui lòng tải lên ảnh chụp 2 mặt rõ nét của CMND/CCCD/Hộ chiếu để Popay xét duyệt.</p>
+
+            <div class="space-y-4">
+                <div>
+                    <label class="file-upload-label" id="label-front">
+                        <i class="fa-solid fa-id-card text-3xl text-gray-500 mb-2"></i>
+                        <span class="text-sm font-bold text-gray-400" id="text-front">Tải lên MẶT TRƯỚC</span>
+                        <input type="file" id="kyc-front" accept="image/*" onchange="previewFile(this, 'text-front', 'label-front')">
+                    </label>
+                </div>
+                <div>
+                    <label class="file-upload-label" id="label-back">
+                        <i class="fa-regular fa-id-card text-3xl text-gray-500 mb-2"></i>
+                        <span class="text-sm font-bold text-gray-400" id="text-back">Tải lên MẶT SAU</span>
+                        <input type="file" id="kyc-back" accept="image/*" onchange="previewFile(this, 'text-back', 'label-back')">
+                    </label>
+                </div>
+            </div>
+
+            <button onclick="submitKYC()" class="w-full bg-popOrange text-black font-black uppercase tracking-wider py-4 rounded-2xl mt-6 hover:bg-orange-600 transition">
+                Gửi Xét Duyệt
+            </button>
+        </div>
+    </div>
+
+    <div id="passwordModal" class="fixed inset-0 bg-black/90 hidden flex justify-center items-end sm:items-center z-50 backdrop-blur-sm transition-opacity duration-300 opacity-0">
+        <div class="bg-cardBg w-full sm:w-[400px] rounded-t-[2rem] sm:rounded-[2rem] p-6 border-t sm:border border-gray-800 transform translate-y-full sm:translate-y-0 transition-transform duration-300" id="passwordModalBox">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-xl font-bold text-white uppercase">Đổi Mật Khẩu</h3>
+                <button onclick="closeModal('passwordModal')" class="w-8 h-8 bg-gray-800 rounded-full flex justify-center items-center text-gray-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            
+            <div class="space-y-4">
+                <div class="bg-inputBg border border-gray-800 rounded-2xl p-4 focus-within:border-popOrange transition">
+                    <label class="text-xs text-gray-500 uppercase tracking-wider block mb-1">Mật khẩu hiện tại</label>
+                    <input type="password" id="pw-old" class="bg-transparent text-white w-full outline-none" placeholder="Nhập mật khẩu cũ">
+                </div>
+                <div class="bg-inputBg border border-gray-800 rounded-2xl p-4 focus-within:border-popOrange transition">
+                    <label class="text-xs text-gray-500 uppercase tracking-wider block mb-1">Mật khẩu mới</label>
+                    <input type="password" id="pw-new" class="bg-transparent text-white w-full outline-none" placeholder="Nhập mật khẩu mới">
+                </div>
+                <div class="bg-inputBg border border-gray-800 rounded-2xl p-4 focus-within:border-popOrange transition">
+                    <label class="text-xs text-gray-500 uppercase tracking-wider block mb-1">Xác nhận mật khẩu mới</label>
+                    <input type="password" id="pw-confirm" class="bg-transparent text-white w-full outline-none" placeholder="Nhập lại mật khẩu mới">
+                </div>
+            </div>
+
+            <button onclick="changePassword()" class="w-full bg-popOrange text-black font-black uppercase tracking-wider py-4 rounded-2xl mt-6 hover:bg-orange-600 transition">
+                Cập Nhật
+            </button>
+        </div>
+    </div>
+
+    <div id="ticketModal" class="fixed inset-0 bg-black/90 hidden flex justify-center items-end sm:items-center z-50 backdrop-blur-sm transition-opacity duration-300 opacity-0">
+        <div class="bg-cardBg w-full sm:w-[400px] rounded-t-[2rem] sm:rounded-[2rem] p-6 border-t sm:border border-gray-800 transform translate-y-full sm:translate-y-0 transition-transform duration-300" id="ticketModalBox">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-xl font-bold text-white uppercase">Gửi Hỗ Trợ</h3>
+                <button onclick="closeModal('ticketModal')" class="w-8 h-8 bg-gray-800 rounded-full flex justify-center items-center text-gray-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            
+            <p class="text-sm text-gray-400 mb-4">Mô tả chi tiết vấn đề bạn đang gặp phải. Đội ngũ Popay sẽ xử lý và phản hồi sớm nhất.</p>
+
+            <div class="space-y-4">
+                <div class="bg-inputBg border border-gray-800 rounded-2xl p-4 focus-within:border-popOrange transition">
+                    <label class="text-xs text-gray-500 uppercase tracking-wider block mb-1">Tiêu đề</label>
+                    <input type="text" id="ticket-subject" class="bg-transparent text-white font-bold w-full outline-none" placeholder="Vd: Lỗi nạp tiền P2P">
+                </div>
+                <div class="bg-inputBg border border-gray-800 rounded-2xl p-4 focus-within:border-popOrange transition">
+                    <label class="text-xs text-gray-500 uppercase tracking-wider block mb-1">Nội dung chi tiết</label>
+                    <textarea id="ticket-msg" rows="4" class="bg-transparent text-white text-sm w-full outline-none resize-none" placeholder="Mô tả lỗi hoặc câu hỏi của bạn..."></textarea>
+                </div>
+            </div>
+
+            <button onclick="submitTicket()" class="w-full bg-popOrange text-black font-black uppercase tracking-wider py-4 rounded-2xl mt-6 hover:bg-orange-600 transition">
+                Gửi Ticket Cho Admin
+            </button>
+        </div>
+    </div>
+
+    <div id="toast" class="fixed top-20 left-1/2 transform -translate-x-1/2 bg-cardBg border border-gray-800 text-white px-5 py-3 rounded-2xl z-[60] flex items-center gap-3 toast-enter transition-all duration-300 pointer-events-none hidden w-[90%] max-w-sm">
+        <i class="fa-solid fa-bell text-popOrange text-xl"></i>
+        <span id="toast-msg" class="font-bold text-sm leading-tight">Thông báo</span>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:3000/api';
+        let token = localStorage.getItem('token');
+        let localProfile = {};
+
+        // --- 1. KHỞI TẠO ---
+        async function initApp() {
+            if (!token) { window.location.href = 'login.html'; return; }
+            await loadProfile();
+            checkAirdropStatus();
+        }
+
+        async function loadProfile() {
+            try {
+                const res = await fetch(`${API_URL}/user/profile`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (!res.ok) throw new Error('Token hết hạn');
+                localProfile = await res.json();
+                
+                document.getElementById('profile-address').innerText = localProfile.wallet_address;
+                
+                const badge = document.getElementById('kyc-badge');
+                if(localProfile.kyc_status === 'verified') {
+                    badge.className = "inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-popGreen/20 text-popGreen border border-popGreen/50";
+                    badge.innerHTML = `<i class="fa-solid fa-check-circle"></i> Đã xác minh`;
+                } else if(localProfile.kyc_status === 'pending') {
+                    badge.className = "inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-yellow-900/50 text-yellow-500 border border-yellow-700";
+                    badge.innerHTML = `<i class="fa-solid fa-clock"></i> Đang chờ duyệt`;
+                } else {
+                    badge.className = "inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-gray-800 text-gray-400 border border-gray-700";
+                    badge.innerHTML = `<i class="fa-solid fa-circle-exclamation"></i> Chưa xác minh`;
+                }
+            } catch (error) {
+                console.error(error);
+                localStorage.removeItem('token');
+                window.location.href = 'login.html';
+            }
+        }
+
+        // --- 2. LOGIC AIRDROP TOÀN CẦU ---
+        function checkAirdropStatus() {
+            const lastClaimDate = localStorage.getItem(`airdrop_${localProfile.wallet_address}`);
+            const today = new Date().toLocaleDateString();
+            
+            if(lastClaimDate === today) {
+                disableAirdropBtn();
+            }
+        }
+
+        async function claimAirdrop() {
+            // Trong thực tế sẽ gọi API Backend: fetch('/api/airdrop/claim', ...)
+            // Ở đây giả lập gọi API thành công và lưu ngày nhận vào localStorage
+            const today = new Date().toLocaleDateString();
+            localStorage.setItem(`airdrop_${localProfile.wallet_address}`, today);
+            
+            // Giả lập cộng tiền (Sẽ được xử lý bởi backend trong thực tế)
+            showToast('Thành công! Bạn đã nhận 0.2 POPT từ Airdrop Toàn Cầu.');
+            disableAirdropBtn();
+        }
+
+        function disableAirdropBtn() {
+            const btn = document.getElementById('btn-airdrop');
+            btn.disabled = true;
+            btn.className = "w-full bg-gray-800 text-gray-500 font-bold py-3 rounded-xl cursor-not-allowed flex items-center justify-center gap-2";
+            btn.innerHTML = '<i class="fa-solid fa-check"></i> Đã Nhận Thưởng';
+            document.getElementById('airdrop-status').classList.remove('hidden');
+        }
+
+
+        // --- 3. LOGIC KYC, ĐỔI MẬT KHẨU, TICKET ---
+        function previewFile(input, textId, labelId) {
+            const textEl = document.getElementById(textId);
+            const labelEl = document.getElementById(labelId);
+            if (input.files && input.files[0]) {
+                textEl.innerText = "Đã chọn: " + input.files[0].name.substring(0, 15) + "...";
+                textEl.classList.remove('text-gray-400');
+                textEl.classList.add('text-popOrange');
+                labelEl.style.borderColor = '#ff5f1f';
+            }
+        }
+
+        async function submitKYC() {
+            const front = document.getElementById('kyc-front').files.length;
+            const back = document.getElementById('kyc-back').files.length;
+
+            if (localProfile.kyc_status === 'pending') return showToast('Bạn đã gửi yêu cầu rồi. Vui lòng chờ Admin duyệt!');
+            if (localProfile.kyc_status === 'verified') return showToast('Tài khoản của bạn đã được xác minh!');
+            if (front === 0 || back === 0) return showToast('Vui lòng tải lên đầy đủ 2 mặt của giấy tờ!');
+
+            // Giả lập gọi API KYC
+            showToast('Đã gửi tài liệu! Admin sẽ xét duyệt hồ sơ của bạn sớm nhất.');
+            closeModal('kycModal');
+            
+            // Cập nhật UI tạm thời
+            localProfile.kyc_status = 'pending';
+            const badge = document.getElementById('kyc-badge');
+            badge.className = "inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-yellow-900/50 text-yellow-500 border border-yellow-700";
+            badge.innerHTML = `<i class="fa-solid fa-clock"></i> Đang chờ duyệt`;
+        }
+
+        async function changePassword() {
+            const oldPw = document.getElementById('pw-old').value;
+            const newPw = document.getElementById('pw-new').value;
+            const confirmPw = document.getElementById('pw-confirm').value;
+
+            if (!oldPw || !newPw || !confirmPw) return showToast('Vui lòng nhập đầy đủ thông tin!');
+            if (newPw !== confirmPw) return showToast('Mật khẩu mới không trùng khớp!');
+            if (newPw.length < 6) return showToast('Mật khẩu mới phải có ít nhất 6 ký tự!');
+
+            // Gọi API đổi mật khẩu (Giả lập)
+            showToast('Đổi mật khẩu thành công! Hãy ghi nhớ mật khẩu mới.');
+            closeModal('passwordModal');
+            
+            document.getElementById('pw-old').value = '';
+            document.getElementById('pw-new').value = '';
+            document.getElementById('pw-confirm').value = '';
+        }
+
+        async function submitTicket() {
+            const subject = document.getElementById('ticket-subject').value.trim();
+            const msg = document.getElementById('ticket-msg').value.trim();
+
+            if (!subject || !msg) return showToast('Vui lòng nhập tiêu đề và nội dung!');
+
+            // Gọi API tạo Ticket (Giả lập)
+            showToast(`Đã gửi yêu cầu hỗ trợ cho hệ thống Admin Popay.`);
+            closeModal('ticketModal');
+            
+            document.getElementById('ticket-subject').value = '';
+            document.getElementById('ticket-msg').value = '';
+        }
+
+        // --- 4. LOGIC ĐĂNG XUẤT ---
+        function handleLogout() {
+            showToast('Đang đăng xuất khỏi hệ thống...');
+            setTimeout(() => {
+                localStorage.removeItem('token'); 
+                window.location.href = "login.html";
+            }, 1500);
+        }
+
+        // --- TIỆN ÍCH MODAL & TOAST ---
+        function openModal(id) {
+            const modal = document.getElementById(id);
+            const box = document.getElementById(id + 'Box');
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                modal.classList.remove('opacity-0');
+                box.classList.remove('translate-y-full');
+            }, 10);
+        }
+
+        function closeModal(id) {
+            const modal = document.getElementById(id);
+            const box = document.getElementById(id + 'Box');
+            modal.classList.add('opacity-0');
+            box.classList.add('translate-y-full');
+            setTimeout(() => { modal.classList.add('hidden'); }, 300);
+        }
+
+        let toastTimeout;
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            document.getElementById('toast-msg').innerText = message;
+            toast.classList.remove('hidden');
+            setTimeout(() => { toast.classList.remove('toast-enter'); toast.classList.add('toast-active'); }, 10);
+            clearTimeout(toastTimeout);
+            toastTimeout = setTimeout(() => {
+                toast.classList.remove('toast-active'); toast.classList.add('toast-enter');
+                setTimeout(() => toast.classList.add('hidden'), 300);
+            }, 3000);
+        }
+
+        // Khởi chạy khi tải trang
+        window.onload = initApp;
+    </script>
+</body>
+</html>

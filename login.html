@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Popay Wallet - Nền Tảng Tài Chính</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        popOrange: '#ff5f1f',
+                        darkBg: '#0a0a0a',
+                        cardBg: '#141414',
+                        inputBg: '#1f1f1f',
+                        popGreen: '#26A17B',
+                        popRed: '#E33E5A'
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        ::-webkit-scrollbar { display: none; }
+        body { -ms-overflow-style: none; scrollbar-width: none; }
+        
+        /* Smooth form transition */
+        .form-container { transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
+        .form-hidden { opacity: 0; pointer-events: none; position: absolute; transform: translateX(20px); width: 100%; }
+        .form-active { opacity: 1; pointer-events: auto; position: relative; transform: translateX(0); width: 100%; }
+        
+        /* Toast */
+        .toast-enter { transform: translateY(-100%); opacity: 0; }
+        .toast-active { transform: translateY(0); opacity: 1; }
+        
+        .fade-in { animation: fadeIn 0.5s ease-out forwards; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body class="bg-darkBg text-white font-sans min-h-screen flex flex-col justify-center items-center p-5 selection:bg-popOrange selection:text-black overflow-x-hidden">
+
+    <div class="w-full max-w-sm fade-in relative">
+        
+        <div class="text-center mb-8">
+            <img src="logo.png" alt="Popay Logo" class="w-20 h-20 mx-auto rounded-full border border-popOrange object-cover mb-4" onerror="this.src='https://via.placeholder.com/80/ff5f1f/000000?text=P'">
+            <h1 class="text-3xl font-black tracking-widest text-white uppercase">Popay</h1>
+            <p class="text-xs text-gray-500 tracking-widest uppercase mt-2">Quyền lực tài chính trong tay bạn</p>
+        </div>
+
+        <div class="flex bg-cardBg rounded-xl p-1 border border-gray-800 mb-6">
+            <button onclick="switchView('login')" id="tab-login" class="flex-1 bg-popOrange text-black font-bold py-2.5 rounded-lg text-sm transition">Đăng Nhập</button>
+            <button onclick="switchView('register')" id="tab-register" class="flex-1 text-gray-400 font-bold py-2.5 rounded-lg text-sm hover:text-white transition bg-transparent">Đăng Ký</button>
+        </div>
+
+        <div class="relative w-full overflow-hidden">
+            <div id="form-login" class="form-container form-active space-y-4">
+                <div class="bg-inputBg border border-gray-800 rounded-xl p-3.5 focus-within:border-popOrange transition">
+                    <label class="text-[10px] text-gray-500 uppercase tracking-wider block mb-1 pl-1">Tài khoản</label>
+                    <div class="flex items-center gap-3">
+                        <i class="fa-regular fa-user text-gray-500"></i>
+                        <input type="text" id="login-username" class="bg-transparent text-white w-full outline-none font-bold" placeholder="Email hoặc Số điện thoại">
+                    </div>
+                </div>
+
+                <div class="bg-inputBg border border-gray-800 rounded-xl p-3.5 focus-within:border-popOrange transition">
+                    <label class="text-[10px] text-gray-500 uppercase tracking-wider block mb-1 pl-1">Mật khẩu</label>
+                    <div class="flex items-center gap-3">
+                        <i class="fa-solid fa-lock text-gray-500"></i>
+                        <input type="password" id="login-password" class="bg-transparent text-white w-full outline-none font-bold tracking-widest" placeholder="••••••••">
+                        <button onclick="togglePassword('login-password', this)" class="text-gray-500 hover:text-white transition"><i class="fa-regular fa-eye"></i></button>
+                    </div>
+                </div>
+
+                <div class="text-right">
+                    <a href="#" class="text-xs text-popOrange hover:underline font-bold">Quên mật khẩu?</a>
+                </div>
+
+                <button onclick="handleLogin()" id="btn-login" class="w-full bg-popOrange text-black font-black uppercase tracking-wider py-4 rounded-xl mt-4 hover:bg-orange-600 transition flex justify-center items-center gap-2">
+                    Vào Ví Popay <i class="fa-solid fa-arrow-right"></i>
+                </button>
+            </div>
+
+            <div id="form-register" class="form-container form-hidden space-y-4">
+                <div class="bg-inputBg border border-gray-800 rounded-xl p-3.5 focus-within:border-popOrange transition">
+                    <label class="text-[10px] text-gray-500 uppercase tracking-wider block mb-1 pl-1">Tài khoản mới</label>
+                    <div class="flex items-center gap-3">
+                        <i class="fa-regular fa-user text-gray-500"></i>
+                        <input type="text" id="reg-username" class="bg-transparent text-white w-full outline-none font-bold" placeholder="Email hoặc Số điện thoại">
+                    </div>
+                </div>
+
+                <div class="bg-inputBg border border-gray-800 rounded-xl p-3.5 focus-within:border-popOrange transition">
+                    <label class="text-[10px] text-gray-500 uppercase tracking-wider block mb-1 pl-1">Mật khẩu</label>
+                    <div class="flex items-center gap-3">
+                        <i class="fa-solid fa-lock text-gray-500"></i>
+                        <input type="password" id="reg-password" class="bg-transparent text-white w-full outline-none font-bold tracking-widest" placeholder="Tạo mật khẩu (>6 ký tự)">
+                        <button onclick="togglePassword('reg-password', this)" class="text-gray-500 hover:text-white transition"><i class="fa-regular fa-eye"></i></button>
+                    </div>
+                </div>
+
+                <div class="bg-inputBg border border-gray-800 rounded-xl p-3.5 focus-within:border-popOrange transition">
+                    <label class="text-[10px] text-gray-500 uppercase tracking-wider block mb-1 pl-1">Xác nhận mật khẩu</label>
+                    <div class="flex items-center gap-3">
+                        <i class="fa-solid fa-shield-halved text-gray-500"></i>
+                        <input type="password" id="reg-confirm" class="bg-transparent text-white w-full outline-none font-bold tracking-widest" placeholder="Nhập lại mật khẩu">
+                    </div>
+                </div>
+
+                <div class="bg-inputBg border border-gray-800 rounded-xl p-3.5 focus-within:border-popOrange transition">
+                    <label class="text-[10px] text-popOrange font-bold uppercase tracking-wider block mb-1 pl-1">Mã Giới Thiệu (Tùy chọn)</label>
+                    <div class="flex items-center gap-3">
+                        <i class="fa-solid fa-gift text-popOrange"></i>
+                        <input type="text" id="reg-ref" class="bg-transparent text-white w-full outline-none font-bold uppercase" placeholder="Nhập mã giới thiệu">
+                    </div>
+                </div>
+
+                <button onclick="handleRegister()" id="btn-register" class="w-full bg-transparent border-2 border-popOrange text-popOrange font-black uppercase tracking-wider py-4 rounded-xl mt-4 hover:bg-popOrange hover:text-black transition flex justify-center items-center gap-2">
+                    Tạo Ví Mới <i class="fa-solid fa-user-plus"></i>
+                </button>
+                <p class="text-[10px] text-center text-gray-500 mt-2">Bằng việc đăng ký, bạn đồng ý với Điều khoản sử dụng của Popay.</p>
+            </div>
+        </div>
+    </div>
+
+    <div id="toast" class="fixed top-5 left-1/2 transform -translate-x-1/2 bg-cardBg border border-gray-800 text-white px-6 py-3 rounded-full flex items-center gap-3 toast-enter transition-all duration-300 pointer-events-none hidden w-max z-[60]">
+        <i class="fa-solid fa-circle-exclamation text-popOrange"></i>
+        <span id="toast-msg" class="font-bold text-sm">Thông báo</span>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:3000/api';
+
+        // 1. Kiểm tra nếu đã có Token thì cho vào thẳng Index
+        function checkToken() {
+            const token = localStorage.getItem('token');
+            if(token) {
+                window.location.href = 'index.html';
+            }
+        }
+
+        // 2. LOGIC GIAO DIỆN (UI)
+        function switchView(view) {
+            const loginForm = document.getElementById('form-login');
+            const registerForm = document.getElementById('form-register');
+            const tabLogin = document.getElementById('tab-login');
+            const tabRegister = document.getElementById('tab-register');
+
+            if(view === 'login') {
+                loginForm.classList.replace('form-hidden', 'form-active');
+                registerForm.classList.replace('form-active', 'form-hidden');
+                
+                tabLogin.className = "flex-1 bg-popOrange text-black font-bold py-2.5 rounded-lg text-sm transition";
+                tabRegister.className = "flex-1 text-gray-400 font-bold py-2.5 rounded-lg text-sm hover:text-white transition bg-transparent";
+            } else {
+                registerForm.classList.replace('form-hidden', 'form-active');
+                loginForm.classList.replace('form-active', 'form-hidden');
+                
+                tabRegister.className = "flex-1 bg-popOrange text-black font-bold py-2.5 rounded-lg text-sm transition";
+                tabLogin.className = "flex-1 text-gray-400 font-bold py-2.5 rounded-lg text-sm hover:text-white transition bg-transparent";
+            }
+        }
+
+        function togglePassword(inputId, btn) {
+            const input = document.getElementById(inputId);
+            const icon = btn.querySelector('i');
+            if(input.type === 'password') {
+                input.type = 'text';
+                icon.classList.replace('fa-eye', 'fa-eye-slash');
+                icon.classList.add('text-popOrange');
+            } else {
+                input.type = 'password';
+                icon.classList.replace('fa-eye-slash', 'fa-eye');
+                icon.classList.remove('text-popOrange');
+            }
+        }
+
+        let toastTimeout;
+        function showToast(message, isSuccess = false) {
+            const toast = document.getElementById('toast');
+            const icon = toast.querySelector('i');
+            document.getElementById('toast-msg').innerText = message;
+            
+            if(isSuccess) {
+                icon.className = "fa-solid fa-circle-check text-popGreen";
+                toast.classList.replace('border-gray-800', 'border-popGreen');
+            } else {
+                icon.className = "fa-solid fa-circle-exclamation text-popOrange";
+                toast.classList.replace('border-popGreen', 'border-gray-800');
+            }
+
+            toast.classList.remove('hidden');
+            setTimeout(() => { toast.classList.remove('toast-enter'); toast.classList.add('toast-active'); }, 10);
+            
+            clearTimeout(toastTimeout);
+            toastTimeout = setTimeout(() => {
+                toast.classList.remove('toast-active'); toast.classList.add('toast-enter');
+                setTimeout(() => toast.classList.add('hidden'), 300);
+            }, 3000);
+        }
+
+        // 3. LOGIC XỬ LÝ DỮ LIỆU VỚI BACKEND
+
+        // Kiểm tra URL xem có chứa mã giới thiệu không (?ref=...)
+        function checkReferral() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const refCode = urlParams.get('ref');
+            if(refCode) {
+                switchView('register');
+                document.getElementById('reg-ref').value = refCode.toUpperCase();
+                showToast('Đã áp dụng mã giới thiệu: ' + refCode.toUpperCase(), true);
+            }
+        }
+
+        // Đăng Ký API
+        async function handleRegister() {
+            const username = document.getElementById('reg-username').value.trim();
+            const password = document.getElementById('reg-password').value;
+            const confirm = document.getElementById('reg-confirm').value;
+            const refCode = document.getElementById('reg-ref').value.trim();
+            const btn = document.getElementById('btn-register');
+
+            if(!username) return showToast('Vui lòng nhập tài khoản!');
+            if(password.length < 6) return showToast('Mật khẩu phải từ 6 ký tự trở lên!');
+            if(password !== confirm) return showToast('Mật khẩu xác nhận không khớp!');
+
+            // Hiệu ứng Loading
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Đang xử lý...';
+            
+            try {
+                const response = await fetch(`${API_URL}/auth/register`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password, refCode })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    showToast('Tạo ví thành công! Quà tân thủ đã được nạp.', true);
+                    // Tự động chuyển qua đăng nhập và điền sẵn ID
+                    setTimeout(() => {
+                        switchView('login');
+                        document.getElementById('login-username').value = username;
+                        document.getElementById('login-password').value = '';
+                        btn.disabled = false;
+                        btn.innerHTML = 'Tạo Ví Mới <i class="fa-solid fa-user-plus"></i>';
+                    }, 1500);
+                } else {
+                    showToast(data.error || 'Đăng ký thất bại!');
+                    btn.disabled = false;
+                    btn.innerHTML = 'Tạo Ví Mới <i class="fa-solid fa-user-plus"></i>';
+                }
+            } catch (error) {
+                showToast('Lỗi kết nối máy chủ!');
+                btn.disabled = false;
+                btn.innerHTML = 'Tạo Ví Mới <i class="fa-solid fa-user-plus"></i>';
+            }
+        }
+
+        // Đăng Nhập API
+        async function handleLogin() {
+            const username = document.getElementById('login-username').value.trim();
+            const password = document.getElementById('login-password').value;
+            const btn = document.getElementById('btn-login');
+
+            if(!username || !password) return showToast('Vui lòng nhập đầy đủ thông tin!');
+
+            // Hiệu ứng Loading
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Đang xác thực...';
+
+            try {
+                const response = await fetch(`${API_URL}/auth/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    // Lưu Token thật vào LocalStorage
+                    localStorage.setItem('token', data.token);
+                    showToast('Đăng nhập thành công! Đang tải ví...', true);
+                    
+                    setTimeout(() => {
+                        window.location.href = 'index.html';
+                    }, 1000);
+                } else {
+                    showToast(data.error || 'Sai tài khoản hoặc mật khẩu!');
+                    btn.disabled = false;
+                    btn.innerHTML = 'Vào Ví Popay <i class="fa-solid fa-arrow-right"></i>';
+                }
+            } catch (error) {
+                showToast('Lỗi kết nối máy chủ!');
+                btn.disabled = false;
+                btn.innerHTML = 'Vào Ví Popay <i class="fa-solid fa-arrow-right"></i>';
+            }
+        }
+
+        // Khởi chạy khi load trang
+        window.onload = () => {
+            checkToken();
+            checkReferral();
+        };
+    </script>
+</body>
+</html>
