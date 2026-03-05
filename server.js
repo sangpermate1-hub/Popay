@@ -7,7 +7,7 @@ const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
 
 const app = express();
-app.use(cors());
+app.use(cors()); // Cho phép tất cả các nguồn truy cập
 app.use(express.json());
 
 // ==========================================
