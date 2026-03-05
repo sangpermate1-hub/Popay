@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trình Khám Phá Mạng Lưới PoPay Native Chain | PoPayScan</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: { 
+                    colors: { popOrange: '#ff5f1f', darkBg: '#060606', cardBg: '#111111', borderGray: '#1f1f1f', textGray: '#8c8c8c' },
+                    fontFamily: { sans: ['Roboto', 'sans-serif'] }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { background-color: #060606; color: #f8f9fa; }
+        .hero-section { background-image: radial-gradient(circle at 50% -20%, #2a2a2a 0%, #060606 100%); border-bottom: 1px solid #1f1f1f; }
+        .table-custom tr { border-bottom: 1px solid #1a1a1a; transition: 0.2s; }
+        .table-custom tr:hover { background-color: rgba(255, 95, 31, 0.02); }
+        .popt-icon { background: linear-gradient(135deg, #ff5f1f 0%, #ff8c5a 100%); }
+        /* Thống nhất style scrollbar */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: #060606; }
+        ::-webkit-scrollbar-thumb { background: #2a2a2a; border-radius: 3px; }
+    </style>
+</head>
+<body class="font-sans antialiased">
+
+    <div class="border-b border-borderGray py-2 text-[11px] text-textGray px-4">
+        <div class="max-w-[1400px] mx-auto flex justify-between items-center">
+            <div class="flex gap-4 items-center">
+                <span>Giá POPT: <span class="text-popOrange font-medium" id="top-price">$0.10</span></span>
+                <span>Vốn hóa: <span class="text-white" id="top-mcap">$0</span></span>
+            </div>
+            <div class="flex gap-3 items-center">
+                <i class="fa-solid fa-gas-pump"></i> <span>Phí Gas: <span class="text-popOrange">0 Gwei</span></span>
+                <span class="bg-popOrange/10 text-popOrange px-2 py-0.5 rounded font-bold uppercase text-[9px]">PoPay Native Chain</span>
+            </div>
+        </div>
+    </div>
+
+    <nav class="bg-cardBg border-b border-borderGray sticky top-0 z-50 px-4 py-3">
+        <div class="max-w-[1400px] mx-auto flex justify-between items-center">
+            <div class="flex items-center gap-3 cursor-pointer" onclick="window.location.href='index.html'">
+                <img src="logo.png" class="w-10 h-10 object-cover rounded-xl border border-borderGray" onerror="this.src='https://via.placeholder.com/40/ff5f1f/ffffff?text=P'">
+                <div class="leading-none">
+                    <h1 class="text-2xl font-black tracking-tighter text-white">PoPay<span class="text-textGray">Scan</span></h1>
+                    <span class="text-[10px] text-textGray font-medium tracking-widest uppercase">Trình khám phá Native Chain</span>
+                </div>
+            </div>
+            <div class="hidden md:flex gap-7 text-sm font-medium text-gray-300">
+                <a href="index.html" class="hover:text-popOrange">Trang Chủ</a>
+                <a href="explore.html" class="text-popOrange">Mạng Lưới</a>
+                <a href="trade.html" class="hover:text-popOrange">Giao Dịch</a>
+                <a href="settings.html" class="hover:text-popOrange">Cài Đặt</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="hero-section py-16 px-4">
+        <div class="max-w-3xl mx-auto text-center">
+            <h2 class="text-2xl md:text-3xl font-bold text-white mb-2">Trình Khám Phá PoPay Native Chain</h2>
+            <p class="text-textGray text-sm mb-8">Tra cứu mã giao dịch, địa chỉ ví, khối và các thông tin khác trên mạng lưới Native</p>
+            
+            <div class="flex bg-cardBg border border-gray-700 rounded-2xl overflow-hidden p-1.5 shadow-2xl focus-within:border-popOrange transition">
+                <input type="text" id="search-input" placeholder="Tìm kiếm theo địa chỉ ví POPT... (Ví dụ: POPT...)" class="w-full bg-transparent px-5 py-3.5 text-base outline-none text-white placeholder:text-gray-600">
+                <button onclick="handleSearch()" class="bg-popOrange text-black font-bold px-8 rounded-xl hover:bg-orange-600 transition">
+                    <i class="fa-solid fa-magnifying-glass text-lg"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <main class="max-w-[1400px] mx-auto p-4 md:p-6 -mt-10 relative z-10">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
+            <div class="bg-cardBg p-6 rounded-2xl border border-borderGray shadow-xl flex items-center gap-4">
+                <div class="w-12 h-12 rounded-full bg-gray-900 flex items-center justify-center text-popOrange text-xl border border-borderGray"><i class="fa-solid fa-globe"></i></div>
+                <div>
+                    <p class="text-[11px] text-textGray uppercase font-bold tracking-wider mb-1">Mã Khối Mới Nhất</p>
+                    <h3 class="text-2xl font-black text-white" id="stat-block">0</h3>
+                </div>
+            </div>
+            <div class="bg-cardBg p-6 rounded-2xl border border-borderGray shadow-xl flex items-center gap-4">
+                <div class="w-12 h-12 rounded-full bg-gray-900 flex items-center justify-center text-popOrange text-xl border border-borderGray"><i class="fa-solid fa-right-left"></i></div>
+                <div>
+                    <p class="text-[11px] text-textGray uppercase font-bold tracking-wider mb-1">Tổng Giao Dịch</p>
+                    <h3 class="text-2xl font-black text-white" id="stat-txs">0</h3>
+                </div>
+            </div>
+            <div class="bg-cardBg p-6 rounded-2xl border border-borderGray shadow-xl flex items-center gap-4">
+                <div class="w-12 h-12 rounded-full bg-gray-900 flex items-center justify-center text-popOrange text-xl border border-borderGray"><i class="fa-solid fa-users"></i></div>
+                <div>
+                    <p class="text-[11px] text-textGray uppercase font-bold tracking-wider mb-1">Thành Viên (Holders)</p>
+                    <h3 class="text-2xl font-black text-white" id="stat-users">0</h3>
+                </div>
+            </div>
+            <div class="bg-cardBg p-6 rounded-2xl border border-borderGray shadow-xl flex items-center gap-4">
+                <div class="w-12 h-12 rounded-full popt-icon flex items-center justify-center text-black text-2xl font-black shadow-[0_0_15px_rgba(255,95,31,0.5)]">P</div>
+                <div>
+                    <p class="text-[11px] text-textGray uppercase font-bold tracking-wider mb-1">Tổng Cung POPT</p>
+                    <h3 class="text-2xl font-black text-white" id="stat-supply">0</h3>
+                </div>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-10">
+            <div class="bg-cardBg border border-borderGray rounded-2xl overflow-hidden shadow-sm">
+                <div class="p-4 border-b border-borderGray flex justify-between items-center bg-gray-900/30">
+                    <h3 class="font-bold text-sm text-white">Khối Mới Nhất</h3>
+                </div>
+                <div id="blocks-list" class="divide-y divide-borderGray/50 min-h-[500px]">
+                    <div class="p-10 text-center text-textGray text-sm">Đang tải dữ liệu mạng lưới...</div>
+                </div>
+            </div>
+
+            <div class="bg-cardBg border border-borderGray rounded-2xl overflow-hidden shadow-sm">
+                <div class="p-4 border-b border-borderGray flex justify-between items-center bg-gray-900/30">
+                    <h3 class="font-bold text-sm text-white">Giao Dịch Mới Nhất</h3>
+                </div>
+                <div id="txs-list" class="divide-y divide-borderGray/50 min-h-[500px]">
+                    <div class="p-10 text-center text-textGray text-sm">Đang tải giao dịch...</div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <div id="searchModal" class="fixed inset-0 bg-black/95 hidden flex justify-center items-center z-[100] p-4 backdrop-blur-md transition-opacity duration-300 opacity-0">
+        <div class="bg-cardBg w-full max-w-xl rounded-2xl border border-popOrange/30 p-8 shadow-[0_0_60px_rgba(255,95,31,0.2)] transform scale-90 transition-transform duration-300" id="searchModalBox">
+            <div id="modal-body"></div>
+            <button onclick="closeModal()" class="w-full mt-8 bg-gray-800 border border-gray-700 py-3.5 rounded-xl hover:bg-gray-700 transition font-bold text-sm text-white">Đóng cửa sổ</button>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = '/api'; 
+        let currentPoptPrice = 0.10;
+
+        async function fetchStats() {
+            try {
+                const res = await fetch(`${API_URL}/explore/stats`);
+                if(!res.ok) return;
+                const data = await res.json();
+                
+                document.getElementById('stat-block').innerText = parseInt(data.latestBlock).toLocaleString('vi-VN');
+                document.getElementById('stat-txs').innerText = parseInt(data.totalTxs).toLocaleString('vi-VN');
+                document.getElementById('stat-users').innerText = parseInt(data.totalUsers).toLocaleString('vi-VN');
+                document.getElementById('stat-supply').innerText = parseFloat(data.poptSupply).toLocaleString('vi-VN') + ' POPT';
+                
+                const mcap = parseFloat(data.poptSupply) * currentPoptPrice;
+                document.getElementById('top-mcap').innerText = '$' + mcap.toLocaleString('en-US', {maximumFractionDigits: 0});
+            } catch (err) { console.error("Lỗi lấy thống kê", err); }
+        }
+
+        async function fetchLiveLists() {
+            try {
+                const res = await fetch(`${API_URL}/explore/latest`);
+                if(!res.ok) return;
+                const data = await res.json();
+
+                const blocksList = document.getElementById('blocks-list');
+                blocksList.innerHTML = data.blocks.map(b => `
+                    <div class="p-4 flex justify-between items-center hover:bg-white/5 transition">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 bg-gray-900 rounded-lg flex items-center justify-center border border-borderGray text-popOrange font-bold text-xs">Bk</div>
+                            <div>
+                                <p class="text-sm font-bold text-popOrange">#${b.id}</p>
+                                <p class="text-[10px] text-textGray">${new Date(b.created_at).toLocaleString()}</p>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <p class="text-xs font-medium text-white">Giao dịch: ${b.tx_count || 0}</p>
+                            <p class="text-[10px] text-popOrange">Đã xác nhận</p>
+                        </div>
+                    </div>
+                `).join('');
+
+                const txsList = document.getElementById('txs-list');
+                txsList.innerHTML = data.transactions.map(tx => `
+                    <div class="p-4 flex justify-between items-center hover:bg-white/5 transition">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 bg-gray-900 rounded-lg flex items-center justify-center border border-borderGray text-popOrange"><i class="fa-solid fa-file-invoice"></i></div>
+                            <div>
+                                <p class="text-sm font-bold text-white truncate w-32 md:w-48">${tx.id}</p>
+                                <p class="text-[10px] text-textGray">Từ: ${tx.user_address.substring(0,10)}...</p>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <p class="text-sm font-bold text-popOrange">+${tx.amount} ${tx.asset}</p>
+                            <p class="text-[10px] text-textGray">${new Date(tx.created_at).toLocaleTimeString()}</p>
+                        </div>
+                    </div>
+                `).join('');
+            } catch (err) { console.error("Lỗi lấy dữ liệu trực tiếp", err); }
+        }
+
+        async function handleSearch() {
+            const val = document.getElementById('search-input').value.trim();
+            if(!val) return;
+            try {
+                const res = await fetch(`${API_URL}/explore/search?q=${val}`);
+                const data = await res.json();
+                const modal = document.getElementById('searchModal');
+                const modalBody = document.getElementById('modal-body');
+                
+                if(!res.ok || data.error) {
+                    modalBody.innerHTML = `<div class="text-center text-red-500 font-bold">${data.error || 'Không tìm thấy kết quả'}</div>`;
+                } else if (data.type === 'user') {
+                    modalBody.innerHTML = `
+                        <div class="text-center mb-6">
+                            <div class="w-20 h-20 bg-popOrange/20 text-popOrange rounded-full flex items-center justify-center mx-auto mb-4 text-3xl border border-popOrange/30">
+                                <i class="fa-solid fa-wallet"></i>
+                            </div>
+                            <h3 class="text-xl font-bold text-white">Kết Quả Ví</h3>
+                        </div>
+                        <div class="space-y-4">
+                            <div class="bg-gray-900/50 p-4 rounded-xl border border-borderGray">
+                                <p class="text-[10px] text-textGray uppercase font-bold mb-1">Địa chỉ ví</p>
+                                <p class="text-sm text-white font-mono break-all">${data.wallet_address}</p>
+                            </div>
+                            <div class="grid grid-cols-2 gap-4">
+                                <div class="bg-gray-900/50 p-4 rounded-xl border border-borderGray">
+                                    <p class="text-[10px] text-textGray uppercase font-bold mb-1">Số dư USDT</p>
+                                    <p class="text-lg font-black text-popOrange">${parseFloat(data.usdt_balance).toLocaleString()} <span class="text-xs font-normal text-white">USDT</span></p>
+                                </div>
+                                <div class="bg-gray-900/50 p-4 rounded-xl border border-borderGray">
+                                    <p class="text-[10px] text-textGray uppercase font-bold mb-1">Số dư POPT</p>
+                                    <p class="text-lg font-black text-popOrange">${parseFloat(data.popt_balance).toLocaleString()} <span class="text-xs font-normal text-white">POPT</span></p>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                } else if (data.type === 'transaction') {
+                    modalBody.innerHTML = `
+                        <div class="text-center mb-6">
+                            <div class="w-20 h-20 bg-popOrange/20 text-popOrange rounded-full flex items-center justify-center mx-auto mb-4 text-3xl border border-popOrange/30">
+                                <i class="fa-solid fa-file-invoice"></i>
+                            </div>
+                            <h3 class="text-xl font-bold text-white">Chi Tiết Giao Dịch</h3>
+                        </div>
+                        <div class="space-y-4">
+                            <div class="bg-gray-900/50 p-4 rounded-xl border border-borderGray">
+                                <p class="text-[10px] text-textGray uppercase font-bold mb-1">Mã Giao Dịch (ID)</p>
+                                <p class="text-sm text-white font-mono">#${data.id}</p>
+                            </div>
+                            <div class="bg-gray-900/50 p-4 rounded-xl border border-borderGray">
+                                <p class="text-[10px] text-textGray uppercase font-bold mb-1">Tiêu đề</p>
+                                <p class="text-sm text-white">${data.title}</p>
+                            </div>
+                            <div class="grid grid-cols-2 gap-4">
+                                <div class="bg-gray-900/50 p-4 rounded-xl border border-borderGray">
+                                    <p class="text-[10px] text-textGray uppercase font-bold mb-1">Số lượng</p>
+                                    <p class="text-lg font-black text-popOrange">${parseFloat(data.amount).toLocaleString()} ${data.asset}</p>
+                                </div>
+                                <div class="bg-gray-900/50 p-4 rounded-xl border border-borderGray">
+                                    <p class="text-[10px] text-textGray uppercase font-bold mb-1">Thời gian</p>
+                                    <p class="text-xs text-white">${new Date(data.created_at).toLocaleString()}</p>
+                                </div>
+                            </div>
+                            <div class="bg-gray-900/50 p-4 rounded-xl border border-borderGray">
+                                <p class="text-[10px] text-textGray uppercase font-bold mb-1">Địa chỉ liên quan</p>
+                                <p class="text-xs text-white font-mono break-all">${data.user_address}</p>
+                            </div>
+                        </div>
+                    `;
+                }
+                modal.classList.remove('hidden');
+                setTimeout(() => {
+                    modal.classList.add('opacity-100');
+                    document.getElementById('searchModalBox').classList.remove('scale-90');
+                }, 10);
+            } catch (err) { alert("Lỗi tìm kiếm!"); }
+        }
+
+        function closeModal() {
+            const modal = document.getElementById('searchModal');
+            modal.classList.remove('opacity-100');
+            document.getElementById('searchModalBox').classList.add('scale-90');
+            setTimeout(() => modal.classList.add('hidden'), 300);
+        }
+
+        fetchStats();
+        fetchLiveLists();
+        setInterval(fetchLiveLists, 10000);
+    </script>
+</body>
+</html>
