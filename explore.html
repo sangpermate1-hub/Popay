@@ -3,289 +3,399 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Trình Khám Phá Mạng Lưới PoPay Native Chain | PoPayScan</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700;900&display=swap" rel="stylesheet">
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: { 
-                    colors: { popOrange: '#ff5f1f', darkBg: '#060606', cardBg: '#111111', borderGray: '#1f1f1f', textGray: '#8c8c8c' },
-                    fontFamily: { sans: ['Roboto', 'sans-serif'] }
-                }
-            }
-        }
-    </script>
+    <title>MySPay Explorer - Trình khám phá hệ thống</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
-        body { background-color: #060606; color: #f8f9fa; }
-        .hero-section { background-image: radial-gradient(circle at 50% -20%, #2a2a2a 0%, #060606 100%); border-bottom: 1px solid #1f1f1f; }
-        .table-custom tr { border-bottom: 1px solid #1a1a1a; transition: 0.2s; }
-        .table-custom tr:hover { background-color: rgba(255, 95, 31, 0.02); }
-        .popt-icon { background: linear-gradient(135deg, #ff5f1f 0%, #ff8c5a 100%); }
-        /* Thống nhất style scrollbar */
-        ::-webkit-scrollbar { width: 6px; height: 6px; }
-        ::-webkit-scrollbar-track { background: #060606; }
-        ::-webkit-scrollbar-thumb { background: #2a2a2a; border-radius: 3px; }
+        :root {
+            --primary-color: #007bff;
+            --primary-dark: #0056b3;
+            --bg-light: #f8f9fa;
+            --card-bg: #ffffff;
+            --text-main: #343a40;
+            --text-muted: #6c757d;
+            --border-color: #e9ecef;
+            --success: #28a745;
+            --danger: #dc3545;
+            --warning: #f39c12;
+            --link-color: #3498db;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+
+        body { background-color: var(--bg-light); color: var(--text-main); font-size: 14px; }
+
+        /* Navbar */
+        .navbar { background: var(--card-bg); padding: 15px 5%; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 5px rgba(0,0,0,0.02); }
+        .brand { display: flex; align-items: center; gap: 10px; font-size: 1.2rem; font-weight: bold; color: var(--text-main); text-decoration: none; }
+        .brand img { width: 30px; height: 30px; border-radius: 50%; }
+        .nav-links { display: flex; gap: 20px; }
+        .nav-links a { text-decoration: none; color: var(--text-muted); font-weight: 500; transition: 0.2s; }
+        .nav-links a:hover { color: var(--primary-color); }
+
+        /* Hero Search Section */
+        .hero { background: var(--text-main); color: white; padding: 40px 5%; text-align: center; background-image: linear-gradient(135deg, #1e293b, #0f172a); }
+        .hero h1 { font-size: 1.8rem; margin-bottom: 15px; font-weight: 600; }
+        .search-box { max-width: 600px; margin: 0 auto; display: flex; background: white; border-radius: 8px; overflow: hidden; padding: 5px; }
+        .search-select { border: none; outline: none; padding: 10px; background: transparent; border-right: 1px solid var(--border-color); color: var(--text-main); font-weight: 500; }
+        .search-input { flex: 1; border: none; outline: none; padding: 10px 15px; font-size: 1rem; }
+        .search-btn { background: var(--primary-color); color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-weight: bold; transition: 0.2s; }
+        .search-btn:hover { background: var(--primary-dark); }
+
+        /* Main Content */
+        .container { padding: 30px 5%; max-width: 1400px; margin: 0 auto; }
+
+        /* Stats Grid */
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-bottom: 30px; }
+        .stat-card { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 10px; padding: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.02); display: flex; align-items: center; gap: 15px; }
+        .stat-icon { width: 45px; height: 45px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; }
+        .stat-info h4 { font-size: 0.85rem; color: var(--text-muted); text-transform: uppercase; margin-bottom: 5px; }
+        .stat-info .val { font-size: 1.2rem; font-weight: bold; color: var(--text-main); }
+        .stat-info .sub-val { font-size: 0.8rem; color: var(--success); }
+
+        .icon-blue { background: #e3f2fd; color: var(--primary-color); }
+        .icon-green { background: #e8f5e9; color: var(--success); }
+        .icon-purple { background: #f3e5f5; color: #8e44ad; }
+        .icon-orange { background: #fff3e0; color: var(--warning); }
+
+        /* Tokens List */
+        .tokens-panel { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 10px; padding: 20px; margin-bottom: 30px; box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
+        .panel-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; border-bottom: 1px solid var(--border-color); padding-bottom: 10px; }
+        .panel-title { font-size: 1.1rem; font-weight: 600; display: flex; align-items: center; gap: 8px; }
+        
+        .token-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; }
+        .token-item { border: 1px solid var(--border-color); border-radius: 8px; padding: 12px; text-align: center; }
+        .token-item img { width: 25px; height: 25px; margin-bottom: 5px; border-radius: 50%; }
+        .token-name { font-weight: bold; color: var(--text-main); font-size: 0.9rem; }
+        .token-supply { color: var(--text-muted); font-size: 0.85rem; margin-top: 5px; }
+
+        /* Two Columns: Blocks & Txns */
+        .row { display: flex; gap: 20px; flex-wrap: wrap; }
+        .col-half { flex: 1; min-width: 300px; background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.02); overflow: hidden; }
+        
+        .list-group { display: flex; flex-direction: column; }
+        .list-item { display: flex; justify-content: space-between; padding: 15px 20px; border-bottom: 1px solid var(--border-color); transition: 0.2s; }
+        .list-item:hover { background: var(--bg-light); }
+        .list-item:last-child { border-bottom: none; }
+        
+        .item-left { display: flex; align-items: center; gap: 15px; }
+        .item-icon-box { background: var(--bg-light); border: 1px solid var(--border-color); padding: 10px; border-radius: 8px; text-align: center; min-width: 50px; }
+        .item-icon-box i { color: var(--text-muted); }
+        .item-title { font-weight: 600; color: var(--link-color); cursor: pointer; text-decoration: none; }
+        .item-title:hover { text-decoration: underline; }
+        .item-desc { font-size: 0.8rem; color: var(--text-muted); margin-top: 3px; }
+        
+        .item-right { text-align: right; }
+        .tx-badge { display: inline-block; padding: 3px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: 600; margin-bottom: 5px; }
+        .badge-transfer { background: #e3f2fd; color: #0d47a1; border: 1px solid #bbdefb; }
+        .badge-stake { background: #f3e5f5; color: #4a148c; border: 1px solid #e1bee7; }
+        .badge-mint { background: #e8f5e9; color: #1b5e20; border: 1px solid #c8e6c9; }
+        
+        .tx-amount { font-weight: bold; font-size: 0.9rem; }
+        .panel-footer { padding: 12px; text-align: center; background: var(--bg-light); border-top: 1px solid var(--border-color); }
+        .panel-footer a { color: var(--text-main); text-decoration: none; font-weight: 500; font-size: 0.9rem; }
+
+        /* Search Modal Overlay */
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); display: none; justify-content: center; align-items: center; z-index: 1000; }
+        .modal-content { background: var(--card-bg); width: 600px; max-width: 90%; border-radius: 10px; padding: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid var(--border-color); padding-bottom: 10px; }
+        .close-btn { background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--text-muted); }
+
+        .search-result-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px dashed var(--border-color); }
+        .search-result-label { color: var(--text-muted); font-weight: 600; }
+        .search-result-value { font-weight: bold; color: var(--text-main); word-break: break-all; text-align: right; max-width: 70%; }
+
+        @media (max-width: 768px) {
+            .search-box { flex-direction: column; background: transparent; }
+            .search-select, .search-input, .search-btn { border-radius: 5px; margin-bottom: 10px; background: white; width: 100%; }
+        }
     </style>
 </head>
-<body class="font-sans antialiased">
+<body>
 
-    <div class="border-b border-borderGray py-2 text-[11px] text-textGray px-4">
-        <div class="max-w-[1400px] mx-auto flex justify-between items-center">
-            <div class="flex gap-4 items-center">
-                <span>Giá POPT: <span class="text-popOrange font-medium" id="top-price">$0.10</span></span>
-                <span>Vốn hóa: <span class="text-white" id="top-mcap">$0</span></span>
-            </div>
-            <div class="flex gap-3 items-center">
-                <i class="fa-solid fa-gas-pump"></i> <span>Phí Gas: <span class="text-popOrange">0 Gwei</span></span>
-                <span class="bg-popOrange/10 text-popOrange px-2 py-0.5 rounded font-bold uppercase text-[9px]">PoPay Native Chain</span>
-            </div>
-        </div>
-    </div>
-
-    <nav class="bg-cardBg border-b border-borderGray sticky top-0 z-50 px-4 py-3">
-        <div class="max-w-[1400px] mx-auto flex justify-between items-center">
-            <div class="flex items-center gap-3 cursor-pointer" onclick="window.location.href='index.html'">
-                <img src="logo.png" class="w-10 h-10 object-cover rounded-xl border border-borderGray" onerror="this.src='https://via.placeholder.com/40/ff5f1f/ffffff?text=P'">
-                <div class="leading-none">
-                    <h1 class="text-2xl font-black tracking-tighter text-white">PoPay<span class="text-textGray">Scan</span></h1>
-                    <span class="text-[10px] text-textGray font-medium tracking-widest uppercase">Trình khám phá Native Chain</span>
-                </div>
-            </div>
-            <div class="hidden md:flex gap-7 text-sm font-medium text-gray-300">
-                <a href="index.html" class="hover:text-popOrange">Trang Chủ</a>
-                <a href="explore.html" class="text-popOrange">Mạng Lưới</a>
-                <a href="trade.html" class="hover:text-popOrange">Giao Dịch</a>
-                <a href="settings.html" class="hover:text-popOrange">Cài Đặt</a>
-            </div>
+    <nav class="navbar">
+        <a href="index.html" class="brand">
+            <img src="logo.png" alt="Logo" onerror="this.src='https://via.placeholder.com/30/007bff/ffffff?text=M'">
+            MySPay Explorer
+        </a>
+        <div class="nav-links">
+            <a href="index.html">Về Ví</a>
+            <a href="trade.html">P2P</a>
         </div>
     </nav>
 
-    <div class="hero-section py-16 px-4">
-        <div class="max-w-3xl mx-auto text-center">
-            <h2 class="text-2xl md:text-3xl font-bold text-white mb-2">Trình Khám Phá PoPay Native Chain</h2>
-            <p class="text-textGray text-sm mb-8">Tra cứu mã giao dịch, địa chỉ ví, khối và các thông tin khác trên mạng lưới Native</p>
-            
-            <div class="flex bg-cardBg border border-gray-700 rounded-2xl overflow-hidden p-1.5 shadow-2xl focus-within:border-popOrange transition">
-                <input type="text" id="search-input" placeholder="Tìm kiếm theo địa chỉ ví POPT... (Ví dụ: POPT...)" class="w-full bg-transparent px-5 py-3.5 text-base outline-none text-white placeholder:text-gray-600">
-                <button onclick="handleSearch()" class="bg-popOrange text-black font-bold px-8 rounded-xl hover:bg-orange-600 transition">
-                    <i class="fa-solid fa-magnifying-glass text-lg"></i>
-                </button>
-            </div>
+    <div class="hero">
+        <h1>MySPay Smart Chain Explorer</h1>
+        <div class="search-box">
+            <select class="search-select" id="search-type">
+                <option value="address">Địa chỉ Ví</option>
+                <option value="tx">Txn Hash</option>
+            </select>
+            <input type="text" class="search-input" id="search-input" placeholder="Tìm kiếm theo địa chỉ ví bắt đầu bằng MSPW-0x... hoặc mã giao dịch">
+            <button class="search-btn" onclick="handleSearch()"><i class="fas fa-search"></i> Tìm kiếm</button>
         </div>
     </div>
 
-    <main class="max-w-[1400px] mx-auto p-4 md:p-6 -mt-10 relative z-10">
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
-            <div class="bg-cardBg p-6 rounded-2xl border border-borderGray shadow-xl flex items-center gap-4">
-                <div class="w-12 h-12 rounded-full bg-gray-900 flex items-center justify-center text-popOrange text-xl border border-borderGray"><i class="fa-solid fa-globe"></i></div>
-                <div>
-                    <p class="text-[11px] text-textGray uppercase font-bold tracking-wider mb-1">Mã Khối Mới Nhất</p>
-                    <h3 class="text-2xl font-black text-white" id="stat-block">0</h3>
+    <div class="container">
+        
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-icon icon-blue"><i class="fas fa-coins"></i></div>
+                <div class="stat-info">
+                    <h4>Giá MSPW</h4>
+                    <div class="val" id="mspw-price">$0.0000</div>
+                    <div class="sub-val">Cập nhật mỗi 60 giây</div>
                 </div>
             </div>
-            <div class="bg-cardBg p-6 rounded-2xl border border-borderGray shadow-xl flex items-center gap-4">
-                <div class="w-12 h-12 rounded-full bg-gray-900 flex items-center justify-center text-popOrange text-xl border border-borderGray"><i class="fa-solid fa-right-left"></i></div>
-                <div>
-                    <p class="text-[11px] text-textGray uppercase font-bold tracking-wider mb-1">Tổng Giao Dịch</p>
-                    <h3 class="text-2xl font-black text-white" id="stat-txs">0</h3>
+            <div class="stat-card">
+                <div class="stat-icon icon-green"><i class="fas fa-wallet"></i></div>
+                <div class="stat-info">
+                    <h4>Tổng số Ví trên Mạng lưới</h4>
+                    <div class="val" id="total-wallets">0</div>
+                    <div class="sub-val" style="color: var(--text-muted);">Đã định danh</div>
                 </div>
             </div>
-            <div class="bg-cardBg p-6 rounded-2xl border border-borderGray shadow-xl flex items-center gap-4">
-                <div class="w-12 h-12 rounded-full bg-gray-900 flex items-center justify-center text-popOrange text-xl border border-borderGray"><i class="fa-solid fa-users"></i></div>
-                <div>
-                    <p class="text-[11px] text-textGray uppercase font-bold tracking-wider mb-1">Thành Viên (Holders)</p>
-                    <h3 class="text-2xl font-black text-white" id="stat-users">0</h3>
-                </div>
-            </div>
-            <div class="bg-cardBg p-6 rounded-2xl border border-borderGray shadow-xl flex items-center gap-4">
-                <div class="w-12 h-12 rounded-full popt-icon flex items-center justify-center text-black text-2xl font-black shadow-[0_0_15px_rgba(255,95,31,0.5)]">P</div>
-                <div>
-                    <p class="text-[11px] text-textGray uppercase font-bold tracking-wider mb-1">Tổng Cung POPT</p>
-                    <h3 class="text-2xl font-black text-white" id="stat-supply">0</h3>
+            <div class="stat-card">
+                <div class="stat-icon icon-purple"><i class="fas fa-exchange-alt"></i></div>
+                <div class="stat-info">
+                    <h4>Tổng số Giao dịch (Txns)</h4>
+                    <div class="val" id="total-txns">0</div>
+                    <div class="sub-val" style="color: var(--text-muted);">MSP Smart Chain</div>
                 </div>
             </div>
         </div>
 
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-10">
-            <div class="bg-cardBg border border-borderGray rounded-2xl overflow-hidden shadow-sm">
-                <div class="p-4 border-b border-borderGray flex justify-between items-center bg-gray-900/30">
-                    <h3 class="font-bold text-sm text-white">Khối Mới Nhất</h3>
-                </div>
-                <div id="blocks-list" class="divide-y divide-borderGray/50 min-h-[500px]">
-                    <div class="p-10 text-center text-textGray text-sm">Đang tải dữ liệu mạng lưới...</div>
-                </div>
+        <div class="tokens-panel">
+            <div class="panel-header">
+                <div class="panel-title"><i class="fas fa-cubes"></i> Tổng cung Tài sản (Total Supply)</div>
             </div>
-
-            <div class="bg-cardBg border border-borderGray rounded-2xl overflow-hidden shadow-sm">
-                <div class="p-4 border-b border-borderGray flex justify-between items-center bg-gray-900/30">
-                    <h3 class="font-bold text-sm text-white">Giao Dịch Mới Nhất</h3>
-                </div>
-                <div id="txs-list" class="divide-y divide-borderGray/50 min-h-[500px]">
-                    <div class="p-10 text-center text-textGray text-sm">Đang tải giao dịch...</div>
-                </div>
+            <div class="token-grid" id="token-supply-container">
+                <div style="text-align: center; width: 100%; color: var(--text-muted);"><i class="fas fa-spinner fa-spin"></i> Đang tải dữ liệu cung cấp...</div>
             </div>
         </div>
-    </main>
 
-    <div id="searchModal" class="fixed inset-0 bg-black/95 hidden flex justify-center items-center z-[100] p-4 backdrop-blur-md transition-opacity duration-300 opacity-0">
-        <div class="bg-cardBg w-full max-w-xl rounded-2xl border border-popOrange/30 p-8 shadow-[0_0_60px_rgba(255,95,31,0.2)] transform scale-90 transition-transform duration-300" id="searchModalBox">
-            <div id="modal-body"></div>
-            <button onclick="closeModal()" class="w-full mt-8 bg-gray-800 border border-gray-700 py-3.5 rounded-xl hover:bg-gray-700 transition font-bold text-sm text-white">Đóng cửa sổ</button>
+        <div class="row">
+            
+            <div class="col-half">
+                <div class="panel-header" style="padding: 15px 20px; margin-bottom: 0;">
+                    <div class="panel-title">Hoạt động khởi tạo mới</div>
+                </div>
+                <div class="list-group" id="latest-blocks-container">
+                    <div style="padding: 20px; text-align: center; color: var(--text-muted);"><i class="fas fa-spinner fa-spin"></i> Đang tải dữ liệu...</div>
+                </div>
+                <div class="panel-footer">
+                    <a href="#">Xem tất cả địa chỉ <i class="fas fa-arrow-right"></i></a>
+                </div>
+            </div>
+
+            <div class="col-half">
+                <div class="panel-header" style="padding: 15px 20px; margin-bottom: 0;">
+                    <div class="panel-title">Giao dịch gần nhất (Txns)</div>
+                </div>
+                <div class="list-group" id="latest-txns-container">
+                    <div style="padding: 20px; text-align: center; color: var(--text-muted);"><i class="fas fa-spinner fa-spin"></i> Đang tải dữ liệu...</div>
+                </div>
+                <div class="panel-footer">
+                    <a href="#">Xem tất cả giao dịch <i class="fas fa-arrow-right"></i></a>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="searchResultModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="search-title">Kết quả tìm kiếm</h3>
+                <button class="close-btn" onclick="closeModal('searchResultModal')">&times;</button>
+            </div>
+            <div id="search-content">
+                </div>
         </div>
     </div>
 
     <script>
-        const API_URL = '/api'; 
-        let currentPoptPrice = 0.10;
+        const API_BASE_URL = 'http://localhost:3000/api/explorer';
 
-        async function fetchStats() {
+        // --- 1. WEBSOCKET CẬP NHẬT GIÁ MSPW (TỪ XRP BINANCE) ---
+        const ws = new WebSocket('wss://stream.binance.com:9443/ws/xrpusdt@ticker');
+        ws.onmessage = function(event) {
+            const data = JSON.parse(event.data);
+            document.getElementById('mspw-price').innerText = `$${parseFloat(data.c).toFixed(4)}`;
+        };
+
+        // --- 2. LẤY DỮ LIỆU THỐNG KÊ TỔNG QUAN TỪ SERVER ---
+        async function fetchSystemStats() {
             try {
-                const res = await fetch(`${API_URL}/explore/stats`);
-                if(!res.ok) return;
+                // Giả định API trả về thống kê tổng hợp của toàn hệ thống
+                const res = await fetch(`${API_BASE_URL}/stats`);
+                if (!res.ok) throw new Error('Cannot fetch stats');
                 const data = await res.json();
                 
-                document.getElementById('stat-block').innerText = parseInt(data.latestBlock).toLocaleString('vi-VN');
-                document.getElementById('stat-txs').innerText = parseInt(data.totalTxs).toLocaleString('vi-VN');
-                document.getElementById('stat-users').innerText = parseInt(data.totalUsers).toLocaleString('vi-VN');
-                document.getElementById('stat-supply').innerText = parseFloat(data.poptSupply).toLocaleString('vi-VN') + ' POPT';
-                
-                const mcap = parseFloat(data.poptSupply) * currentPoptPrice;
-                document.getElementById('top-mcap').innerText = '$' + mcap.toLocaleString('en-US', {maximumFractionDigits: 0});
-            } catch (err) { console.error("Lỗi lấy thống kê", err); }
-        }
+                document.getElementById('total-wallets').innerText = data.total_wallets.toLocaleString();
+                document.getElementById('total-txns').innerText = data.total_transactions.toLocaleString();
 
-        async function fetchLiveLists() {
-            try {
-                const res = await fetch(`${API_URL}/explore/latest`);
-                if(!res.ok) return;
-                const data = await res.json();
+                // Render Token Supply
+                const tokenContainer = document.getElementById('token-supply-container');
+                tokenContainer.innerHTML = '';
+                const tokens = [
+                    { symbol: 'MSPW', supply: data.supply_mspw, img: 'logo.png' },
+                    { symbol: 'USDT', supply: data.supply_usdt, img: 'https://cryptologos.cc/logos/tether-usdt-logo.png' },
+                    { symbol: 'BTC', supply: data.supply_btc, img: 'https://cryptologos.cc/logos/bitcoin-btc-logo.png' },
+                    { symbol: 'ETH', supply: data.supply_eth, img: 'https://cryptologos.cc/logos/ethereum-eth-logo.png' },
+                    { symbol: 'VNDW', supply: data.supply_vndw, img: 'https://via.placeholder.com/40/e74c3c/ffffff?text=V' }
+                ];
 
-                const blocksList = document.getElementById('blocks-list');
-                blocksList.innerHTML = data.blocks.map(b => `
-                    <div class="p-4 flex justify-between items-center hover:bg-white/5 transition">
-                        <div class="flex items-center gap-3">
-                            <div class="w-10 h-10 bg-gray-900 rounded-lg flex items-center justify-center border border-borderGray text-popOrange font-bold text-xs">Bk</div>
-                            <div>
-                                <p class="text-sm font-bold text-popOrange">#${b.id}</p>
-                                <p class="text-[10px] text-textGray">${new Date(b.created_at).toLocaleString()}</p>
-                            </div>
-                        </div>
-                        <div class="text-right">
-                            <p class="text-xs font-medium text-white">Giao dịch: ${b.tx_count || 0}</p>
-                            <p class="text-[10px] text-popOrange">Đã xác nhận</p>
-                        </div>
-                    </div>
-                `).join('');
-
-                const txsList = document.getElementById('txs-list');
-                txsList.innerHTML = data.transactions.map(tx => `
-                    <div class="p-4 flex justify-between items-center hover:bg-white/5 transition">
-                        <div class="flex items-center gap-3">
-                            <div class="w-10 h-10 bg-gray-900 rounded-lg flex items-center justify-center border border-borderGray text-popOrange"><i class="fa-solid fa-file-invoice"></i></div>
-                            <div>
-                                <p class="text-sm font-bold text-white truncate w-32 md:w-48">${tx.id}</p>
-                                <p class="text-[10px] text-textGray">Từ: ${tx.user_address.substring(0,10)}...</p>
-                            </div>
-                        </div>
-                        <div class="text-right">
-                            <p class="text-sm font-bold text-popOrange">+${tx.amount} ${tx.asset}</p>
-                            <p class="text-[10px] text-textGray">${new Date(tx.created_at).toLocaleTimeString()}</p>
-                        </div>
-                    </div>
-                `).join('');
-            } catch (err) { console.error("Lỗi lấy dữ liệu trực tiếp", err); }
-        }
-
-        async function handleSearch() {
-            const val = document.getElementById('search-input').value.trim();
-            if(!val) return;
-            try {
-                const res = await fetch(`${API_URL}/explore/search?q=${val}`);
-                const data = await res.json();
-                const modal = document.getElementById('searchModal');
-                const modalBody = document.getElementById('modal-body');
-                
-                if(!res.ok || data.error) {
-                    modalBody.innerHTML = `<div class="text-center text-red-500 font-bold">${data.error || 'Không tìm thấy kết quả'}</div>`;
-                } else if (data.type === 'user') {
-                    modalBody.innerHTML = `
-                        <div class="text-center mb-6">
-                            <div class="w-20 h-20 bg-popOrange/20 text-popOrange rounded-full flex items-center justify-center mx-auto mb-4 text-3xl border border-popOrange/30">
-                                <i class="fa-solid fa-wallet"></i>
-                            </div>
-                            <h3 class="text-xl font-bold text-white">Kết Quả Ví</h3>
-                        </div>
-                        <div class="space-y-4">
-                            <div class="bg-gray-900/50 p-4 rounded-xl border border-borderGray">
-                                <p class="text-[10px] text-textGray uppercase font-bold mb-1">Địa chỉ ví</p>
-                                <p class="text-sm text-white font-mono break-all">${data.wallet_address}</p>
-                            </div>
-                            <div class="grid grid-cols-2 gap-4">
-                                <div class="bg-gray-900/50 p-4 rounded-xl border border-borderGray">
-                                    <p class="text-[10px] text-textGray uppercase font-bold mb-1">Số dư USDT</p>
-                                    <p class="text-lg font-black text-popOrange">${parseFloat(data.usdt_balance).toLocaleString()} <span class="text-xs font-normal text-white">USDT</span></p>
-                                </div>
-                                <div class="bg-gray-900/50 p-4 rounded-xl border border-borderGray">
-                                    <p class="text-[10px] text-textGray uppercase font-bold mb-1">Số dư POPT</p>
-                                    <p class="text-lg font-black text-popOrange">${parseFloat(data.popt_balance).toLocaleString()} <span class="text-xs font-normal text-white">POPT</span></p>
-                                </div>
-                            </div>
+                tokens.forEach(token => {
+                    tokenContainer.innerHTML += `
+                        <div class="token-item">
+                            <img src="${token.img}" onerror="this.src='https://via.placeholder.com/40/007bff/ffffff?text=${token.symbol[0]}'">
+                            <div class="token-name">${token.symbol}</div>
+                            <div class="token-supply">${parseFloat(token.supply).toLocaleString()}</div>
                         </div>
                     `;
-                } else if (data.type === 'transaction') {
-                    modalBody.innerHTML = `
-                        <div class="text-center mb-6">
-                            <div class="w-20 h-20 bg-popOrange/20 text-popOrange rounded-full flex items-center justify-center mx-auto mb-4 text-3xl border border-popOrange/30">
-                                <i class="fa-solid fa-file-invoice"></i>
+                });
+
+            } catch (error) {
+                // Xử lý khi Backend chưa chạy (Hiển thị trống)
+                document.getElementById('total-wallets').innerText = '0';
+                document.getElementById('total-txns').innerText = '0';
+                document.getElementById('token-supply-container').innerHTML = '<div style="color:var(--danger); width: 100%; text-align: center;">Mất kết nối với Database Neon.tech</div>';
+            }
+        }
+
+        // --- 3. LẤY CÁC GIAO DỊCH VÀ ĐỊA CHỈ MỚI NHẤT ---
+        async function fetchLatestData() {
+            try {
+                // Lấy 5 ví/hoạt động sinh coin mới nhất
+                const resBlocks = await fetch(`${API_BASE_URL}/latest-mints`);
+                const mintsData = await resBlocks.json();
+                renderLatestMints(mintsData);
+
+                // Lấy 5 giao dịch gần nhất
+                const resTxns = await fetch(`${API_BASE_URL}/latest-txns`);
+                const txnsData = await resTxns.json();
+                renderLatestTxns(txnsData);
+
+            } catch (error) {
+                document.getElementById('latest-blocks-container').innerHTML = '<div style="padding: 20px; text-align: center; color: var(--danger);">Không thể kết nối CSDL</div>';
+                document.getElementById('latest-txns-container').innerHTML = '<div style="padding: 20px; text-align: center; color: var(--danger);">Không thể kết nối CSDL</div>';
+            }
+        }
+
+        function renderLatestMints(data) {
+            const container = document.getElementById('latest-blocks-container');
+            container.innerHTML = '';
+            if(data.length === 0) return container.innerHTML = '<div style="padding:20px; text-align:center;">Chưa có dữ liệu</div>';
+            
+            data.forEach(item => {
+                const shortAddr = item.wallet.substring(0, 15) + '...';
+                const timeStr = new Date(item.created_at).toLocaleTimeString('vi-VN');
+                container.innerHTML += `
+                    <div class="list-item">
+                        <div class="item-left">
+                            <div class="item-icon-box"><i class="fas fa-cube"></i></div>
+                            <div>
+                                <a href="javascript:void(0)" onclick="searchDirectly('address', '${item.wallet}')" class="item-title">${shortAddr}</a>
+                                <div class="item-desc">Đã tham gia lúc ${timeStr}</div>
                             </div>
-                            <h3 class="text-xl font-bold text-white">Chi Tiết Giao Dịch</h3>
                         </div>
-                        <div class="space-y-4">
-                            <div class="bg-gray-900/50 p-4 rounded-xl border border-borderGray">
-                                <p class="text-[10px] text-textGray uppercase font-bold mb-1">Mã Giao Dịch (ID)</p>
-                                <p class="text-sm text-white font-mono">#${data.id}</p>
-                            </div>
-                            <div class="bg-gray-900/50 p-4 rounded-xl border border-borderGray">
-                                <p class="text-[10px] text-textGray uppercase font-bold mb-1">Tiêu đề</p>
-                                <p class="text-sm text-white">${data.title}</p>
-                            </div>
-                            <div class="grid grid-cols-2 gap-4">
-                                <div class="bg-gray-900/50 p-4 rounded-xl border border-borderGray">
-                                    <p class="text-[10px] text-textGray uppercase font-bold mb-1">Số lượng</p>
-                                    <p class="text-lg font-black text-popOrange">${parseFloat(data.amount).toLocaleString()} ${data.asset}</p>
-                                </div>
-                                <div class="bg-gray-900/50 p-4 rounded-xl border border-borderGray">
-                                    <p class="text-[10px] text-textGray uppercase font-bold mb-1">Thời gian</p>
-                                    <p class="text-xs text-white">${new Date(data.created_at).toLocaleString()}</p>
-                                </div>
-                            </div>
-                            <div class="bg-gray-900/50 p-4 rounded-xl border border-borderGray">
-                                <p class="text-[10px] text-textGray uppercase font-bold mb-1">Địa chỉ liên quan</p>
-                                <p class="text-xs text-white font-mono break-all">${data.user_address}</p>
+                        <div class="item-right">
+                            <div class="tx-badge badge-mint">Tạo Ví Mới</div>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        function renderLatestTxns(data) {
+            const container = document.getElementById('latest-txns-container');
+            container.innerHTML = '';
+            if(data.length === 0) return container.innerHTML = '<div style="padding:20px; text-align:center;">Chưa có dữ liệu</div>';
+
+            data.forEach(item => {
+                const shortHash = item.tx_hash.substring(0, 15) + '...';
+                const timeStr = new Date(item.created_at).toLocaleTimeString('vi-VN');
+                
+                let badgeClass = 'badge-transfer';
+                let typeName = 'Chuyển tiền';
+                if(item.type === 'stake') { badgeClass = 'badge-stake'; typeName = 'Staking'; }
+                if(item.type === 'p2p') { badgeClass = 'badge-mint'; typeName = 'P2P Trade'; }
+
+                container.innerHTML += `
+                    <div class="list-item">
+                        <div class="item-left">
+                            <div class="item-icon-box"><i class="fas fa-file-invoice-dollar"></i></div>
+                            <div>
+                                <a href="javascript:void(0)" onclick="searchDirectly('tx', '${item.tx_hash}')" class="item-title">${shortHash}</a>
+                                <div class="item-desc">${timeStr}</div>
                             </div>
                         </div>
+                        <div class="item-right">
+                            <div class="tx-badge ${badgeClass}">${typeName}</div>
+                            <div class="tx-amount">${item.amount} ${item.currency}</div>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        // --- 4. TÍNH NĂNG TÌM KIẾM ---
+        async function handleSearch() {
+            const type = document.getElementById('search-type').value;
+            const query = document.getElementById('search-input').value.trim();
+            if(!query) return;
+
+            searchDirectly(type, query);
+        }
+
+        async function searchDirectly(type, query) {
+            try {
+                // Gọi API tìm kiếm
+                const res = await fetch(`${API_BASE_URL}/search?type=${type}&q=${query}`);
+                const data = await res.json();
+
+                if(!res.ok || !data) {
+                    throw new Error('Không tìm thấy thông tin');
+                }
+
+                const contentBox = document.getElementById('search-content');
+                document.getElementById('search-title').innerText = type === 'address' ? 'Thông tin Ví' : 'Chi tiết Giao dịch';
+                
+                if (type === 'address') {
+                    contentBox.innerHTML = `
+                        <div class="search-result-row"><span class="search-result-label">Địa chỉ:</span><span class="search-result-value">${data.wallet_address}</span></div>
+                        <div class="search-result-row"><span class="search-result-label">Ngày tạo:</span><span class="search-result-value">${new Date(data.created_at).toLocaleString('vi-VN')}</span></div>
+                        <div class="search-result-row"><span class="search-result-label">Số dư USDT:</span><span class="search-result-value">${data.balance_usdt || 0}</span></div>
+                        <div class="search-result-row"><span class="search-result-label">Số dư MSPW:</span><span class="search-result-value">${data.balance_mspw || 0}</span></div>
+                        <div class="search-result-row"><span class="search-result-label">Trạng thái KYC:</span><span class="search-result-value" style="color:var(--success)">${data.kyc_status === 'approved' ? 'Đã duyệt' : 'Chưa xác minh'}</span></div>
+                    `;
+                } else {
+                    contentBox.innerHTML = `
+                        <div class="search-result-row"><span class="search-result-label">Mã Txn Hash:</span><span class="search-result-value">${data.tx_hash}</span></div>
+                        <div class="search-result-row"><span class="search-result-label">Loại Giao dịch:</span><span class="search-result-value">${data.type}</span></div>
+                        <div class="search-result-row"><span class="search-result-label">Người gửi:</span><span class="search-result-value">${data.from_wallet || 'Hệ thống'}</span></div>
+                        <div class="search-result-row"><span class="search-result-label">Người nhận:</span><span class="search-result-value">${data.to_wallet}</span></div>
+                        <div class="search-result-row"><span class="search-result-label">Số lượng:</span><span class="search-result-value" style="color:var(--success)">+${data.amount} ${data.currency}</span></div>
+                        <div class="search-result-row"><span class="search-result-label">Thời gian:</span><span class="search-result-value">${new Date(data.created_at).toLocaleString('vi-VN')}</span></div>
                     `;
                 }
-                modal.classList.remove('hidden');
-                setTimeout(() => {
-                    modal.classList.add('opacity-100');
-                    document.getElementById('searchModalBox').classList.remove('scale-90');
-                }, 10);
-            } catch (err) { alert("Lỗi tìm kiếm!"); }
+
+                openModal('searchResultModal');
+            } catch (error) {
+                alert('Không tìm thấy dữ liệu trên Blockchain hoặc Server đang lỗi.');
+            }
         }
 
-        function closeModal() {
-            const modal = document.getElementById('searchModal');
-            modal.classList.remove('opacity-100');
-            document.getElementById('searchModalBox').classList.add('scale-90');
-            setTimeout(() => modal.classList.add('hidden'), 300);
-        }
+        // Modal Utils
+        function openModal(id) { document.getElementById(id).style.display = 'flex'; }
+        function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+        window.onclick = function(event) { if (event.target.classList.contains('modal-overlay')) event.target.style.display = 'none'; }
 
-        fetchStats();
-        fetchLiveLists();
-        setInterval(fetchLiveLists, 10000);
+        // Init
+        window.onload = () => {
+            fetchSystemStats();
+            fetchLatestData();
+        };
     </script>
 </body>
 </html>
