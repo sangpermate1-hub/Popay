@@ -6,16 +6,18 @@ const bcrypt = require('bcrypt');
 const path = require('path');
 
 const app = express();
+
+// --- 1. CẤU HÌNH HỆ THỐNG ---
 app.use(cors({ origin: '*' }));
 app.use(express.json());
-app.use(express.static(__dirname));
+app.use(express.static(__dirname)); // Phục vụ HTML và logo.png trực tiếp
 
 const pool = new Pool({
     connectionString: process.env.DATABASE_URL,
     ssl: { rejectUnauthorized: false }
 });
 
-// --- CORE: TÍNH SỐ DƯ (FIX TRIỆT ĐỂ LỖI NaN) ---
+// --- 2. HÀM CORE: TÍNH TOÁN SỐ DƯ (CHỐNG NaN) ---
 async function getBalance(wallet, currency) {
     try {
         const query = `
@@ -27,7 +29,9 @@ async function getBalance(wallet, currency) {
         `;
         const res = await pool.query(query, [wallet, currency]);
         return parseFloat(res.rows[0].total || 0);
-    } catch (e) { return 0; }
+    } catch (e) {
+        return 0;
+    }
 }
 
 async function recordTx(client, type, from, to, amount, currency) {
@@ -39,12 +43,15 @@ async function recordTx(client, type, from, to, amount, currency) {
     return hash;
 }
 
-// --- 1. AUTH & USER ---
+// --- 3. ĐƯỜNG DẪN GIAO DIỆN MẶC ĐỊNH ---
+app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'login.html')));
+
+// --- 4. MODULE XÁC THỰC (AUTH) ---
 app.post('/api/auth/register', async (req, res) => {
     const { full_name, email, password, referred_by } = req.body;
     try {
         const hash = await bcrypt.hash(password, 10);
-        const wallet = 'M' + Math.random().toString(36).substring(2, 10).toUpperCase() + Date.now().toString(36).toUpperCase();
+        const wallet = 'M' + Math.random().toString(36).substring(2, 15).toUpperCase();
         const ref = Math.random().toString(36).substring(2, 8).toUpperCase();
         await pool.query(`INSERT INTO users (wallet_address, full_name, email, password_hash, referral_code, referred_by) VALUES ($1, $2, $3, $4, $5, $6)`, [wallet, full_name, email, hash, ref, referred_by]);
         await recordTx(pool, 'mint', 'SYSTEM', wallet, 0, 'MPT');
@@ -54,16 +61,13 @@ app.post('/api/auth/register', async (req, res) => {
 
 app.post('/api/auth/login', async (req, res) => {
     const { email, password } = req.body;
-    try {
-        const user = await pool.query(`SELECT * FROM users WHERE email = $1`, [email]);
-        if (user.rows.length === 0 || !await bcrypt.compare(password, user.rows[0].password_hash)) {
-            return res.status(401).json({ message: 'Sai thông tin' });
-        }
-        res.json({ token: 'active', wallet_address: user.rows[0].wallet_address });
-    } catch (e) { res.status(500).send(); }
+    const user = await pool.query(`SELECT * FROM users WHERE email = $1`, [email]);
+    if (user.rows.length > 0 && await bcrypt.compare(password, user.rows[0].password_hash)) {
+        res.json({ token: 'metahash-session-active', wallet_address: user.rows[0].wallet_address });
+    } else res.status(401).json({ message: 'Sai thông tin' });
 });
 
-// --- 2. TÀI SẢN VÍ (INDEX & EXPLORER) ---
+// --- 5. MODULE VÍ & TÀI SẢN (Dữ liệu cho index.html) ---
 app.get('/api/wallet/assets', async (req, res) => {
     const { wallet } = req.query;
     try {
@@ -75,14 +79,27 @@ app.get('/api/wallet/assets', async (req, res) => {
     } catch (e) { res.json({ MPT: 0, USDT: 0, TON: 0, USDC: 0, DOGE: 0 }); }
 });
 
-// --- 3. NẠP (SEPAY) & RÚT (TRADE) ---
+app.post('/api/wallet/send', async (req, res) => {
+    const { from_wallet, to_wallet, amount, currency } = req.body;
+    const client = await pool.connect();
+    try {
+        await client.query('BEGIN');
+        if (await getBalance(from_wallet, currency) < amount) throw new Error('Số dư không đủ');
+        await recordTx(client, 'transfer', from_wallet, to_wallet, amount, currency);
+        await client.query('COMMIT'); res.json({ success: true });
+    } catch (e) { await client.query('ROLLBACK'); res.status(400).json({ message: e.message }); }
+    finally { client.release(); }
+});
+
+// --- 6. MODULE NẠP RÚT (Tích hợp SePay & BIDV 96247FIXFH) ---
 app.post('/api/webhooks/sepay', async (req, res) => {
     const { content, amount } = req.body;
-    const walletTag = content.replace('MPH', '').toUpperCase();
+    const tag = content.replace('MPH', '').toUpperCase();
     try {
-        const user = await pool.query(`SELECT wallet_address FROM users WHERE wallet_address LIKE $1`, [`%${walletTag}`]);
+        const user = await pool.query(`SELECT wallet_address FROM users WHERE wallet_address LIKE $1`, [`%${tag}`]);
         if (user.rows.length > 0) {
-            await recordTx(pool, 'deposit_sepay', 'BANK_BIDV', user.rows[0].wallet_address, parseFloat(amount) / 26800, 'USDT');
+            // Tỷ giá nạp cố định 26.800
+            await recordTx(pool, 'deposit_sepay', 'BANK_BIDV', user.rows[0].wallet_address, parseFloat(amount)/26800, 'USDT');
             res.json({ success: true });
         } else res.status(404).send();
     } catch (e) { res.status(500).send(); }
@@ -93,7 +110,7 @@ app.post('/api/admin/withdraw-request', async (req, res) => {
     const client = await pool.connect();
     try {
         await client.query('BEGIN');
-        if (await getBalance(wallet, asset) < amount) throw new Error('Số dư không đủ');
+        if (await getBalance(wallet, asset) < amount) throw new Error('Không đủ số dư');
         await recordTx(client, 'withdraw_hold', wallet, 'SYSTEM_HOLD', amount, asset);
         await client.query(`INSERT INTO withdraw_requests (wallet, asset, amount, vnd_amount, bank) VALUES ($1, $2, $3, $4, $5)`, [wallet, asset, amount, vnd_amount, bank]);
         await client.query('COMMIT'); res.json({ success: true });
@@ -101,13 +118,13 @@ app.post('/api/admin/withdraw-request', async (req, res) => {
     finally { client.release(); }
 });
 
-// --- 4. ADMIN PANEL (FULL) ---
+// --- 7. QUẢN TRỊ ADMIN (mrminhthangvn / 0383154754) ---
 app.get('/api/admin/dashboard', async (req, res) => {
     try {
         const u = await pool.query(`SELECT COUNT(*) FROM users`);
         const w = await pool.query(`SELECT COUNT(*) FROM withdraw_requests WHERE status = 'pending'`);
-        const s = await pool.query(`SELECT COALESCE(SUM(staked_usdt), 0) FROM user_staking`);
-        res.json({ total_users: u.rows[0].count, total_staking: s.rows[0].coalesce, pending_p2p: w.rows[0].count });
+        const s = await pool.query(`SELECT COALESCE(SUM(staked_usdt), 0) as total FROM user_staking`);
+        res.json({ total_users: u.rows[0].count, total_staking: s.rows[0].total, pending_p2p: w.rows[0].count });
     } catch (e) { res.status(500).send(); }
 });
 
@@ -126,16 +143,16 @@ app.post('/api/admin/withdraws/process', async (req, res) => {
     const client = await pool.connect();
     try {
         await client.query('BEGIN');
-        const req = (await client.query(`SELECT * FROM withdraw_requests WHERE id = $1`, [id])).rows[0];
-        if (status === 'completed') await recordTx(client, 'withdraw_done', 'SYSTEM_HOLD', 'BURN', req.amount, req.asset);
-        else await recordTx(client, 'withdraw_refund', 'SYSTEM_HOLD', req.wallet, req.amount, req.asset);
+        const reqData = (await client.query(`SELECT * FROM withdraw_requests WHERE id = $1`, [id])).rows[0];
+        if (status === 'completed') await recordTx(client, 'withdraw_final', 'SYSTEM_HOLD', 'BURN', reqData.amount, reqData.asset);
+        else await recordTx(client, 'withdraw_refund', 'SYSTEM_HOLD', reqData.wallet, reqData.amount, reqData.asset);
         await client.query(`UPDATE withdraw_requests SET status = $1 WHERE id = $2`, [status, id]);
         await client.query('COMMIT'); res.json({ success: true });
     } catch (e) { await client.query('ROLLBACK'); res.status(500).send(); }
     finally { client.release(); }
 });
 
-// --- 5. STAKING ---
+// --- 8. STAKING & P2P HISTORY ---
 app.get('/api/staking/info', async (req, res) => {
     const { wallet } = req.query;
     let r = await pool.query(`SELECT * FROM user_staking WHERE wallet_address = $1`, [wallet]);
@@ -148,18 +165,24 @@ app.get('/api/staking/info', async (req, res) => {
 
 app.post('/api/staking/deposit', async (req, res) => {
     const { wallet, amount } = req.body;
-    const client = await pool.connect();
-    try {
-        await client.query('BEGIN');
-        if (await getBalance(wallet, 'USDT') < amount) throw new Error('Không đủ USDT');
-        await recordTx(client, 'stake', wallet, 'SYSTEM_STAKING', amount, 'USDT');
-        await client.query(`UPDATE user_staking SET staked_usdt = staked_usdt + $1 WHERE wallet_address = $2`, [amount, wallet]);
-        await client.query('COMMIT'); res.json({ success: true });
-    } catch (e) { await client.query('ROLLBACK'); res.status(400).json({ message: e.message }); }
-    finally { client.release(); }
+    if (await getBalance(wallet, 'USDT') < amount) return res.status(400).send();
+    await recordTx(pool, 'stake', wallet, 'SYSTEM_STAKING', amount, 'USDT');
+    await pool.query(`UPDATE user_staking SET staked_usdt = staked_usdt + $1 WHERE wallet_address = $2`, [amount, wallet]);
+    res.json({ success: true });
 });
 
-// --- 6. EXPLORER (MPT SCAN) ---
+app.get('/api/p2p/my-pending', async (req, res) => {
+    const r = await pool.query(`
+        SELECT 'withdraw' as type, asset, amount, vnd_amount, status, created_at FROM withdraw_requests WHERE wallet = $1
+        UNION ALL
+        SELECT 'deposit' as type, currency as asset, amount, (amount * 26800)::text as vnd_amount, 'completed' as status, created_at 
+        FROM transaction_history WHERE to_wallet = $1 AND type = 'deposit_sepay'
+        ORDER BY created_at DESC
+    `, [req.query.wallet]);
+    res.json(r.rows);
+});
+
+// --- 9. EXPLORER (MPT SCAN) ---
 app.get('/api/explorer/stats', async (req, res) => {
     const u = await pool.query(`SELECT COUNT(*) FROM users`);
     const t = await pool.query(`SELECT COUNT(*) FROM transaction_history`);
@@ -169,27 +192,17 @@ app.get('/api/explorer/stats', async (req, res) => {
 app.get('/api/explorer/search', async (req, res) => {
     const { type, q } = req.query;
     if (type === 'address') {
-        const txs = await pool.query(`SELECT * FROM transaction_history WHERE from_wallet = $1 OR to_wallet = $1 ORDER BY created_at DESC LIMIT 20`, [q]);
-        res.json({ wallet_address: q, balance_mspw: await getBalance(q, 'MPT'), balance_usdt: await getBalance(q, 'USDT'), txns: txs.rows });
+        const [mpt, usdt, txs] = await Promise.all([
+            getBalance(q, 'MPT'), getBalance(q, 'USDT'),
+            pool.query(`SELECT * FROM transaction_history WHERE from_wallet = $1 OR to_wallet = $1 ORDER BY created_at DESC LIMIT 15`, [q])
+        ]);
+        res.json({ wallet_address: q, balance_mspw: mpt, balance_usdt: usdt, txns: txs.rows });
     } else {
         const tx = await pool.query(`SELECT * FROM transaction_history WHERE tx_hash = $1`, [q]);
         res.json(tx.rows[0] || null);
     }
 });
 
-// Lịch sử lệnh xử lý tại Trade
-app.get('/api/p2p/my-pending', async (req, res) => {
-    const r = await pool.query(`
-        SELECT 'withdraw' as type, asset, amount, vnd_amount, status, created_at FROM withdraw_requests WHERE wallet = $1
-        UNION ALL
-        SELECT 'deposit' as type, currency as asset, amount, (amount * 26800)::text as vnd_amount, 'completed' as status, created_at FROM transaction_history WHERE to_wallet = $1 AND type = 'deposit_sepay'
-        ORDER BY created_at DESC
-    `, [req.query.wallet]);
-    res.json(r.rows);
-});
-
-// Root & Web Server
-app.get('*', (req, res) => { if (!req.path.startsWith('/api')) res.sendFile(path.join(__dirname, 'login.html')); });
-
+// --- KHỞI CHẠY ---
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`🚀 System Online: ${PORT}`));
+app.listen(PORT, () => console.log(`🚀 MetahashPay System Online: ${PORT}`));
