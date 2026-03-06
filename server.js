@@ -4,21 +4,35 @@ const cors = require('cors');
 const { Pool } = require('pg');
 const bcrypt = require('bcrypt');
 const multer = require('multer');
+const path = require('path'); // Thư viện xử lý đường dẫn file HTML
 
 const app = express();
 
-// Cấu hình CORS để cho phép Frontend từ domain metahash.online hoặc localhost truy cập
+// Cấu hình CORS
 app.use(cors({
-    origin: '*', // Trong môi trường thực tế, bạn có thể thay bằng 'https://metahash.online'
+    origin: '*',
     methods: ['GET', 'POST', 'PUT', 'DELETE'],
     allowedHeaders: ['Content-Type', 'Authorization']
 }));
 app.use(express.json());
 
-// Thư mục lưu trữ ảnh KYC
+// ==========================================
+// CẤU HÌNH WEB SERVER (PHỤC VỤ GIAO DIỆN HTML)
+// ==========================================
+// Cho phép server đọc các file html, css, hình ảnh nằm cùng thư mục
+app.use(express.static(path.join(__dirname)));
+
+// Khi người dùng gõ metahash.online, tự động mở trang login.html
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'login.html'));
+});
+
+
+// ==========================================
+// KẾT NỐI DATABASE & THIẾT LẬP LƯU TRỮ
+// ==========================================
 const upload = multer({ dest: 'uploads/' });
 
-// Kết nối CSDL Neon.tech PostgreSQL
 const pool = new Pool({
     connectionString: process.env.DATABASE_URL,
     ssl: { rejectUnauthorized: false }
@@ -27,8 +41,6 @@ const pool = new Pool({
 // ==========================================
 // HÀM TIỆN ÍCH (CORE UTILS)
 // ==========================================
-
-// Tạo địa chỉ ví MetahashPay (Bắt đầu bằng M, tổng 30 ký tự)
 function generateWallet() {
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
     let randomPart = '';
@@ -38,7 +50,6 @@ function generateWallet() {
     return 'M' + randomPart;
 }
 
-// Ghi chép giao dịch vào Sổ cái (Ledger)
 async function recordTx(client, type, from, to, amount, currency) {
     await client.query(
         `INSERT INTO transaction_history (type, from_wallet, to_wallet, amount, currency) VALUES ($1, $2, $3, $4, $5)`,
@@ -46,7 +57,6 @@ async function recordTx(client, type, from, to, amount, currency) {
     );
 }
 
-// Lấy số dư thực tế tính toán từ Sổ cái (Bảo mật tuyệt đối)
 async function getBalance(wallet, currency) {
     const res = await pool.query(`
         SELECT 
@@ -113,7 +123,6 @@ app.post('/api/wallet/send', async (req, res) => {
     try {
         await client.query('BEGIN');
         
-        // Kiểm tra xem ví nhận có tồn tại không
         const toUser = await client.query(`SELECT * FROM users WHERE wallet_address = $1`, [to_wallet]);
         if(toUser.rows.length === 0) throw new Error('Địa chỉ ví nhận không tồn tại');
 
@@ -134,20 +143,26 @@ app.post('/api/wallet/send', async (req, res) => {
 // ==========================================
 app.get('/api/p2p/orders', async (req, res) => {
     const { type } = req.query;
-    const result = await pool.query(`SELECT * FROM p2p_orders WHERE type = $1 AND status = 'open' ORDER BY created_at DESC`, [type]);
-    res.json(result.rows);
+    try {
+        const result = await pool.query(`SELECT * FROM p2p_orders WHERE type = $1 AND status = 'open' ORDER BY created_at DESC`, [type]);
+        res.json(result.rows);
+    } catch(e) { res.status(500).send(); }
 });
 
 app.get('/api/p2p/my-pending', async (req, res) => {
     const { wallet } = req.query;
-    const result = await pool.query(`SELECT * FROM p2p_orders WHERE (maker_wallet = $1 OR taker_wallet = $1) AND status IN ('processing', 'paid')`, [wallet]);
-    res.json(result.rows);
+    try {
+        const result = await pool.query(`SELECT * FROM p2p_orders WHERE (maker_wallet = $1 OR taker_wallet = $1) AND status IN ('processing', 'paid')`, [wallet]);
+        res.json(result.rows);
+    } catch(e) { res.status(500).send(); }
 });
 
 app.get('/api/p2p/my-pending-count', async (req, res) => {
     const { wallet } = req.query;
-    const result = await pool.query(`SELECT COUNT(*) FROM p2p_orders WHERE (maker_wallet = $1 OR taker_wallet = $1) AND status IN ('processing', 'paid')`, [wallet]);
-    res.json({ count: parseInt(result.rows[0].count) });
+    try {
+        const result = await pool.query(`SELECT COUNT(*) FROM p2p_orders WHERE (maker_wallet = $1 OR taker_wallet = $1) AND status IN ('processing', 'paid')`, [wallet]);
+        res.json({ count: parseInt(result.rows[0].count) });
+    } catch(e) { res.status(500).send(); }
 });
 
 app.post('/api/p2p/create', async (req, res) => {
@@ -158,7 +173,6 @@ app.post('/api/p2p/create', async (req, res) => {
         if(type === 'sell') {
             const bal = await getBalance(maker_wallet, 'MPT');
             if(bal < amount) throw new Error('Không đủ MPT để đăng bán');
-            // Khóa MPT vào ví hệ thống
             await recordTx(client, 'p2p_lock', maker_wallet, 'SYSTEM_ESCROW', amount, 'MPT');
         }
         await client.query(`INSERT INTO p2p_orders (maker_wallet, type, price, amount, bank_info) VALUES ($1, $2, $3, $4, $5)`, [maker_wallet, type, price, amount, bank_info]);
@@ -175,9 +189,8 @@ app.post('/api/p2p/initiate', async (req, res) => {
     try {
         await client.query('BEGIN');
         const order = (await client.query(`SELECT * FROM p2p_orders WHERE id = $1 AND status = 'open' FOR UPDATE`, [order_id])).rows[0];
-        if(!order) throw new Error('Lệnh đã bị người khác khớp');
+        if(!order) throw new Error('Lệnh đã bị người khác khớp hoặc không tồn tại');
 
-        // Nếu Maker đang Mua -> Taker là người Bán -> Khóa MPT của Taker
         if(order.type === 'buy') {
             const bal = await getBalance(taker_wallet, 'MPT');
             if(bal < order.amount) throw new Error('Không đủ MPT để bán');
@@ -203,7 +216,6 @@ app.post('/api/p2p/update-status', async (req, res) => {
 
         if (status === 'completed') {
             const buyer = order.type === 'sell' ? order.taker_wallet : order.maker_wallet;
-            // Trả MPT từ Escrow cho người Mua
             await recordTx(client, 'p2p_release', 'SYSTEM_ESCROW', buyer, order.amount, 'MPT');
         }
         await client.query('COMMIT');
@@ -235,8 +247,10 @@ app.get('/api/staking/info', async (req, res) => {
 
 app.post('/api/staking/sync-reward', async (req, res) => {
     const { wallet, new_reward } = req.body;
-    await pool.query(`UPDATE user_staking SET earned_mpt = $1, last_updated = CURRENT_TIMESTAMP WHERE wallet_address = $2`, [new_reward, wallet]);
-    res.json({ success: true });
+    try {
+        await pool.query(`UPDATE user_staking SET earned_mpt = $1, last_updated = CURRENT_TIMESTAMP WHERE wallet_address = $2`, [new_reward, wallet]);
+        res.json({ success: true });
+    } catch(e) { res.status(500).send(); }
 });
 
 app.post('/api/staking/deposit', async (req, res) => {
@@ -294,13 +308,17 @@ app.get('/api/explorer/stats', async (req, res) => {
 });
 
 app.get('/api/explorer/latest-mints', async (req, res) => {
-    const result = await pool.query(`SELECT wallet_address as wallet, created_at FROM users ORDER BY created_at DESC LIMIT 6`);
-    res.json(result.rows);
+    try {
+        const result = await pool.query(`SELECT wallet_address as wallet, created_at FROM users ORDER BY created_at DESC LIMIT 6`);
+        res.json(result.rows);
+    } catch(e) { res.status(500).send(); }
 });
 
 app.get('/api/explorer/latest-txns', async (req, res) => {
-    const result = await pool.query(`SELECT * FROM transaction_history ORDER BY created_at DESC LIMIT 6`);
-    res.json(result.rows);
+    try {
+        const result = await pool.query(`SELECT * FROM transaction_history ORDER BY created_at DESC LIMIT 6`);
+        res.json(result.rows);
+    } catch(e) { res.status(500).send(); }
 });
 
 app.get('/api/explorer/search', async (req, res) => {
@@ -319,7 +337,7 @@ app.get('/api/explorer/search', async (req, res) => {
             res.json({
                 wallet_address: q,
                 kyc_status: kycRes.rows.length > 0 ? kycRes.rows[0].status : 'unverified',
-                balance_mspw: mpt, // Map với giao diện
+                balance_mspw: mpt,
                 balance_usdt: usdt,
                 txns: txnsRes.rows
             });
@@ -346,8 +364,10 @@ app.post('/api/users/change-password', async (req, res) => {
 });
 
 app.get('/api/users/tickets', async (req, res) => {
-    const result = await pool.query(`SELECT * FROM support_tickets WHERE wallet = $1 ORDER BY created_at DESC`, [req.query.wallet]);
-    res.json(result.rows);
+    try {
+        const result = await pool.query(`SELECT * FROM support_tickets WHERE wallet = $1 ORDER BY created_at DESC`, [req.query.wallet]);
+        res.json(result.rows);
+    } catch(e) { res.status(500).send(); }
 });
 
 // ==========================================
@@ -364,13 +384,17 @@ app.get('/api/admin/dashboard', async (req, res) => {
 });
 
 app.get('/api/admin/users', async (req, res) => {
-    const result = await pool.query(`SELECT u.wallet_address, u.email, u.created_at, COALESCE(k.status, 'unverified') as kyc_status FROM users u LEFT JOIN user_kyc k ON u.wallet_address = k.wallet`);
-    res.json(result.rows);
+    try {
+        const result = await pool.query(`SELECT u.wallet_address, u.email, u.created_at, COALESCE(k.status, 'unverified') as kyc_status FROM users u LEFT JOIN user_kyc k ON u.wallet_address = k.wallet`);
+        res.json(result.rows);
+    } catch(e) { res.status(500).send(); }
 });
 
 app.get('/api/admin/p2p/all', async (req, res) => {
-    const result = await pool.query(`SELECT * FROM p2p_orders ORDER BY created_at DESC`);
-    res.json(result.rows);
+    try {
+        const result = await pool.query(`SELECT * FROM p2p_orders ORDER BY created_at DESC`);
+        res.json(result.rows);
+    } catch(e) { res.status(500).send(); }
 });
 
 app.post('/api/admin/p2p/resolve', async (req, res) => {
@@ -396,38 +420,49 @@ app.post('/api/admin/p2p/resolve', async (req, res) => {
     } finally { client.release(); }
 });
 
-// Admin xử lý KYC và Ticket
 app.post('/api/admin/kyc-submit', upload.single('documentFront'), async (req, res) => {
     const { wallet, name, idNumber } = req.body;
     const imageUrl = req.file ? `/uploads/${req.file.filename}` : '';
-    await pool.query(`INSERT INTO user_kyc (wallet, full_name, id_number, image_url) VALUES ($1, $2, $3, $4)`, [wallet, name, idNumber, imageUrl]);
-    res.json({ success: true });
+    try {
+        await pool.query(`INSERT INTO user_kyc (wallet, full_name, id_number, image_url) VALUES ($1, $2, $3, $4)`, [wallet, name, idNumber, imageUrl]);
+        res.json({ success: true });
+    } catch(e) { res.status(500).send(); }
 });
 
 app.get('/api/admin/kyc/pending', async (req, res) => {
-    const result = await pool.query(`SELECT * FROM user_kyc WHERE status = 'pending'`);
-    res.json(result.rows);
+    try {
+        const result = await pool.query(`SELECT * FROM user_kyc WHERE status = 'pending'`);
+        res.json(result.rows);
+    } catch(e) { res.status(500).send(); }
 });
 
 app.post('/api/admin/kyc/process', async (req, res) => {
-    await pool.query(`UPDATE user_kyc SET status = $1 WHERE id = $2`, [req.body.status, req.body.id]);
-    res.json({ success: true });
+    try {
+        await pool.query(`UPDATE user_kyc SET status = $1 WHERE id = $2`, [req.body.status, req.body.id]);
+        res.json({ success: true });
+    } catch(e) { res.status(500).send(); }
 });
 
 app.get('/api/admin/tickets/open', async (req, res) => {
-    const result = await pool.query(`SELECT * FROM support_tickets WHERE status = 'open'`);
-    res.json(result.rows);
+    try {
+        const result = await pool.query(`SELECT * FROM support_tickets WHERE status = 'open'`);
+        res.json(result.rows);
+    } catch(e) { res.status(500).send(); }
 });
 
 app.post('/api/admin/tickets/reply', async (req, res) => {
-    await pool.query(`UPDATE support_tickets SET admin_reply = $1, status = $2 WHERE id = $3`, [req.body.reply, req.body.status, req.body.id]);
-    res.json({ success: true });
+    try {
+        await pool.query(`UPDATE support_tickets SET admin_reply = $1, status = $2 WHERE id = $3`, [req.body.reply, req.body.status, req.body.id]);
+        res.json({ success: true });
+    } catch(e) { res.status(500).send(); }
 });
 
 app.post('/api/admin/tickets', async (req, res) => {
     const { wallet, title, content } = req.body;
-    await pool.query(`INSERT INTO support_tickets (wallet, title, content) VALUES ($1, $2, $3)`, [wallet, title, content]);
-    res.json({ success: true });
+    try {
+        await pool.query(`INSERT INTO support_tickets (wallet, title, content) VALUES ($1, $2, $3)`, [wallet, title, content]);
+        res.json({ success: true });
+    } catch(e) { res.status(500).send(); }
 });
 
 // Khởi chạy Server
