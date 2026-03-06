@@ -22,17 +22,12 @@
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
         body { background-color: var(--bg-color); color: var(--text-main); padding-bottom: 80px; -webkit-font-smoothing: antialiased; }
 
-        /* Header */
         .header { background: var(--primary-color); padding: 20px; color: white; border-bottom-left-radius: 20px; border-bottom-right-radius: 20px; box-shadow: 0 4px 15px rgba(0, 102, 255, 0.2); }
-        .header-top { display: flex; justify-content: space-between; align-items: center; }
-        .network-status { font-size: 0.75rem; background: rgba(255,255,255,0.2); padding: 4px 10px; border-radius: 12px; }
-
-        /* Tabs */
+        
         .trade-tabs { display: flex; background: var(--card-bg); margin: 15px 20px; border-radius: 12px; padding: 5px; border: 1px solid var(--border-color); }
         .tab-btn { flex: 1; padding: 12px; text-align: center; border: none; background: none; font-size: 0.95rem; font-weight: 700; color: var(--text-muted); cursor: pointer; border-radius: 10px; transition: 0.3s; }
         .tab-btn.active { background: var(--primary-color); color: white; }
 
-        /* Content Sections */
         .content-section { padding: 0 20px; display: none; }
         .content-section.active { display: block; animation: fadeIn 0.3s; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
@@ -44,7 +39,6 @@
         .form-group label { display: block; margin-bottom: 6px; font-size: 0.85rem; color: var(--text-muted); font-weight: 600; }
         .input-box { position: relative; display: flex; align-items: center; }
         .form-control { width: 100%; padding: 14px; border: 1px solid var(--border-color); border-radius: 12px; font-size: 1.1rem; outline: none; background: var(--bg-color); font-weight: bold; }
-        .form-control:focus { border-color: var(--primary-color); background: white; }
         .unit { position: absolute; right: 15px; font-weight: bold; color: var(--text-muted); }
 
         .price-info { background: #f8fafc; padding: 12px; border-radius: 10px; font-size: 0.9rem; margin-bottom: 15px; border: 1px dashed var(--border-color); }
@@ -55,50 +49,43 @@
         .btn-buy { background: var(--success); }
         .btn-withdraw { background: var(--danger); }
 
-        /* Payment Panel - Sửa lỗi hiển thị */
-        #payment-details { display: none; margin-top: 15px; border-top: 2px dashed var(--border-color); padding-top: 15px; }
-        .payment-card { background: #f0fdf4; border: 1px solid #dcfce7; border-radius: 12px; padding: 15px; position: relative; }
+        #payment-details { display: none; margin-top: 15px; }
+        .payment-card { background: #f0fdf4; border: 1px solid #dcfce7; border-radius: 12px; padding: 15px; }
         .bank-item { margin-bottom: 10px; }
         .bank-label { color: var(--text-muted); font-size: 0.75rem; display: block; }
-        .bank-val { font-weight: 700; color: var(--text-main); font-size: 1.05rem; letter-spacing: 0.5px; }
-        .copy-icon { color: var(--primary-color); margin-left: 5px; cursor: pointer; font-size: 0.85rem; }
+        .bank-val { font-weight: 700; color: var(--text-main); font-size: 1.05rem; }
+        .copy-icon { color: var(--primary-color); margin-left: 8px; cursor: pointer; }
 
-        .qr-box { text-align: center; margin: 15px 0; background: white; padding: 10px; border-radius: 10px; border: 1px solid var(--border-color); }
-        .qr-box img { width: 100%; max-width: 200px; display: block; margin: 0 auto; }
+        .qr-box { text-align: center; margin: 15px 0; background: white; padding: 15px; border-radius: 10px; border: 1px solid var(--border-color); min-height: 200px; display: flex; align-items: center; justify-content: center; }
+        .qr-box img { width: 100%; max-width: 200px; }
 
-        .warning-box { background: #fffbeb; color: #b45309; padding: 10px; border-radius: 8px; font-size: 0.75rem; border: 1px solid #fef3c7; line-height: 1.4; margin-top: 10px; }
-
-        /* Bottom Nav */
-        .bottom-nav { position: fixed; bottom: 0; left: 0; width: 100%; background: var(--card-bg); display: flex; justify-content: space-around; align-items: center; padding: 12px 0; box-shadow: 0 -5px 15px rgba(0,0,0,0.03); border-top: 1px solid var(--border-color); z-index: 900; height: 65px; }
+        .bottom-nav { position: fixed; bottom: 0; left: 0; width: 100%; background: var(--card-bg); display: flex; justify-content: space-around; align-items: center; padding: 12px 0; border-top: 1px solid var(--border-color); z-index: 900; height: 65px; }
         .nav-item { text-decoration: none; color: var(--text-muted); display: flex; flex-direction: column; align-items: center; gap: 4px; font-size: 0.75rem; width: 33.33%; font-weight: 500; }
         .nav-item.active { color: var(--primary-color); }
         .nav-item i { font-size: 1.3rem; }
 
-        #toast { visibility: hidden; min-width: 250px; background-color: #1e293b; color: white; text-align: center; border-radius: 10px; padding: 15px; position: fixed; z-index: 10000; left: 50%; bottom: 100px; transform: translateX(-50%); opacity: 0; transition: 0.3s; font-weight: 600; box-shadow: 0 5px 15px rgba(0,0,0,0.2); }
+        #toast { visibility: hidden; min-width: 250px; background-color: #1e293b; color: white; text-align: center; border-radius: 10px; padding: 15px; position: fixed; z-index: 10000; left: 50%; bottom: 100px; transform: translateX(-50%); opacity: 0; transition: 0.3s; font-weight: 600; }
         #toast.show { visibility: visible; opacity: 1; }
     </style>
 </head>
 <body>
 
     <header class="header">
-        <div class="header-top">
-            <h2 style="font-size: 1.2rem;">Giao dịch VND</h2>
-            <div class="network-status"><i class="fas fa-bolt"></i> MPT Smart Chain</div>
-        </div>
+        <h2 style="font-size: 1.2rem; text-align: center;">Giao dịch P2P MPT</h2>
     </header>
 
     <div class="trade-tabs">
-        <button class="tab-btn active" id="btn-tab-buy" onclick="switchTab('buy')">Nạp (Mua)</button>
-        <button class="tab-btn" id="btn-tab-withdraw" onclick="switchTab('withdraw')">Rút (Bán)</button>
+        <button class="tab-btn active" id="btn-tab-buy" onclick="switchTab('buy')">Nạp Tiền</button>
+        <button class="tab-btn" id="btn-tab-withdraw" onclick="switchTab('withdraw')">Rút Tiền</button>
     </div>
 
     <section id="buy-section" class="content-section active">
         <div class="card">
-            <div class="card-title"><i class="fas fa-plus-circle" style="color:var(--success)"></i> Nạp tài sản</div>
+            <div class="card-title"><i class="fas fa-plus-circle" style="color:var(--success)"></i> Nạp tài sản tự động</div>
             
             <div class="form-group">
-                <label>Tài sản muốn nạp</label>
-                <select class="form-control" id="buy-asset" onchange="calculateVND()">
+                <label>Chọn loại tài sản</label>
+                <select class="form-control" id="buy-asset" onchange="updateBuyUI()">
                     <option value="USDT">Tether (USDT)</option>
                     <option value="MPT">MetahashPay (MPT)</option>
                 </select>
@@ -107,84 +94,59 @@
             <div class="form-group">
                 <label>Số lượng nạp</label>
                 <div class="input-box">
-                    <input type="number" step="any" class="form-control" id="buy-amount" placeholder="0.00" oninput="calculateVND()">
+                    <input type="number" step="any" class="form-control" id="buy-amount" placeholder="0.00" oninput="calculateTotalBuy()">
                     <span class="unit" id="buy-unit">USDT</span>
                 </div>
             </div>
 
             <div class="price-info">
-                <div class="price-row"><span>Giá 1 <span id="rate-name">USDT</span>:</span> <span class="price-val" id="current-rate">25,500 VND</span></div>
-                <div class="price-row" style="margin-top: 8px; font-size: 1.1rem;">
-                    <span>Tổng thanh toán:</span>
-                    <b class="price-val" id="total-vnd" style="color:var(--danger)">0 VND</b>
-                </div>
+                <div class="price-row"><span>Tỷ giá mua:</span> <span class="price-val" id="buy-rate-display">26,800 VND</span></div>
+                <div class="price-row" style="margin-top: 8px;"><span>Tổng thanh toán:</span> <b class="price-val" id="buy-total-display" style="color:var(--danger); font-size:1.1rem;">0 VND</b></div>
             </div>
 
             <div id="payment-details">
                 <div class="payment-card">
-                    <div class="bank-item">
-                        <span class="bank-label">Ngân hàng:</span>
-                        <span class="bank-val">BIDV (NH ĐT & PT Việt Nam)</span>
-                    </div>
-                    <div class="bank-item">
-                        <span class="bank-label">Số tài khoản:</span>
-                        <span class="bank-val" id="bank-acc">96247FIXFH</span>
-                        <i class="fas fa-copy copy-icon" onclick="copyText('96247FIXFH')"></i>
-                    </div>
-                    <div class="bank-item">
-                        <span class="bank-label">Chủ tài khoản:</span>
-                        <span class="bank-val">NGUYEN MINH THANG</span>
-                    </div>
-                    <div class="bank-item">
-                        <span class="bank-label">Nội dung chuyển khoản (SePay):</span>
-                        <b class="bank-val" id="sepay-content" style="color:var(--danger)">MPH...</b>
-                        <i class="fas fa-copy copy-icon" onclick="copyText(document.getElementById('sepay-content').innerText)"></i>
-                    </div>
+                    <div class="bank-item"><span class="bank-label">Ngân hàng:</span><span class="bank-val">BIDV</span></div>
+                    <div class="bank-item"><span class="bank-label">Số tài khoản:</span><span class="bank-val">96247FIXFH</span><i class="fas fa-copy copy-icon" onclick="copyText('96247FIXFH')"></i></div>
+                    <div class="bank-item"><span class="bank-label">Chủ tài khoản:</span><span class="bank-val">NGUYEN MINH THANG</span></div>
+                    <div class="bank-item"><span class="bank-label">Nội dung chuyển khoản (SePay):</span><b class="bank-val" id="sepay-content" style="color:var(--danger)">MPH...</b><i class="fas fa-copy copy-icon" onclick="copyText(document.getElementById('sepay-content').innerText)"></i></div>
 
-                    <div class="qr-box">
-                        <img id="vietqr-img" src="" alt="QR Thanh toán">
+                    <div class="qr-box" id="qr-container">
+                        <img id="vietqr-img" src="" alt="Đang tải QR...">
                     </div>
-
-                    <div class="warning-box">
-                        <i class="fas fa-exclamation-circle"></i> Hệ thống tự động SePay. Vui lòng chuyển <b>chính xác số tiền và nội dung</b> để được cộng coin sau 1 phút.
-                    </div>
+                    <p style="font-size: 0.7rem; color: var(--text-muted); text-align: center;">Hệ thống SePay tự động cộng tiền sau 30 giây.</p>
                 </div>
             </div>
 
-            <button class="btn-submit btn-buy" id="btn-main-action" onclick="showPayment()" style="margin-top: 15px;">Lấy thông tin thanh toán</button>
+            <button class="btn-submit btn-buy" id="btn-buy-action" onclick="generatePayment()" style="margin-top:15px;">Lấy mã QR thanh toán</button>
         </div>
     </section>
 
     <section id="withdraw-section" class="content-section">
         <div class="card">
-            <div class="card-title"><i class="fas fa-university" style="color:var(--danger)"></i> Rút về Ngân hàng</div>
+            <div class="card-title"><i class="fas fa-university" style="color:var(--danger)"></i> Rút tiền về Bank</div>
             
             <form id="withdrawForm" onsubmit="handleWithdraw(event)">
                 <div class="form-group">
                     <label>Tài sản muốn rút</label>
-                    <select class="form-control" id="wd-asset" onchange="updateWithdrawRate()">
+                    <select class="form-control" id="wd-asset" onchange="updateWithdrawUI()">
                         <option value="USDT">Tether (USDT)</option>
                         <option value="MPT">MetahashPay (MPT)</option>
                     </select>
                 </div>
-
                 <div class="form-group">
                     <label>Số lượng rút</label>
                     <div class="input-box">
-                        <input type="number" step="any" class="form-control" id="wd-amount" placeholder="0.00" oninput="updateWithdrawTotal()" required>
+                        <input type="number" step="any" class="form-control" id="wd-amount" placeholder="0.00" oninput="calculateTotalWithdraw()" required>
                         <span class="unit" id="wd-unit">USDT</span>
                     </div>
-                    <p style="font-size: 0.75rem; color: var(--text-muted); margin-top: 6px;">
-                        Giá bán: <span id="wd-rate-display">25,200</span> VND. Nhận về: <b id="wd-total-display">0</b> VND
-                    </p>
+                    <p style="font-size: 0.75rem; color: var(--text-muted); margin-top: 6px;">Tỷ giá rút: <span id="wd-rate-display">25,300</span> VND. Nhận về: <b id="wd-total-display">0</b> VND</p>
                 </div>
-
                 <div style="border-top: 1px solid var(--border-color); margin: 15px 0; padding-top: 15px;">
                     <div class="form-group"><label>Tên Ngân hàng</label><input type="text" class="form-control" id="wd-bank-name" placeholder="Ví dụ: Vietcombank" required></div>
-                    <div class="form-group"><label>Số tài khoản</label><input type="text" class="form-control" id="wd-bank-number" placeholder="Số tài khoản nhận tiền" required></div>
+                    <div class="form-group"><label>Số tài khoản</label><input type="text" class="form-control" id="wd-bank-number" placeholder="Số TK nhận tiền" required></div>
                     <div class="form-group"><label>Tên chủ thẻ (Viết hoa không dấu)</label><input type="text" class="form-control" id="wd-bank-owner" placeholder="NGUYEN VAN A" required></div>
                 </div>
-
                 <button type="submit" class="btn-submit btn-withdraw" id="btn-wd-submit">Gửi yêu cầu Rút tiền</button>
             </form>
         </div>
@@ -203,109 +165,90 @@
         const userToken = localStorage.getItem('metahashpay_token');
         if (!userToken || !myWallet) window.location.href = 'login.html';
 
-        let API_BASE_URL = '';
-        const currentHost = window.location.hostname;
-        if (currentHost === 'localhost' || currentHost === '127.0.0.1') API_BASE_URL = 'http://localhost:3000/api';
-        else API_BASE_URL = `https://${currentHost}/api`;
-
-        let usdtVndRate = 25500;
-        let mptVndRate = 12500;
-
-        // WebSocket lấy giá live
-        const ws = new WebSocket('wss://stream.binance.com:9443/ws/xrpusdt@ticker');
-        ws.onmessage = (event) => {
-            const data = JSON.parse(event.data);
-            const xrpPrice = parseFloat(data.c);
-            usdtVndRate = 25500 + (Math.random() * 50 - 25); 
-            mptVndRate = xrpPrice * usdtVndRate; 
-            updateUIPrice();
+        // Cấu hình giá cố định
+        const RATES = {
+            BUY_USDT: 26800,
+            SELL_USDT: 25300,
+            MPT_MARKUP: 1.05 // Giá MPT nạp = Giá thị trường + 5%
         };
 
-        function switchTab(tab) {
-            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-            document.querySelectorAll('.content-section').forEach(s => s.classList.remove('active'));
-            if(tab === 'buy') document.getElementById('btn-tab-buy').classList.add('active');
-            else document.getElementById('btn-tab-withdraw').classList.add('active');
-            document.getElementById(tab + '-section').classList.add('active');
-        }
+        let currentMptPrice = 0.5; // Giá USD mặc định của MPT
+        let API_BASE_URL = window.location.hostname === 'localhost' ? 'http://localhost:3000/api' : `https://${window.location.hostname}/api`;
 
-        function updateUIPrice() {
-            const asset = document.getElementById('buy-asset').value;
-            const rate = asset === 'USDT' ? usdtVndRate : mptVndRate;
-            document.getElementById('rate-name').innerText = asset;
-            document.getElementById('current-rate').innerText = Math.round(rate).toLocaleString() + ' VND';
-            calculateVND();
-            updateWithdrawRate();
+        // 1. Cập nhật giá MPT mỗi 5 phút
+        async function refreshMptPrice() {
+            try {
+                const res = await fetch('https://api.binance.com/api/v3/ticker/price?symbol=XRPUSDT');
+                const data = await res.json();
+                currentMptPrice = parseFloat(data.price);
+                updateBuyUI();
+                updateWithdrawUI();
+                console.log("Giá MPT đã cập nhật:", currentMptPrice);
+            } catch (e) { console.error("Lỗi lấy giá MPT"); }
         }
+        setInterval(refreshMptPrice, 300000); 
+        refreshMptPrice();
 
-        function calculateVND() {
+        // 2. Logic Nạp (Buy)
+        function updateBuyUI() {
             const asset = document.getElementById('buy-asset').value;
-            const amount = parseFloat(document.getElementById('buy-amount').value) || 0;
-            const rate = asset === 'USDT' ? usdtVndRate : mptVndRate;
-            const total = Math.round(amount * rate);
+            let rate = RATES.BUY_USDT;
+            if (asset === 'MPT') rate = Math.round(currentMptPrice * RATES.BUY_USDT * RATES.MPT_MARKUP);
+            
             document.getElementById('buy-unit').innerText = asset;
-            document.getElementById('total-vnd').innerText = total.toLocaleString() + ' VND';
-            
-            // Nếu người dùng đang nhập lại số lượng, ẩn phần thanh toán cũ đi để tránh nhầm lẫn
+            document.getElementById('buy-rate-display').innerText = rate.toLocaleString() + ' VND';
+            calculateTotalBuy();
             document.getElementById('payment-details').style.display = 'none';
-            document.getElementById('btn-main-action').style.display = 'block';
+            document.getElementById('btn-buy-action').style.display = 'block';
         }
 
-        // --- HÀM QUAN TRỌNG: LẤY THÔNG TIN THANH TOÁN ---
-        function showPayment() {
+        function calculateTotalBuy() {
+            const amount = parseFloat(document.getElementById('buy-amount').value) || 0;
+            const rate = parseInt(document.getElementById('buy-rate-display').innerText.replace(/,/g, ''));
+            document.getElementById('buy-total-display').innerText = (amount * rate).toLocaleString() + ' VND';
+        }
+
+        function generatePayment() {
             const amount = parseFloat(document.getElementById('buy-amount').value);
-            if (!amount || amount <= 0) {
-                showToast('Vui lòng nhập số lượng muốn nạp!');
-                return;
-            }
+            const total = parseInt(document.getElementById('buy-total-display').innerText.replace(/,/g, ''));
+            if (!amount || amount <= 0) return showToast('Vui lòng nhập số lượng!');
 
-            const asset = document.getElementById('buy-asset').value;
-            const rate = asset === 'USDT' ? usdtVndRate : mptVndRate;
-            const total = Math.round(amount * rate);
-
-            // Tạo nội dung chuẩn SePay: MPH + 6 ký tự cuối ví
             const contentCode = "MPH" + myWallet.substring(myWallet.length - 6).toUpperCase();
-            
-            // Cập nhật giao diện
             document.getElementById('sepay-content').innerText = contentCode;
             
-            // Tạo link VietQR
-            const bankId = 'BIDV';
-            const accountNo = '96247FIXFH';
-            const accountName = encodeURIComponent('NGUYEN MINH THANG');
-            const vietQrUrl = `https://img.vietqr.io/image/${bankId}-${accountNo}-compact2.png?amount=${total}&addInfo=${contentCode}&accountName=${accountName}`;
+            // Link VietQR chuẩn, không lỗi
+            const vietQrUrl = `https://img.vietqr.io/image/BIDV-96247FIXFH-compact2.png?amount=${total}&addInfo=${contentCode}&accountName=NGUYEN%20MINH%20THANG`;
             
             document.getElementById('vietqr-img').src = vietQrUrl;
-            
-            // Hiển thị panel
             document.getElementById('payment-details').style.display = 'block';
-            document.getElementById('btn-main-action').style.display = 'none';
-
-            showToast('Đã tạo mã QR thanh toán!');
+            document.getElementById('btn-buy-action').style.display = 'none';
+            showToast('Đã tạo mã thanh toán thành công!');
         }
 
-        function updateWithdrawRate() {
+        // 3. Logic Rút (Withdraw)
+        function updateWithdrawUI() {
             const asset = document.getElementById('wd-asset').value;
-            const buyRate = asset === 'USDT' ? usdtVndRate : mptVndRate;
-            const sellRate = Math.round(buyRate * 0.98); 
+            let rate = RATES.SELL_USDT;
+            if (asset === 'MPT') rate = Math.round(currentMptPrice * RATES.SELL_USDT * 0.95);
+            
             document.getElementById('wd-unit').innerText = asset;
-            document.getElementById('wd-rate-display').innerText = sellRate.toLocaleString();
-            updateWithdrawTotal();
+            document.getElementById('wd-rate-display').innerText = rate.toLocaleString();
+            calculateTotalWithdraw();
         }
 
-        function updateWithdrawTotal() {
+        function calculateTotalWithdraw() {
             const amount = parseFloat(document.getElementById('wd-amount').value) || 0;
-            const sellRate = parseInt(document.getElementById('wd-rate-display').innerText.replace(/,/g, ''));
-            document.getElementById('wd-total-display').innerText = Math.round(amount * sellRate).toLocaleString();
+            const rate = parseInt(document.getElementById('wd-rate-display').innerText.replace(/,/g, ''));
+            document.getElementById('wd-total-display').innerText = Math.round(amount * rate).toLocaleString();
         }
 
         async function handleWithdraw(event) {
             event.preventDefault();
-            const btn = document.getElementById('btn-wd-submit');
             const amount = parseFloat(document.getElementById('wd-amount').value);
             if(amount <= 0) return showToast('Số lượng không hợp lệ');
 
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Đang gửi...';
+            const btn = document.getElementById('btn-wd-submit');
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Đang xử lý...';
             btn.disabled = true;
 
             const wdData = {
@@ -325,27 +268,27 @@
                     showToast('Yêu cầu rút đã gửi tới Admin!');
                     document.getElementById('withdrawForm').reset();
                 } else throw new Error();
-            } catch (e) {
-                showToast('Lỗi gửi yêu cầu. Thử lại sau.');
-            } finally {
-                btn.innerHTML = 'Gửi yêu cầu Rút tiền';
-                btn.disabled = false;
-            }
+            } catch (e) { showToast('Lỗi gửi yêu cầu. Thử lại sau.'); }
+            finally { btn.innerHTML = 'Gửi yêu cầu Rút tiền'; btn.disabled = false; }
         }
 
-        function copyText(text) {
-            navigator.clipboard.writeText(text);
-            showToast('Đã sao chép: ' + text);
+        // 4. Utils
+        function switchTab(tab) {
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.content-section').forEach(s => s.classList.remove('active'));
+            if(tab === 'buy') document.getElementById('btn-tab-buy').classList.add('active');
+            else document.getElementById('btn-tab-withdraw').classList.add('active');
+            document.getElementById(tab + '-section').classList.add('active');
         }
 
+        function copyText(text) { navigator.clipboard.writeText(text); showToast('Đã sao chép!'); }
         function showToast(msg) {
             const t = document.getElementById("toast");
-            t.innerText = msg;
-            t.classList.add("show");
+            t.innerText = msg; t.classList.add("show");
             setTimeout(() => t.classList.remove("show"), 3000);
         }
 
-        window.onload = () => { updateUIPrice(); };
+        window.onload = () => { updateBuyUI(); updateWithdrawUI(); };
     </script>
 </body>
 </html>
