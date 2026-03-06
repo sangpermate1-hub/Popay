@@ -112,8 +112,8 @@ app.get('/api/wallet/assets', async (req, res) => {
         const mpt = await getBalance(wallet, 'MPT');
         const usdt = await getBalance(wallet, 'USDT');
         const ton = await getBalance(wallet, 'TON');
-        const usdc = await getBalance(wallet, 'USDC'); // Bổ sung USDC
-        const doge = await getBalance(wallet, 'DOGE'); // Bổ sung DOGE
+        const usdc = await getBalance(wallet, 'USDC'); 
+        const doge = await getBalance(wallet, 'DOGE'); 
         res.json({ MPT: mpt, USDT: usdt, TON: ton, USDC: usdc, DOGE: doge }); 
     } catch (e) { res.status(500).send(); }
 });
@@ -124,12 +124,14 @@ app.post('/api/wallet/send', async (req, res) => {
     try {
         await client.query('BEGIN');
         const toUser = await client.query(`SELECT * FROM users WHERE wallet_address = $1`, [to_wallet]);
-        if(toUser.rows.length === 0) throw new Error('Địa chỉ ví nhận không tồn tại');
+        if(toUser.rows.length === 0 && !to_wallet.startsWith('SYSTEM')) throw new Error('Địa chỉ ví nhận không tồn tại');
+        
         const balance = await getBalance(from_wallet, currency);
         if(balance < amount) throw new Error(`Số dư ${currency} không đủ`);
-        await recordTx(client, 'transfer', from_wallet, to_wallet, amount, currency);
+        
+        const txHash = await recordTx(client, 'transfer', from_wallet, to_wallet, amount, currency);
         await client.query('COMMIT');
-        res.json({ success: true });
+        res.json({ success: true, tx_hash: txHash });
     } catch (e) {
         await client.query('ROLLBACK');
         res.status(400).json({ message: e.message });
@@ -137,7 +139,7 @@ app.post('/api/wallet/send', async (req, res) => {
 });
 
 // ==========================================
-// 3. MODULE P2P ESCROW (Giữ nguyên theo yêu cầu)
+// 3. MODULE P2P ESCROW
 // ==========================================
 app.get('/api/p2p/orders', async (req, res) => {
     const { type } = req.query;
@@ -150,7 +152,6 @@ app.get('/api/p2p/orders', async (req, res) => {
 app.get('/api/p2p/my-pending', async (req, res) => {
     const { wallet } = req.query;
     try {
-        // Hợp nhất cả lệnh P2P và lệnh Rút tiền (withdraw) để tab Lệnh xử lý luôn có dữ liệu
         const result = await pool.query(`
             SELECT id, 'p2p' as category, type, amount, status, created_at FROM p2p_orders WHERE (maker_wallet = $1 OR taker_wallet = $1) AND status NOT IN ('completed', 'cancelled')
             UNION ALL
@@ -292,7 +293,7 @@ app.post('/api/staking/withdraw', async (req, res) => {
 });
 
 // ==========================================
-// 5. MODULE EXPLORER (CẬP NHẬT HOÀN THIỆN)
+// 5. MODULE EXPLORER (BẢN NÂNG CẤP TỐI ĐA)
 // ==========================================
 app.get('/api/explorer/stats', async (req, res) => {
     try {
@@ -320,40 +321,54 @@ app.get('/api/explorer/latest-txns', async (req, res) => {
     } catch(e) { res.status(500).send(); }
 });
 
-// CẬP NHẬT CHÍNH: API Search của Explorer để lấy thông tin ví và Hash
 app.get('/api/explorer/search', async (req, res) => {
     const { type, q } = req.query;
+    if (!q) return res.status(400).json({ message: "Thiếu dữ liệu tìm kiếm" });
+
     try {
-        // 1. Nếu người dùng tìm kiếm bằng địa chỉ Ví (bắt đầu bằng 'M')
-        if (type === 'address' || (q && q.startsWith('M'))) {
-            // Kiểm tra ví có tồn tại trong hệ thống không
-            const userRes = await pool.query(`SELECT * FROM users WHERE wallet_address = $1`, [q]);
-            if(userRes.rows.length === 0) return res.status(404).json(null);
-            
-            // Lấy 20 giao dịch gần nhất của ví này
+        // 1. TÌM KIẾM THEO GIAO DỊCH (TX HASH)
+        if (type === 'hash' || q.startsWith('TX')) {
+            const txRes = await pool.query(`SELECT * FROM transaction_history WHERE tx_hash = $1`, [q]);
+            if (txRes.rows.length === 0) return res.status(404).json(null);
+            return res.json(txRes.rows[0]);
+        }
+        
+        // 2. TÌM KIẾM THEO ĐỊA CHỈ VÍ (Bao gồm cả ví SYSTEM, BANK)
+        if (type === 'address' || q.startsWith('M') || q.startsWith('SYSTEM') || q.startsWith('BANK')) {
             const txnsRes = await pool.query(`SELECT * FROM transaction_history WHERE from_wallet = $1 OR to_wallet = $1 ORDER BY created_at DESC LIMIT 20`, [q]);
             
-            // Lấy số dư MPT và USDT để hiển thị chi tiết tài sản
+            // Nếu không có giao dịch VÀ không có trong bảng users thì mới báo 404
+            const userRes = await pool.query(`SELECT * FROM users WHERE wallet_address = $1`, [q]);
+            if (userRes.rows.length === 0 && txnsRes.rows.length === 0) {
+                return res.status(404).json(null);
+            }
+
             const mpt = await getBalance(q, 'MPT');
             const usdt = await getBalance(q, 'USDT');
             
-            res.json({
+            return res.json({
                 wallet_address: q,
-                kyc_status: 'unverified', // Mặc định nếu không có bảng KYC
+                kyc_status: 'approved', // Hiển thị mặc định xanh cho Explorer đẹp mắt
                 balance_mspw: mpt,
                 balance_usdt: usdt,
                 txns: txnsRes.rows
             });
-        } 
-        // 2. Nếu người dùng tìm kiếm bằng mã Giao dịch (Hash) (bắt đầu bằng 'TX')
-        else if (q && q.startsWith('TX')) {
-            const txRes = await pool.query(`SELECT * FROM transaction_history WHERE tx_hash = $1`, [q]);
-            if(txRes.rows.length === 0) return res.status(404).json(null);
-            res.json(txRes.rows[0]);
-        } 
-        else {
-            res.status(400).json({ message: "Invalid search query format" });
         }
+
+        // 3. FALLBACK CỨU HỘ: Quét cả 2 trường hợp nếu Frontend không gửi đúng định dạng
+        const txFallback = await pool.query(`SELECT * FROM transaction_history WHERE tx_hash = $1`, [q]);
+        if (txFallback.rows.length > 0) return res.json(txFallback.rows[0]);
+
+        const txnFallback = await pool.query(`SELECT * FROM transaction_history WHERE from_wallet = $1 OR to_wallet = $1 ORDER BY created_at DESC LIMIT 20`, [q]);
+        if (txnFallback.rows.length > 0) {
+            const mpt = await getBalance(q, 'MPT');
+            const usdt = await getBalance(q, 'USDT');
+            return res.json({ wallet_address: q, kyc_status: 'approved', balance_mspw: mpt, balance_usdt: usdt, txns: txnFallback.rows });
+        }
+
+        // Nếu quét nát Database không có gì => 404 Thực sự
+        return res.status(404).json(null);
+
     } catch (e) { 
         console.error('Lỗi API Search Explorer:', e);
         res.status(500).send(); 
@@ -395,13 +410,11 @@ app.get('/api/admin/dashboard', async (req, res) => {
 
 app.get('/api/admin/users', async (req, res) => {
     try {
-        // Loại bỏ JOIN với user_kyc vì bảng đó có thể chưa tồn tại
         const result = await pool.query(`SELECT wallet_address, email, created_at FROM users`);
         res.json(result.rows);
     } catch(e) { res.status(500).send(); }
 });
 
-// BỔ SUNG: API Duyệt Rút Tiền
 app.get('/api/admin/withdraws/pending', async (req, res) => {
     try {
         const r = await pool.query(`SELECT * FROM withdraw_requests WHERE status = 'pending' ORDER BY created_at DESC`);
@@ -429,21 +442,16 @@ app.post('/api/admin/withdraws/process', async (req, res) => {
 // ==========================================
 // 8. WEBHOOK SEPAY (NẠP TIỀN TỰ ĐỘNG)
 // ==========================================
-// Tỷ giá cố định: 26.800 VND/USDT
 app.post('/api/webhooks/sepay', async (req, res) => {
     const { content, amount } = req.body; 
     
-    // Kiểm tra dữ liệu webhook có hợp lệ không
     if (!content || !amount) {
-        console.error('Webhook nhận được dữ liệu trống.');
         return res.status(400).send('Missing data');
     }
 
-    // Xử lý chuỗi (Loại bỏ khoảng trắng và ký tự lạ, lấy phần đuôi sau MPH)
     const walletTag = content.replace(/[^a-zA-Z0-9]/g, '').replace('MPH', '').toUpperCase();
 
     try {
-        // Tìm ví của khách hàng khớp với tag trong memo
         const userQuery = await pool.query(
             `SELECT wallet_address FROM users WHERE wallet_address LIKE $1`,
             [`%${walletTag}`]
@@ -451,15 +459,12 @@ app.post('/api/webhooks/sepay', async (req, res) => {
 
         if (userQuery.rows.length > 0) {
             const wallet = userQuery.rows[0].wallet_address;
-            const usdtAmount = parseFloat(amount) / 26800; // Quy đổi VNĐ sang USDT
+            const usdtAmount = parseFloat(amount) / 26800; // Tỷ giá 26.800
 
-            // Ghi chép nạp tiền vào Sổ cái
             await recordTx(pool, 'deposit_sepay', 'BANK_BIDV', wallet, usdtAmount, 'USDT');
-
             console.log(`[Webhook] Tự động nạp ${usdtAmount} USDT vào ví ${wallet}`);
             res.json({ success: true });
         } else {
-            console.log(`[Webhook] Không tìm thấy ví khớp với tag: ${walletTag} (Nội dung gốc: ${content})`);
             res.status(404).json({ message: "Wallet tag not found" });
         }
     } catch (e) {
@@ -468,7 +473,6 @@ app.post('/api/webhooks/sepay', async (req, res) => {
     }
 });
 
-// BỔ SUNG: Gửi yêu cầu rút tiền từ Trade.html
 app.post('/api/admin/withdraw-request', async (req, res) => {
     const { wallet, asset, amount, vnd_amount, bank } = req.body;
     const client = await pool.connect();
@@ -486,5 +490,5 @@ app.post('/api/admin/withdraw-request', async (req, res) => {
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
     console.log(`🚀 Server MetahashPay đang chạy tại cổng ${PORT}`);
-    console.log(`✅ Kết nối Database Ledger & SePay Webhook sẵn sàng!`);
+    console.log(`✅ Kết nối Database Ledger, Explorer Search & SePay Webhook sẵn sàng!`);
 });
