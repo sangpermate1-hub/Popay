@@ -2,488 +2,757 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Popay Wallet - Quyền Lực Trong Tay Bạn</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        popOrange: '#ff5f1f',
-                        darkBg: '#0a0a0a',
-                        cardBg: '#141414',
-                        inputBg: '#1f1f1f'
-                    }
-                }
-            }
-        }
-    </script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>MySPay Wallet</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="https://unpkg.com/html5-qrcode"></script>
     <style>
-        ::-webkit-scrollbar { display: none; }
-        body { -ms-overflow-style: none; scrollbar-width: none; }
-        .glass-nav { background: rgba(20, 20, 20, 0.98); border-top: 1px solid #1f1f1f; }
+        :root {
+            --primary-color: #007bff;
+            --primary-light: #e6f2ff;
+            --bg-color: #f8faff;
+            --card-bg: #ffffff;
+            --text-main: #2c3e50;
+            --text-muted: #7f8c8d;
+            --border-color: #e1e8ed;
+            --success: #2ecc71;
+            --danger: #e74c3c;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        /* Đồng bộ padding-bottom với trade.html */
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            padding-bottom: 75px; 
+        }
+
+        /* Header */
+        .header {
+            background: var(--primary-color);
+            padding: 20px;
+            color: white;
+            border-bottom-left-radius: 25px;
+            border-bottom-right-radius: 25px;
+            box-shadow: 0 4px 15px rgba(0, 123, 255, 0.2);
+        }
+
+        .header-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .brand-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .brand-info img {
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            background: white;
+            padding: 2px;
+        }
+
+        .brand-name {
+            font-size: 1.2rem;
+            font-weight: 600;
+        }
+
+        .wallet-address-container {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+        }
+
+        .total-balance-section {
+            text-align: center;
+            margin-bottom: 10px;
+        }
+
+        .total-balance-label {
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+
+        .total-balance-value {
+            font-size: 2.5rem;
+            font-weight: bold;
+            margin: 5px 0;
+        }
+
+        /* Action Buttons */
+        .action-buttons {
+            display: flex;
+            justify-content: space-around;
+            padding: 20px;
+            margin-top: -20px;
+        }
+
+        .action-btn {
+            background: var(--card-bg);
+            border: none;
+            border-radius: 15px;
+            padding: 15px;
+            width: 80px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+            cursor: pointer;
+            color: var(--text-main);
+            transition: transform 0.2s;
+        }
+
+        .action-btn:active {
+            transform: scale(0.95);
+        }
+
+        .action-icon {
+            width: 40px;
+            height: 40px;
+            background: var(--primary-light);
+            color: var(--primary-color);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+        }
+
+        .action-btn span {
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+
+        /* Assets List */
+        .section-title {
+            padding: 0 20px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+
+        .assets-list {
+            padding: 0 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .asset-card {
+            background: var(--card-bg);
+            padding: 15px;
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+        }
+
+        .asset-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .asset-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+
+        .asset-info h4 {
+            font-size: 1rem;
+            margin-bottom: 3px;
+        }
+
+        .asset-info p {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        .asset-right {
+            text-align: right;
+        }
+
+        .asset-balance {
+            font-weight: 600;
+            font-size: 1rem;
+        }
+
+        .asset-value {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-top: 3px;
+        }
+
+        /* Modals */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            display: none;
+            justify-content: center;
+            align-items: flex-end;
+            z-index: 1000;
+        }
+
+        .modal-content {
+            background: var(--card-bg);
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+            border-top-left-radius: 25px;
+            border-top-right-radius: 25px;
+            padding: 25px 20px;
+            animation: slideUp 0.3s ease-out;
+        }
+
+        @keyframes slideUp {
+            from { transform: translateY(100%); }
+            to { transform: translateY(0); }
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            color: var(--text-muted);
+            cursor: pointer;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 0.9rem;
+            color: var(--text-muted);
+        }
+
+        .input-group {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            font-size: 1rem;
+            outline: none;
+        }
         
-        /* Hiệu ứng Toast Notification */
-        .toast-enter { transform: translateY(100%); opacity: 0; }
-        .toast-active { transform: translateY(0); opacity: 1; }
+        .input-group .form-control {
+            padding-right: 45px; /* Để trống chỗ cho icon QR */
+        }
+
+        .input-group .scan-btn {
+            position: absolute;
+            right: 10px;
+            background: none;
+            border: none;
+            color: var(--primary-color);
+            font-size: 1.4rem;
+            cursor: pointer;
+            padding: 5px;
+        }
+
+        .form-control:focus {
+            border-color: var(--primary-color);
+        }
+
+        .btn-primary {
+            width: 100%;
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 15px;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+
+        .qr-placeholder {
+            width: 200px;
+            height: 200px;
+            background: var(--border-color);
+            margin: 0 auto 20px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3rem;
+            color: var(--text-muted);
+        }
+
+        .copy-box {
+            background: var(--bg-color);
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            word-break: break-all;
+            margin-bottom: 20px;
+            font-size: 0.9rem;
+            border: 1px dashed var(--primary-color);
+        }
+
+        /* Toast Notification Popup */
+        #toast {
+            visibility: hidden;
+            min-width: 250px;
+            background-color: var(--card-bg);
+            color: var(--text-main);
+            text-align: center;
+            border-radius: 10px;
+            padding: 15px 20px;
+            position: fixed;
+            z-index: 10000;
+            left: 50%;
+            bottom: 90px;
+            transform: translateX(-50%);
+            box-shadow: 0 5px 20px rgba(0,0,0,0.15);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            border-left: 5px solid var(--primary-color);
+            opacity: 0;
+            transition: opacity 0.3s, bottom 0.3s;
+        }
+
+        #toast.show {
+            visibility: visible;
+            opacity: 1;
+            bottom: 100px;
+        }
+
+        #toast.success { border-left-color: var(--success); }
+        #toast.error { border-left-color: var(--danger); }
+        #toast.info { border-left-color: var(--primary-color); }
+        
+        #toast i { font-size: 1.2rem; }
+        #toast.success i { color: var(--success); }
+        #toast.error i { color: var(--danger); }
+        #toast.info i { color: var(--primary-color); }
+
+        /* Chuẩn hóa lại Bottom Nav giống 100% trade.html */
+        .bottom-nav { 
+            position: fixed; 
+            bottom: 0; 
+            left: 0;
+            width: 100%; 
+            background: var(--card-bg); 
+            display: flex; 
+            justify-content: space-around; 
+            align-items: center;
+            padding: 12px 0; 
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.05); 
+            border-top: 1px solid var(--border-color); 
+            z-index: 900; 
+            height: 65px; /* Ép cứng chiều cao */
+        }
+        
+        .nav-item { 
+            text-decoration: none; 
+            color: var(--text-muted); 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            justify-content: center;
+            gap: 4px; 
+            font-size: 0.75rem; 
+            width: 33.33%; /* Chia đều 3 phần */
+        }
+        
+        .nav-item.active { color: var(--primary-color); }
+        .nav-item i { font-size: 1.3rem; }
+
+        .network-badge {
+            background: rgba(255,255,255,0.2);
+            padding: 4px 10px;
+            border-radius: 15px;
+            font-size: 0.75rem;
+            margin-top: 10px;
+            display: inline-block;
+        }
+        
+        /* Chỉnh sửa style cho vùng quét QR */
+        #reader {
+            width: 100%;
+            border-radius: 10px;
+            overflow: hidden;
+            border: 2px solid var(--primary-light);
+        }
+        #reader button {
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            margin-top: 10px;
+            cursor: pointer;
+        }
     </style>
 </head>
-<body class="bg-darkBg text-white font-sans min-h-screen relative pb-24 selection:bg-popOrange selection:text-black">
+<body>
 
-    <header class="p-5 flex justify-between items-center sticky top-0 z-10 bg-darkBg border-b border-gray-900">
-        <div class="flex items-center gap-3">
-            <img src="logo.png" alt="Popay Logo" class="w-10 h-10 rounded-full border border-popOrange object-cover" onerror="this.src='https://via.placeholder.com/40/ff5f1f/000000?text=P'">
-            <h1 class="text-2xl font-black tracking-widest text-popOrange uppercase">Popay</h1>
+    <header class="header">
+        <div class="header-top">
+            <div class="brand-info">
+                <img src="logo.png" alt="MySPay Logo" onerror="this.src='https://via.placeholder.com/35/007bff/ffffff?text=M'">
+                <span class="brand-name">MySPay Wallet</span>
+            </div>
+            <div class="wallet-address-container" onclick="copyAddress()">
+                <span id="short-address">Đang tải...</span>
+                <i class="fas fa-copy"></i>
+            </div>
         </div>
-        <div class="w-10 h-10 rounded-full border border-gray-800 flex items-center justify-center cursor-pointer bg-cardBg hover:border-popOrange transition">
-            <i class="fa-solid fa-user text-popOrange"></i>
+        <div class="total-balance-section">
+            <div class="total-balance-label">Tổng tài sản (USDT)</div>
+            <div class="total-balance-value" id="total-balance-usd">$0.00</div>
+            <div class="network-badge"><i class="fas fa-link"></i> MSP Smart Chain</div>
         </div>
     </header>
 
-    <main class="max-w-md mx-auto px-5 mt-4">
-        
-        <div class="bg-cardBg rounded-[2rem] p-7 text-center border border-gray-800 mb-6 relative overflow-hidden">
-            <p class="text-gray-400 text-sm font-medium mb-2 uppercase tracking-wider">Tổng Số Dư</p>
-            <h2 class="text-4xl font-black text-white mb-8 tracking-tight" id="total-balance">$ 0.00</h2>
-            
-            <div class="flex justify-center gap-4 relative z-10">
-                <button onclick="openModal('sendModal')" class="flex-1 bg-popOrange text-black font-bold py-3.5 px-4 rounded-2xl hover:bg-orange-600 transition flex items-center justify-center gap-2">
-                    <i class="fa-solid fa-paper-plane"></i> Gửi
-                </button>
-                <button onclick="openModal('receiveModal')" class="flex-1 bg-transparent border-2 border-popOrange text-popOrange font-bold py-3.5 px-4 rounded-2xl hover:bg-popOrange hover:text-black transition flex items-center justify-center gap-2">
-                    <i class="fa-solid fa-qrcode"></i> Nhận
-                </button>
-            </div>
-        </div>
+    <div class="action-buttons">
+        <button class="action-btn" onclick="openModal('sendModal')">
+            <div class="action-icon"><i class="fas fa-paper-plane"></i></div>
+            <span>Gửi</span>
+        </button>
+        <button class="action-btn" onclick="openModal('receiveModal')">
+            <div class="action-icon"><i class="fas fa-qrcode"></i></div>
+            <span>Nhận</span>
+        </button>
+        <button class="action-btn" onclick="openModal('referralModal')">
+            <div class="action-icon"><i class="fas fa-user-plus"></i></div>
+            <span>Giới thiệu</span>
+        </button>
+    </div>
 
-        <h3 class="text-sm font-bold mb-3 text-gray-400 uppercase tracking-widest pl-1">Tài Sản</h3>
-        <div class="space-y-3 mb-8">
-            <div class="bg-cardBg p-4 rounded-2xl flex justify-between items-center border border-gray-800 hover:border-gray-600 transition cursor-pointer">
-                <div class="flex items-center gap-4">
-                    <img src="https://cryptologos.cc/logos/tether-usdt-logo.png" alt="USDT Logo" class="w-12 h-12 rounded-full bg-white p-1">
-                    <div>
-                        <h4 class="font-bold text-lg">USDT</h4>
-                        <p class="text-xs text-gray-500">Tether</p>
-                    </div>
-                </div>
-                <div class="text-right">
-                    <h4 class="font-bold text-lg" id="usdt-balance">0.00</h4>
-                    <p class="text-xs text-gray-500" id="usdt-value">$ 0.00</p>
-                </div>
-            </div>
+    <h3 class="section-title">Tài sản của bạn</h3>
+    <div class="assets-list" id="assets-container">
+    </div>
 
-            <div class="bg-cardBg p-4 rounded-2xl flex justify-between items-center border border-gray-800 hover:border-popOrange transition cursor-pointer">
-                <div class="flex items-center gap-4">
-                    <img src="logo.png" alt="POPT Logo" class="w-12 h-12 rounded-full border border-popOrange object-cover" onerror="this.src='https://via.placeholder.com/48/ff5f1f/000000?text=P'">
-                    <div>
-                        <h4 class="font-bold text-lg text-popOrange">POPT</h4>
-                        <p class="text-xs text-gray-500">Popay Token</p>
-                    </div>
-                </div>
-                <div class="text-right">
-                    <h4 class="font-bold text-lg" id="popt-balance">0.00</h4>
-                    <p class="text-xs text-popOrange font-medium" id="popt-price">Đang cập nhật giá...</p>
-                </div>
-            </div>
-        </div>
-
-        <h3 class="text-sm font-bold mb-3 text-gray-400 uppercase tracking-widest pl-1">Đối Tác & Giới Thiệu</h3>
-        <div class="bg-cardBg rounded-2xl p-5 border border-gray-800 mb-8">
-            <h3 class="text-md font-bold text-popOrange mb-2">Chia Sẻ & Nhận Thưởng</h3>
-            <ul class="text-sm text-gray-400 mb-4 space-y-2 list-disc pl-4">
-                <li>Nhận ngay <span class="text-popOrange font-bold">1 POPT</span> cho mỗi lượt giới thiệu thành công.</li>
-                <li>Điều kiện: Người được giới thiệu phải đăng ký qua link của bạn và hoàn tất 1 giao dịch bất kỳ.</li>
-            </ul>
-            
-            <div class="flex items-center bg-inputBg rounded-xl border border-gray-700 p-1.5 focus-within:border-popOrange transition">
-                <input type="text" id="ref-link" readonly class="bg-transparent text-sm w-full p-2 text-gray-300 outline-none" value="Đang tải...">
-                <button onclick="copyRefLink()" class="bg-popOrange text-black px-5 py-2 rounded-lg font-bold hover:bg-orange-600 transition text-sm">
-                    Copy
-                </button>
-            </div>
-        </div>
-
-        <div class="flex justify-between items-center mb-3 pl-1">
-            <h3 class="text-sm font-bold text-gray-400 uppercase tracking-widest">Lịch Sử Giao Dịch</h3>
-        </div>
-        <div class="space-y-2 mb-4" id="history-container">
-            <p class="text-center text-gray-600 py-6 text-sm">Đang tải dữ liệu...</p>
-        </div>
-
-    </main>
-
-    <nav class="fixed bottom-0 w-full max-w-md left-1/2 transform -translate-x-1/2 glass-nav flex justify-around items-center px-2 py-3 z-20">
-        <a href="index.html" class="flex flex-col items-center p-2 text-popOrange">
-            <i class="fa-solid fa-wallet text-xl mb-1"></i>
-            <span class="text-[10px] font-bold uppercase tracking-wider">Ví Chính</span>
+    <nav class="bottom-nav">
+        <a href="index.html" class="nav-item active">
+            <i class="fas fa-wallet"></i>
+            <span>Ví</span>
         </a>
-        <a href="trade.html" class="flex flex-col items-center p-2 text-gray-500 hover:text-white transition">
-            <i class="fa-solid fa-chart-line text-xl mb-1"></i>
-            <span class="text-[10px] font-bold uppercase tracking-wider">Giao Dịch</span>
+        <a href="trade.html" class="nav-item">
+            <i class="fas fa-exchange-alt"></i>
+            <span>Giao dịch</span>
         </a>
-        <a href="settings.html" class="flex flex-col items-center p-2 text-gray-500 hover:text-white transition">
-            <i class="fa-solid fa-gear text-xl mb-1"></i>
-            <span class="text-[10px] font-bold uppercase tracking-wider">Cài Đặt</span>
+        <a href="settings.html" class="nav-item">
+            <i class="fas fa-cog"></i>
+            <span>Cài đặt</span>
         </a>
     </nav>
 
-    <div id="sendModal" class="fixed inset-0 bg-black/90 hidden flex justify-center items-end sm:items-center z-50 backdrop-blur-sm transition-opacity duration-300 opacity-0">
-        <div class="bg-cardBg w-full sm:w-[400px] rounded-t-[2rem] sm:rounded-[2rem] p-6 border-t sm:border border-gray-800 transform translate-y-full sm:translate-y-0 transition-transform duration-300" id="sendModalBox">
-            <div class="flex justify-between items-center mb-6">
-                <h3 class="text-2xl font-bold text-white">Gửi Tiền</h3>
-                <button onclick="closeModal('sendModal')" class="w-8 h-8 bg-gray-800 rounded-full flex justify-center items-center text-gray-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
+    <div class="modal-overlay" id="sendModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Gửi Tài Sản</h3>
+                <button class="close-btn" onclick="closeModal('sendModal')">&times;</button>
             </div>
-            
-            <div class="space-y-4">
-                <div>
-                    <label class="text-xs text-gray-400 uppercase tracking-wider pl-1 mb-1 block">Địa chỉ nhận (Popay Address)</label>
-                    <input type="text" id="send-address" placeholder="Bắt đầu bằng POPT..." class="w-full bg-inputBg border border-gray-800 rounded-2xl p-4 text-white focus:border-popOrange outline-none transition font-mono text-sm">
-                </div>
-                
-                <div>
-                    <label class="text-xs text-gray-400 uppercase tracking-wider pl-1 mb-1 block">Tài sản & Mạng lưới</label>
-                    <div onclick="openModal('assetModal')" class="bg-inputBg border border-gray-800 rounded-2xl p-4 flex justify-between items-center cursor-pointer hover:border-popOrange transition">
-                        <div class="flex items-center gap-3" id="selected-asset-display">
-                            <img src="https://cryptologos.cc/logos/tether-usdt-logo.png" class="w-6 h-6 rounded-full bg-white p-0.5">
-                            <div>
-                                <p class="text-white font-bold leading-none">USDT</p>
-                                <p class="text-[10px] text-gray-500 mt-1">Mạng: BEP20</p>
-                            </div>
-                        </div>
-                        <i class="fa-solid fa-chevron-down text-gray-500"></i>
-                    </div>
-                    <input type="hidden" id="send-asset" value="USDT">
-                </div>
-
-                <div>
-                    <label class="text-xs text-gray-400 uppercase tracking-wider pl-1 mb-1 block">Số lượng</label>
-                    <div class="flex gap-2">
-                        <input type="number" id="send-amount" placeholder="0.00" class="flex-1 bg-inputBg border border-gray-800 rounded-2xl p-4 text-white focus:border-popOrange outline-none transition text-lg font-bold">
-                    </div>
-                    <p class="text-xs text-popOrange mt-2 text-right font-bold" id="send-available">Khả dụng: 0.00</p>
+            <div class="form-group">
+                <label>Chọn Coin</label>
+                <select class="form-control" id="send-coin">
+                    <option value="MSPW">MySPay (MSPW)</option>
+                    <option value="USDT">Tether (USDT)</option>
+                    <option value="BTC">Bitcoin (BTC)</option>
+                    <option value="ETH">Ethereum (ETH)</option>
+                    <option value="VNDW">VND Wallet (VNDW)</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Địa chỉ ví nhận (MySPay Wallet)</label>
+                <div class="input-group">
+                    <input type="text" id="target-address" class="form-control" placeholder="Bắt đầu bằng MSPW-0x...">
+                    <button type="button" class="scan-btn" onclick="openScannerModal()"><i class="fas fa-expand"></i></button>
                 </div>
             </div>
-
-            <button onclick="executeSend()" class="w-full bg-popOrange text-black font-black uppercase tracking-wider py-4 rounded-2xl mt-8 hover:bg-orange-600 transition">
-                Xác Nhận Gửi
-            </button>
+            <div class="form-group">
+                <label>Số lượng</label>
+                <input type="number" class="form-control" placeholder="0.00">
+            </div>
+            <button class="btn-primary" onclick="confirmSend()">Xác nhận Gửi</button>
         </div>
     </div>
 
-    <div id="assetModal" class="fixed inset-0 bg-black/90 hidden flex justify-center items-end sm:items-center z-[60] backdrop-blur-sm transition-opacity duration-300 opacity-0">
-        <div class="bg-cardBg w-full sm:w-[400px] rounded-t-[2rem] sm:rounded-[2rem] p-6 border-t sm:border border-gray-800 transform translate-y-full sm:translate-y-0 transition-transform duration-300" id="assetModalBox">
-            <div class="flex justify-between items-center mb-6">
-                <h3 class="text-lg font-bold text-white">Chọn Tài Sản & Mạng</h3>
-                <button onclick="closeModal('assetModal')" class="text-gray-400 hover:text-white"><i class="fa-solid fa-xmark text-xl"></i></button>
+    <div class="modal-overlay" id="qrModal" style="z-index: 1001;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Quét Mã QR</h3>
+                <button class="close-btn" onclick="closeScannerModal()">&times;</button>
             </div>
-            <div class="space-y-3">
-                <div onclick="selectAsset('USDT', 'BEP20', 'https://cryptologos.cc/logos/tether-usdt-logo.png')" class="p-4 rounded-xl border border-gray-800 bg-inputBg hover:border-popOrange cursor-pointer flex justify-between items-center">
-                    <div class="flex items-center gap-3">
-                        <img src="https://cryptologos.cc/logos/tether-usdt-logo.png" class="w-8 h-8 rounded-full bg-white p-0.5">
-                        <div>
-                            <p class="font-bold text-white">USDT</p>
-                            <p class="text-xs text-gray-400">Mạng: BNB Smart Chain (BEP20)</p>
-                        </div>
-                    </div>
+            <div id="reader"></div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="receiveModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Nhận Tài Sản</h3>
+                <button class="close-btn" onclick="closeModal('receiveModal')">&times;</button>
+            </div>
+            <div style="text-align: center; margin-bottom: 10px; font-size: 0.9rem; color: var(--danger);">
+                <i class="fas fa-exclamation-triangle"></i> Chỉ gửi tài sản trên mạng <b>MSP Smart Chain</b>
+            </div>
+            <div class="qr-placeholder">
+                <i class="fas fa-qrcode"></i>
+            </div>
+            <p style="text-align: center; margin-bottom: 10px; font-weight: bold;">Địa chỉ ví MySPay của bạn</p>
+            <div class="copy-box" id="full-address-display">
+                Loading...
+            </div>
+            <button class="btn-primary" onclick="copyAddress()">Sao chép Địa chỉ</button>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="referralModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Giới thiệu Bạn Bè</h3>
+                <button class="close-btn" onclick="closeModal('referralModal')">&times;</button>
+            </div>
+            <div style="text-align: center; margin-bottom: 20px;">
+                <i class="fas fa-gift" style="font-size: 3rem; color: var(--primary-color); margin-bottom: 10px;"></i>
+                <p>Nhận ngay <b>0.1 USDT</b> cho mỗi người bạn đăng ký thành công MySPay Wallet qua liên kết của bạn.</p>
+            </div>
+            <div class="form-group">
+                <label>Liên kết giới thiệu của bạn</label>
+                <div class="copy-box" id="ref-link-display" style="font-weight: bold; color: var(--primary-color);">
+                    Loading...
                 </div>
-                <div onclick="selectAsset('POPT', 'Popay Chain', 'logo.png')" class="p-4 rounded-xl border border-gray-800 bg-inputBg hover:border-popOrange cursor-pointer flex justify-between items-center">
-                    <div class="flex items-center gap-3">
-                        <img src="logo.png" class="w-8 h-8 rounded-full border border-popOrange object-cover" onerror="this.src='https://via.placeholder.com/32/ff5f1f/000000?text=P'">
-                        <div>
-                            <p class="font-bold text-popOrange">POPT</p>
-                            <p class="text-xs text-gray-400">Mạng: Popay Native Chain</p>
-                        </div>
-                    </div>
-                </div>
             </div>
+            <button class="btn-primary" onclick="copyRefLink()">Sao chép Link</button>
         </div>
     </div>
 
-    <div id="receiveModal" class="fixed inset-0 bg-black/90 hidden flex justify-center items-end sm:items-center z-50 backdrop-blur-sm transition-opacity duration-300 opacity-0">
-        <div class="bg-cardBg w-full sm:w-[400px] rounded-t-[2rem] sm:rounded-[2rem] p-8 border-t sm:border border-gray-800 text-center transform translate-y-full sm:translate-y-0 transition-transform duration-300" id="receiveModalBox">
-            <div class="flex justify-between items-center mb-4">
-                <h3 class="text-xl font-bold text-white">Nhận Tiền</h3>
-                <button onclick="closeModal('receiveModal')" class="text-gray-400 hover:text-white"><i class="fa-solid fa-xmark text-xl"></i></button>
-            </div>
-            <p class="text-sm text-gray-400 mb-6">Quét mã QR để nhận <span class="text-white font-bold">USDT (BEP20)</span> hoặc <span class="text-popOrange font-bold">POPT</span>.</p>
-            
-            <div class="bg-white p-4 rounded-2xl inline-block mb-6">
-                <img id="qr-image" src="" alt="QR Code" class="w-40 h-40">
-            </div>
-            
-            <div class="bg-inputBg border border-gray-800 rounded-2xl p-4 flex justify-between items-center mb-6">
-                <span class="text-sm font-mono text-gray-300 truncate mr-3" id="my-address">Đang tải...</span>
-                <button onclick="copyMyAddress()" class="text-popOrange hover:text-white transition bg-popOrange/10 p-2 rounded-lg"><i class="fa-regular fa-copy"></i></button>
-            </div>
-        </div>
-    </div>
-
-    <div id="successModal" class="fixed inset-0 bg-black/90 hidden flex justify-center items-center z-50 backdrop-blur-md transition-opacity duration-300 opacity-0">
-        <div class="bg-cardBg w-[320px] rounded-[2rem] p-8 text-center border border-gray-800 transform scale-90 transition-transform duration-300" id="successModalBox">
-            <div class="w-24 h-24 mx-auto bg-popOrange/20 rounded-full flex items-center justify-center mb-6 border border-popOrange">
-                <i class="fa-solid fa-check text-5xl text-popOrange"></i>
-            </div>
-            <h3 class="text-2xl font-black mb-2 text-white uppercase tracking-wide">Thành Công</h3>
-            <p class="text-gray-400 mb-8 text-sm leading-relaxed" id="success-msg">Giao dịch hoàn tất.</p>
-            <button onclick="closeModal('successModal')" class="w-full bg-popOrange text-black font-bold uppercase tracking-wider py-3 rounded-xl hover:bg-orange-600 transition">
-                Hoàn Thành
-            </button>
-        </div>
-    </div>
-
-    <div id="toast" class="fixed top-5 left-1/2 transform -translate-x-1/2 bg-cardBg border border-gray-800 text-white px-6 py-3 rounded-full z-[80] flex items-center gap-3 toast-enter transition-all duration-300 pointer-events-none hidden w-max max-w-[90%]">
-        <i class="fa-solid fa-bell text-popOrange"></i>
-        <span id="toast-msg" class="font-bold text-sm">Thông báo</span>
+    <div id="toast">
+        <i class="fas fa-info-circle"></i>
+        <span id="toast-message">Thông báo</span>
     </div>
 
     <script>
-        const API_URL = 'http://localhost:3000/api'; // Đường dẫn Backend thực tế
-        let currentPoptPrice = 0;
-        let localProfile = {}; // Lưu trữ tạm profile để dùng cho popup
+        // --- 0. BẢO MẬT: YÊU CẦU ĐĂNG NHẬP ---
+        const userToken = localStorage.getItem('myspay_token');
+        let myAddress = localStorage.getItem('myspay_address');
 
-        // --- 1. KHỞI TẠO & KIỂM TRA ĐĂNG NHẬP ---
-        async function initApp() {
-            const token = localStorage.getItem('token');
-            if (!token) {
-                window.location.href = 'login.html'; // Đẩy ra trang login nếu không có token
-                return;
-            }
+        if (!userToken || !myAddress) {
+            // Đá về trang login ngay lập tức nếu chưa có thông tin xác thực
+            window.location.href = 'login.html';
+        }
+
+        // --- 1. HỆ THỐNG THÔNG BÁO POPUP (TOAST) ---
+        function showToast(message, type = 'info') {
+            const toast = document.getElementById("toast");
+            const toastMsg = document.getElementById("toast-message");
+            const icon = toast.querySelector('i');
             
-            await loadProfile(token);
-            await loadHistory(token);
-            startWebStream();
-        }
-
-        // --- 2. LẤY DỮ LIỆU TỪ SERVER ---
-        async function loadProfile(token) {
-            try {
-                const res = await fetch(`${API_URL}/user/profile`, {
-                    headers: { 'Authorization': `Bearer ${token}` }
-                });
-                
-                if (!res.ok) throw new Error('Phiên đăng nhập hết hạn');
-                const data = await res.json();
-                localProfile = data;
-
-                // Cập nhật số dư
-                document.getElementById('usdt-balance').innerText = parseFloat(data.usdt_balance).toFixed(2);
-                document.getElementById('popt-balance').innerText = parseFloat(data.popt_balance).toFixed(2);
-                
-                // Cập nhật Thông tin Nhận tiền
-                document.getElementById('my-address').innerText = data.wallet_address;
-                document.getElementById('qr-image').src = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${data.wallet_address}`;
-
-                // Cập nhật Link Giới thiệu
-                const currentDomain = window.location.origin + window.location.pathname.replace('index.html','');
-                document.getElementById('ref-link').value = `${currentDomain}login.html?ref=${data.ref_code}`;
-                
-                updateTotalBalance();
-            } catch (error) {
-                console.error(error);
-                localStorage.removeItem('token');
-                window.location.href = 'login.html';
-            }
-        }
-
-        async function loadHistory(token) {
-            try {
-                const res = await fetch(`${API_URL}/user/history`, {
-                    headers: { 'Authorization': `Bearer ${token}` }
-                });
-                const transactions = await res.json();
-                
-                const container = document.getElementById('history-container');
-                container.innerHTML = '';
-
-                if (transactions.length === 0) {
-                    container.innerHTML = `<p class="text-center text-gray-600 py-6 text-sm">Chưa có giao dịch nào.</p>`;
-                    return;
-                }
-
-                transactions.forEach(tx => {
-                    const isReceive = tx.type === 'receive';
-                    const color = isReceive ? 'text-[#26A17B]' : 'text-popOrange';
-                    const bgIcon = isReceive ? 'bg-[#26A17B]/10 border-[#26A17B]/50' : 'bg-popOrange/10 border-popOrange/50';
-                    const icon = isReceive ? 'fa-arrow-down' : 'fa-arrow-up';
-                    const sign = isReceive ? '+' : '-';
-                    const dateStr = new Date(tx.created_at).toLocaleString('vi-VN');
-
-                    container.innerHTML += `
-                        <div class="bg-cardBg p-4 rounded-2xl flex justify-between items-center border border-gray-800 hover:border-gray-600 transition">
-                            <div class="flex items-center gap-4">
-                                <div class="w-10 h-10 rounded-full ${bgIcon} flex items-center justify-center border">
-                                    <i class="fa-solid ${icon} ${color}"></i>
-                                </div>
-                                <div>
-                                    <h4 class="font-bold text-sm text-white">${tx.title}</h4>
-                                    <p class="text-[10px] text-gray-500 mt-0.5">${dateStr}</p>
-                                </div>
-                            </div>
-                            <div class="text-right">
-                                <h4 class="font-bold text-sm ${color}">${sign} ${parseFloat(tx.amount).toFixed(2)} ${tx.asset}</h4>
-                            </div>
-                        </div>
-                    `;
-                });
-            } catch (error) {
-                console.error("Lỗi tải lịch sử");
-            }
-        }
-
-        // --- 3. LOGIC GIAO DỊCH GỬI TIỀN (REAL API) ---
-        async function executeSend() {
-            const address = document.getElementById('send-address').value.trim();
-            const amount = document.getElementById('send-amount').value;
-            const asset = document.getElementById('send-asset').value;
-            const token = localStorage.getItem('token');
-
-            if (!address) return showToast('Vui lòng nhập địa chỉ ví nhận!');
-            if (isNaN(amount) || amount <= 0) return showToast('Số lượng không hợp lệ!');
-
-            try {
-                const res = await fetch(`${API_URL}/transaction/send`, {
-                    method: 'POST',
-                    headers: { 
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${token}`
-                    },
-                    body: JSON.stringify({ receiverAddress: address, amount: amount, asset: asset })
-                });
-                
-                const result = await res.json();
-                
-                if (res.ok) {
-                    closeModal('sendModal');
-                    document.getElementById('send-address').value = '';
-                    document.getElementById('send-amount').value = '';
-                    
-                    document.getElementById('success-msg').innerHTML = `Đã chuyển <span class="text-popOrange font-bold">${amount} ${asset}</span><br>đến ${address.substring(0,8)}...`;
-                    openModal('successModal');
-                    
-                    // Tải lại dữ liệu mới nhất
-                    loadProfile(token);
-                    loadHistory(token);
-                } else {
-                    showToast(result.error || 'Giao dịch thất bại!');
-                }
-            } catch (error) {
-                showToast('Lỗi kết nối tới máy chủ!');
-            }
-        }
-
-        // --- 4. TIỆN ÍCH CHỌN TÀI SẢN (POPUP) ---
-        function selectAsset(asset, network, logoSrc) {
-            // Cập nhật input ẩn cho API
-            document.getElementById('send-asset').value = asset;
+            toast.className = "";
+            icon.className = "";
             
-            // Cập nhật Giao diện hiển thị
-            let textColor = asset === 'POPT' ? 'text-popOrange' : 'text-white';
-            document.getElementById('selected-asset-display').innerHTML = `
-                <img src="${logoSrc}" class="w-6 h-6 rounded-full bg-white p-0.5 object-cover">
-                <div>
-                    <p class="${textColor} font-bold leading-none">${asset}</p>
-                    <p class="text-[10px] text-gray-500 mt-1">Mạng: ${network}</p>
-                </div>
-            `;
+            toastMsg.innerText = message;
+            toast.classList.add(type);
             
-            // Cập nhật số dư khả dụng
-            const balance = asset === 'USDT' ? localProfile.usdt_balance : localProfile.popt_balance;
-            document.getElementById('send-available').innerText = `Khả dụng: ${parseFloat(balance).toFixed(2)} ${asset}`;
-            
-            closeModal('assetModal');
-        }
+            if(type === 'success') icon.className = "fas fa-check-circle";
+            else if(type === 'error') icon.className = "fas fa-exclamation-circle";
+            else icon.className = "fas fa-info-circle";
 
-        // --- 5. GIÁ REALTIME (WEBSOCKET BINANCE) ---
-        function startWebStream() {
-            const poptValueEl = document.getElementById('popt-price');
-            const ws = new WebSocket('wss://stream.binance.com:9443/ws/trxusdt@trade');
-            
-            ws.onmessage = (event) => {
-                const data = JSON.parse(event.data);
-                currentPoptPrice = parseFloat(data.p);
-                poptValueEl.innerText = `Giá: $${currentPoptPrice.toFixed(4)}`;
-                updateTotalBalance();
-            };
-        }
+            toast.classList.add("show");
 
-        function updateTotalBalance() {
-            if(!localProfile.usdt_balance) return;
-            const usdt = parseFloat(localProfile.usdt_balance);
-            const popt = parseFloat(localProfile.popt_balance);
-            
-            const usdtValue = usdt;
-            const poptValue = popt * currentPoptPrice;
-            const total = usdtValue + poptValue;
-            
-            document.getElementById('usdt-value').innerText = `~ $${usdtValue.toFixed(2)}`;
-            document.getElementById('total-balance').innerText = `$ ${total.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
-        }
-
-        // --- 6. UI & COPY LOGIC ---
-        function copyRefLink() {
-            copyToClipboard(document.getElementById('ref-link').value, 'Đã sao chép link giới thiệu Popay!');
-        }
-        function copyMyAddress() {
-            copyToClipboard(document.getElementById('my-address').innerText, 'Đã sao chép địa chỉ ví!');
-        }
-
-        function copyToClipboard(text, successMsg) {
-            navigator.clipboard.writeText(text).then(() => showToast(successMsg))
-            .catch(() => {
-                const input = document.createElement('input');
-                input.value = text;
-                document.body.appendChild(input);
-                input.select();
-                document.execCommand('copy');
-                document.body.removeChild(input);
-                showToast(successMsg);
-            });
-        }
-
-        function openModal(id) {
-            const modal = document.getElementById(id);
-            const box = document.getElementById(id + 'Box');
-            modal.classList.remove('hidden');
-            setTimeout(() => {
-                modal.classList.remove('opacity-0');
-                if (id !== 'successModal') box.classList.remove('translate-y-full');
-                else box.classList.remove('scale-90');
-            }, 10);
-
-            // Gán khả dụng ngay khi mở popup Gửi
-            if(id === 'sendModal' && localProfile.usdt_balance) {
-                const currentAsset = document.getElementById('send-asset').value;
-                const balance = currentAsset === 'USDT' ? localProfile.usdt_balance : localProfile.popt_balance;
-                document.getElementById('send-available').innerText = `Khả dụng: ${parseFloat(balance).toFixed(2)} ${currentAsset}`;
-            }
-        }
-
-        function closeModal(id) {
-            const modal = document.getElementById(id);
-            const box = document.getElementById(id + 'Box');
-            modal.classList.add('opacity-0');
-            if (id !== 'successModal') box.classList.add('translate-y-full');
-            else box.classList.add('scale-90');
-            setTimeout(() => modal.classList.add('hidden'), 300);
-        }
-
-        let toastTimeout;
-        function showToast(message) {
-            const toast = document.getElementById('toast');
-            document.getElementById('toast-msg').innerText = message;
-            toast.classList.remove('hidden');
-            setTimeout(() => { toast.classList.remove('toast-enter'); toast.classList.add('toast-active'); }, 10);
-            clearTimeout(toastTimeout);
-            toastTimeout = setTimeout(() => {
-                toast.classList.remove('toast-active'); toast.classList.add('toast-enter');
-                setTimeout(() => toast.classList.add('hidden'), 300);
+            setTimeout(function(){ 
+                toast.classList.remove("show"); 
             }, 3000);
         }
 
-        // Chạy App
-        window.onload = initApp;
+        // --- 2. QUẢN LÝ ĐỊA CHỈ VÍ & REFERRAL (Đã đăng nhập) ---
+        const domain = window.location.hostname || 'myspaywallet.com';
+        // Sửa link giới thiệu điều hướng về login.html để đăng ký
+        const refLink = `https://${domain}/login.html?ref=${myAddress.substring(7, 15)}`;
+
+        document.getElementById('short-address').innerText = myAddress.substring(0, 10) + '...' + myAddress.substring(myAddress.length - 4);
+        document.getElementById('full-address-display').innerText = myAddress;
+        document.getElementById('ref-link-display').innerText = refLink;
+
+        function copyAddress() {
+            navigator.clipboard.writeText(myAddress);
+            showToast('Đã sao chép địa chỉ ví MySPay!', 'success');
+        }
+
+        function copyRefLink() {
+            navigator.clipboard.writeText(refLink);
+            showToast('Đã sao chép liên kết giới thiệu!', 'success');
+        }
+
+        function confirmSend() {
+            showToast('Đang chờ kết nối CSDL Neon.tech SQL', 'info');
+        }
+
+        // --- 3. DỮ LIỆU TÀI SẢN ---
+        // Phần này hiện đang giữ dữ liệu nội bộ để test hiển thị, bạn có thể thiết lập fetch API để lấy tổng số dư thực từ server sau
+        let assets = [
+            { symbol: 'MSPW', name: 'MySPay', balance: 1500, price: 0, logo: 'logo.png', standardLogo: 'https://via.placeholder.com/40/007bff/ffffff?text=M' },
+            { symbol: 'USDT', name: 'Tether', balance: 50.5, price: 1.00, logo: 'https://cryptologos.cc/logos/tether-usdt-logo.png' },
+            { symbol: 'BTC', name: 'Bitcoin', balance: 0.05, price: 0, logo: 'https://cryptologos.cc/logos/bitcoin-btc-logo.png' },
+            { symbol: 'ETH', name: 'Ethereum', balance: 1.2, price: 0, logo: 'https://cryptologos.cc/logos/ethereum-eth-logo.png' },
+            { symbol: 'VNDW', name: 'VND Wallet', balance: 500000, price: 0.000039, logo: 'https://via.placeholder.com/40/e74c3c/ffffff?text=V' }
+        ];
+
+        function renderAssets() {
+            const container = document.getElementById('assets-container');
+            container.innerHTML = '';
+            let totalUsd = 0;
+
+            assets.forEach(asset => {
+                const valueUsd = asset.balance * asset.price;
+                totalUsd += valueUsd;
+
+                const imgSource = asset.symbol === 'MSPW' ? `src="${asset.logo}" onerror="this.src='${asset.standardLogo}'"` : `src="${asset.logo}"`;
+
+                const html = `
+                    <div class="asset-card">
+                        <div class="asset-left">
+                            <img ${imgSource} class="asset-icon" alt="${asset.symbol}">
+                            <div class="asset-info">
+                                <h4>${asset.symbol}</h4>
+                                <p>${asset.name}</p>
+                            </div>
+                        </div>
+                        <div class="asset-right">
+                            <div class="asset-balance">${asset.balance.toLocaleString('en-US', {maximumFractionDigits: 6})}</div>
+                            <div class="asset-value" id="val-${asset.symbol}">$${valueUsd.toFixed(2)}</div>
+                        </div>
+                    </div>
+                `;
+                container.innerHTML += html;
+            });
+
+            document.getElementById('total-balance-usd').innerText = `$${totalUsd.toFixed(2)}`;
+        }
+
+        renderAssets();
+
+        // --- 4. KẾT NỐI WEBSOCKET BINANCE API ---
+        const ws = new WebSocket('wss://stream.binance.com:9443/ws/!ticker@arr');
+
+        ws.onmessage = function(event) {
+            const data = JSON.parse(event.data);
+            let needsUpdate = false;
+
+            data.forEach(ticker => {
+                if (ticker.s === 'XRPUSDT') {
+                    let mspw = assets.find(a => a.symbol === 'MSPW');
+                    if(mspw) { mspw.price = parseFloat(ticker.c); needsUpdate = true; }
+                }
+                if (ticker.s === 'BTCUSDT') {
+                    let btc = assets.find(a => a.symbol === 'BTC');
+                    if(btc) { btc.price = parseFloat(ticker.c); needsUpdate = true; }
+                }
+                if (ticker.s === 'ETHUSDT') {
+                    let eth = assets.find(a => a.symbol === 'ETH');
+                    if(eth) { eth.price = parseFloat(ticker.c); needsUpdate = true; }
+                }
+            });
+
+            if (needsUpdate) {
+                renderAssets();
+            }
+        };
+
+        ws.onerror = function() {
+            showToast('Lỗi kết nối dữ liệu thị trường', 'error');
+        };
+
+        // --- 5. XỬ LÝ MODAL ---
+        function openModal(id) {
+            document.getElementById(id).style.display = 'flex';
+        }
+
+        function closeModal(id) {
+            document.getElementById(id).style.display = 'none';
+        }
+
+        window.onclick = function(event) {
+            if (event.target.classList.contains('modal-overlay')) {
+                event.target.style.display = 'none';
+                if(event.target.id === 'qrModal') stopQRScanner();
+            }
+        }
+
+        // --- 6. TÍNH NĂNG QUÉT MÃ QR ---
+        let html5QrcodeScanner;
+
+        function openScannerModal() {
+            openModal('qrModal');
+            
+            if (!html5QrcodeScanner) {
+                html5QrcodeScanner = new Html5QrcodeScanner(
+                    "reader",
+                    { fps: 10, qrbox: {width: 250, height: 250} },
+                    /* verbose= */ false
+                );
+            }
+            
+            html5QrcodeScanner.render(onScanSuccess, onScanFailure);
+        }
+
+        function closeScannerModal() {
+            closeModal('qrModal');
+            stopQRScanner();
+        }
+
+        function stopQRScanner() {
+            if (html5QrcodeScanner) {
+                html5QrcodeScanner.clear().catch(error => {
+                    console.error("Lỗi đóng camera.", error);
+                });
+            }
+        }
+
+        function onScanSuccess(decodedText, decodedResult) {
+            document.getElementById('target-address').value = decodedText;
+            closeScannerModal();
+            showToast('Quét mã QR thành công!', 'success');
+        }
+
+        function onScanFailure(error) {}
+
     </script>
 </body>
 </html>
