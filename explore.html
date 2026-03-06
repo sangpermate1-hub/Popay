@@ -53,14 +53,13 @@
         .icon-purple { background: #f3e8ff; color: #7c3aed; }
         .icon-orange { background: #fef3c7; color: #d97706; }
 
-        /* Two Columns Layout -> Stacks on Mobile */
         .row { display: flex; flex-direction: column; gap: 20px; }
         @media (min-width: 768px) { .row { flex-direction: row; } .col-half { flex: 1; } .stats-grid { grid-template-columns: repeat(4, 1fr); } }
         
         .col-half { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 12px; overflow: hidden; }
         .panel-header { padding: 15px; border-bottom: 1px solid var(--border-color); background: #f8fafc; font-weight: 600; font-size: 1rem; }
         
-        /* List Styles (For Blocks/Txns) */
+        /* List Styles */
         .list-group { display: flex; flex-direction: column; }
         .list-item { display: flex; justify-content: space-between; padding: 12px 15px; border-bottom: 1px solid var(--border-color); align-items: center; gap: 10px; }
         .list-item:last-child { border-bottom: none; }
@@ -99,7 +98,7 @@
         /* Balances Grid */
         .balance-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; margin-top: 15px; }
         .asset-item { border: 1px solid var(--border-color); padding: 12px; border-radius: 10px; display: flex; align-items: center; gap: 10px; background: var(--card-bg); }
-        .asset-item img { width: 25px; height: 25px; }
+        .asset-item img { width: 25px; height: 25px; border-radius: 50%; background: #fff; }
         .asset-val { font-weight: bold; font-size: 1rem; }
 
         .system-msg { padding: 30px 15px; text-align: center; color: var(--text-muted); font-size: 0.95rem; }
@@ -132,7 +131,6 @@
     </div>
 
     <div class="container" id="main-dashboard">
-        
         <div class="stats-grid">
             <div class="stat-card">
                 <div class="stat-icon icon-blue"><i class="fas fa-chart-line"></i></div>
@@ -171,7 +169,6 @@
                     <div class="system-msg"><i class="fas fa-spinner fa-spin"></i> Đang tải Blockchain...</div>
                 </div>
             </div>
-
             <div class="col-half">
                 <div class="panel-header">Giao dịch gần nhất</div>
                 <div class="list-group" id="latest-txns-container">
@@ -187,93 +184,75 @@
     </div>
 
     <script>
-        // ============================================================
-        // NHẬN DIỆN DOMAIN TỰ ĐỘNG ĐỂ GỌI API 
-        // ============================================================
+        // Tự động nhận diện API
         let API_BASE_URL = '';
         const currentHost = window.location.hostname;
-
         if (currentHost === 'localhost' || currentHost === '127.0.0.1') {
             API_BASE_URL = 'http://localhost:3000/api/explorer';
         } else {
             API_BASE_URL = `https://${currentHost}/api/explorer`; 
-            // LƯU Ý: Nếu frontend và backend (server.js) deploy ở 2 host khác nhau,
-            // bạn phải sửa dòng trên thành link của backend. VD:
-            // API_BASE_URL = 'https://app-name.up.railway.app/api/explorer';
         }
 
-        // --- 1. WEBSOCKET CẬP NHẬT GIÁ ---
+        // Định nghĩa nguồn Logo TrustWallet
+        const COIN_LOGOS = {
+            MPT: 'logo.png',
+            USDT: 'https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/ethereum/assets/0xdAC17F958D2ee523a2206206994597C13D831ec7/logo.png',
+            TON: 'https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/ton/info/logo.png',
+            USDC: 'https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/ethereum/assets/0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48/logo.png',
+            DOGE: 'https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/doge/info/logo.png'
+        };
+
+        // WebSocket giá
         const ws = new WebSocket('wss://stream.binance.com:9443/ws/xrpusdt@ticker');
         ws.onmessage = function(event) {
             const data = JSON.parse(event.data);
             document.getElementById('mpt-price').innerText = `$${parseFloat(data.c).toFixed(4)}`;
         };
 
-        // --- 2. FETCH THỐNG KÊ (KHÔNG DÙNG MOCK) ---
         async function fetchSystemStats() {
             try {
                 const res = await fetch(`${API_BASE_URL}/stats`);
-                if (!res.ok) throw new Error();
                 const data = await res.json();
-                
                 document.getElementById('total-wallets').innerText = data.total_wallets.toLocaleString();
                 document.getElementById('total-txns').innerText = data.total_transactions.toLocaleString();
                 document.getElementById('total-supply').innerText = `${parseFloat(data.supply_mspw).toLocaleString()} MPT`;
-            } catch (error) {
-                document.getElementById('total-wallets').innerText = 'Lỗi Server';
-                document.getElementById('total-txns').innerText = 'Lỗi Server';
-                document.getElementById('total-supply').innerText = 'Lỗi Server';
-            }
+            } catch (error) { console.error('Lỗi Stats'); }
         }
 
-        // --- 3. FETCH DỮ LIỆU MỚI NHẤT (KHÔNG DÙNG MOCK) ---
         async function fetchLatestData() {
             try {
                 const resBlocks = await fetch(`${API_BASE_URL}/latest-mints`);
-                if(!resBlocks.ok) throw new Error();
                 renderLatestWallets(await resBlocks.json());
-
                 const resTxns = await fetch(`${API_BASE_URL}/latest-txns`);
-                if(!resTxns.ok) throw new Error();
                 renderLatestTxns(await resTxns.json());
-            } catch (error) {
-                document.getElementById('latest-wallets-container').innerHTML = '<div class="system-msg" style="color:var(--danger)">Không thể kết nối đến Database.</div>';
-                document.getElementById('latest-txns-container').innerHTML = '<div class="system-msg" style="color:var(--danger)">Không thể kết nối đến Database.</div>';
-            }
+            } catch (error) { console.error('Lỗi dữ liệu mới nhất'); }
         }
 
         function renderLatestWallets(data) {
             const container = document.getElementById('latest-wallets-container');
             container.innerHTML = '';
-            if(data.length === 0) return container.innerHTML = '<div class="system-msg">Chưa có ví nào trên hệ thống.</div>';
-
             data.forEach(item => {
-                const timeStr = new Date(item.created_at).toLocaleTimeString('vi-VN');
                 container.innerHTML += `
                     <div class="list-item">
                         <div class="item-left">
                             <div class="item-icon-box"><i class="fas fa-wallet"></i></div>
-                            <div style="min-width: 0;"> <a onclick="executeSearch('${item.wallet}')" class="item-title">${item.wallet}</a>
-                                <div class="item-desc">Tạo lúc: ${timeStr}</div>
+                            <div style="min-width: 0;">
+                                <a onclick="executeSearch('${item.wallet}')" class="item-title">${item.wallet}</a>
+                                <div class="item-desc">Tạo lúc: ${new Date(item.created_at).toLocaleTimeString('vi-VN')}</div>
                             </div>
                         </div>
-                    </div>
-                `;
+                    </div>`;
             });
         }
 
         function renderLatestTxns(data) {
             const container = document.getElementById('latest-txns-container');
             container.innerHTML = '';
-            if(data.length === 0) return container.innerHTML = '<div class="system-msg">Chưa có giao dịch nào.</div>';
-
             data.forEach(item => {
-                const timeStr = new Date(item.created_at).toLocaleTimeString('vi-VN');
-                
                 let badgeClass = 'badge-transfer'; let typeName = 'Chuyển';
-                if(item.type === 'stake' || item.type === 'unstake') { badgeClass = 'badge-stake'; typeName = 'Stake'; }
+                if(item.type.includes('stake')) { badgeClass = 'badge-stake'; typeName = 'Stake'; }
                 if(item.type.includes('p2p')) { badgeClass = 'badge-p2p'; typeName = 'P2P'; }
-                if(item.type === 'reward' || item.type === 'mint') { badgeClass = 'badge-reward'; typeName = 'Thưởng'; }
+                if(item.type === 'reward') { badgeClass = 'badge-reward'; typeName = 'Thưởng'; }
 
                 container.innerHTML += `
                     <div class="list-item">
@@ -281,25 +260,22 @@
                             <div class="item-icon-box"><i class="fas fa-file-invoice-dollar"></i></div>
                             <div style="min-width: 0;">
                                 <a onclick="executeSearch('${item.tx_hash}')" class="item-title">${item.tx_hash}</a>
-                                <div class="item-desc">${timeStr}</div>
+                                <div class="item-desc">${new Date(item.created_at).toLocaleTimeString('vi-VN')}</div>
                             </div>
                         </div>
                         <div class="item-right">
                             <div class="tx-badge ${badgeClass}">${typeName}</div>
                             <div class="tx-amount">${parseFloat(item.amount)} ${item.currency}</div>
                         </div>
-                    </div>
-                `;
+                    </div>`;
             });
         }
 
-        // --- 4. TÌM KIẾM THỰC TẾ (KHÔNG DÙNG MOCK) ---
         function handleEnter(e) { if(e.key === 'Enter') executeSearch(); }
 
         async function executeSearch(directQuery = null) {
             const query = directQuery || document.getElementById('search-input').value.trim();
             if(!query) return;
-
             let type = document.getElementById('search-type').value;
             if(type === 'all') type = query.startsWith('M') ? 'address' : 'tx';
 
@@ -309,38 +285,30 @@
 
             try {
                 const res = await fetch(`${API_BASE_URL}/search?type=${type}&q=${query}`);
-                if (!res.ok) throw new Error();
                 const data = await res.json();
-                if (!data) throw new Error();
-
                 if(type === 'address') renderAddressView(data);
                 else renderTxView(data);
             } catch (error) {
-                document.getElementById('dynamic-result-content').innerHTML = '<div class="system-msg" style="color:var(--danger);"><i class="fas fa-exclamation-triangle fa-2x"></i><br>Không tìm thấy dữ liệu hoặc Server đang bảo trì.</div>';
+                document.getElementById('dynamic-result-content').innerHTML = '<div class="system-msg" style="color:var(--danger);"><i class="fas fa-exclamation-triangle fa-2x"></i><br>Không tìm thấy dữ liệu.</div>';
             }
         }
 
         function renderAddressView(data) {
             const content = document.getElementById('dynamic-result-content');
-            
             let txRows = '';
             if(!data.txns || data.txns.length === 0) {
-                txRows = '<tr><td colspan="5" style="text-align:center;">Chưa có giao dịch (Ledger rỗng)</td></tr>';
+                txRows = '<tr><td colspan="5" style="text-align:center;">Chưa có giao dịch</td></tr>';
             } else {
                 data.txns.forEach(tx => {
-                    let inOut = tx.to_wallet === data.wallet_address 
-                        ? '<span style="color:var(--success); font-weight:bold;">IN</span>' 
-                        : '<span style="color:var(--danger); font-weight:bold;">OUT</span>';
-                    
+                    let inOut = tx.to_wallet === data.wallet_address ? '<span style="color:var(--success);font-weight:bold;">IN</span>' : '<span style="color:var(--danger);font-weight:bold;">OUT</span>';
                     txRows += `
                         <tr>
-                            <td><a onclick="executeSearch('${tx.tx_hash}')" class="clickable" style="display:block; max-width:80px; overflow:hidden; text-overflow:ellipsis;">${tx.tx_hash}</a></td>
-                            <td style="font-weight:bold; text-transform:uppercase; font-size:0.75rem;">${tx.type}</td>
+                            <td><a onclick="executeSearch('${tx.tx_hash}')" class="clickable">${tx.tx_hash.substring(0,10)}...</a></td>
+                            <td style="font-weight:bold;text-transform:uppercase;font-size:0.75rem;">${tx.type}</td>
                             <td style="font-family:monospace;">${tx.from_wallet === data.wallet_address ? tx.to_wallet.substring(0,8)+'...' : tx.from_wallet.substring(0,8)+'...'}</td>
                             <td>${inOut}</td>
                             <td style="font-weight:bold;">${parseFloat(tx.amount)} ${tx.currency}</td>
-                        </tr>
-                    `;
+                        </tr>`;
                 });
             }
 
@@ -348,17 +316,16 @@
                 <div class="detail-card">
                     <h2><i class="fas fa-wallet" style="color:var(--primary-color);"></i> Chi tiết Ví</h2>
                     <div class="hash-box">${data.wallet_address}</div>
-                    <div style="display:inline-block; padding: 4px 10px; background: #dcfce7; color: #059669; border-radius: 6px; font-size: 0.8rem; font-weight: bold; margin-bottom: 10px;">
-                        KYC: ${data.kyc_status.toUpperCase()}
-                    </div>
-                    
-                    <h3 style="margin-top: 15px; font-size:1.05rem;">Tài sản khả dụng</h3>
+                    <div style="display:inline-block; padding: 4px 10px; background: #dcfce7; color: #059669; border-radius: 6px; font-size: 0.8rem; font-weight: bold; margin-bottom: 10px;">KYC: ${data.kyc_status.toUpperCase()}</div>
+                    <h3 style="margin-top: 15px; font-size:1.05rem;">Danh mục Tài sản</h3>
                     <div class="balance-grid">
-                        <div class="asset-item"><img src="logo.png" onerror="this.src='https://via.placeholder.com/30/0066ff/ffffff?text=M'"> <div><div style="font-size:0.75rem; color:var(--text-muted)">MPT</div><div class="asset-val">${data.balance_mspw || 0}</div></div></div>
-                        <div class="asset-item"><img src="https://cryptologos.cc/logos/tether-usdt-logo.svg?v=024"> <div><div style="font-size:0.75rem; color:var(--text-muted)">USDT</div><div class="asset-val">${data.balance_usdt || 0}</div></div></div>
+                        <div class="asset-item"><img src="${COIN_LOGOS.MPT}" onerror="this.src='https://via.placeholder.com/30/0066ff/ffffff?text=M'"> <div><div style="font-size:0.75rem; color:var(--text-muted)">MPT</div><div class="asset-val">${data.balance_mspw || 0}</div></div></div>
+                        <div class="asset-item"><img src="${COIN_LOGOS.USDT}"> <div><div style="font-size:0.75rem; color:var(--text-muted)">USDT</div><div class="asset-val">${data.balance_usdt || 0}</div></div></div>
+                        <div class="asset-item"><img src="${COIN_LOGOS.TON}"> <div><div style="font-size:0.75rem; color:var(--text-muted)">TON</div><div class="asset-val">${data.balance_ton || 0}</div></div></div>
+                        <div class="asset-item"><img src="${COIN_LOGOS.USDC}"> <div><div style="font-size:0.75rem; color:var(--text-muted)">USDC</div><div class="asset-val">${data.balance_usdc || 0}</div></div></div>
+                        <div class="asset-item"><img src="${COIN_LOGOS.DOGE}"> <div><div style="font-size:0.75rem; color:var(--text-muted)">DOGE</div><div class="asset-val">${data.balance_doge || 0}</div></div></div>
                     </div>
                 </div>
-
                 <div class="detail-card" style="padding:0; overflow:hidden;">
                     <h3 style="padding: 15px; font-size:1.05rem; background:#f8fafc; border-bottom:1px solid var(--border-color); margin:0;"><i class="fas fa-list"></i> Lịch sử Giao dịch</h3>
                     <div class="table-responsive">
@@ -367,8 +334,7 @@
                             <tbody>${txRows}</tbody>
                         </table>
                     </div>
-                </div>
-            `;
+                </div>`;
         }
 
         function renderTxView(data) {
@@ -376,7 +342,6 @@
             content.innerHTML = `
                 <div class="detail-card">
                     <h2><i class="fas fa-receipt" style="color:var(--primary-color);"></i> Lệnh Giao Dịch</h2>
-                    
                     <div style="display:flex; flex-direction:column; gap:12px; margin-top: 20px;">
                         <div><div style="color:var(--text-muted); font-size:0.8rem; font-weight:bold;">Txn Hash:</div><div class="hash-box" style="margin-top:5px;">${data.tx_hash}</div></div>
                         <div style="display:flex; justify-content:space-between; border-bottom:1px solid var(--border-color); padding-bottom:10px;">
@@ -404,8 +369,7 @@
                             <div style="font-size:1.5rem; font-weight:bold; color:var(--success);">${parseFloat(data.amount)} ${data.currency}</div>
                         </div>
                     </div>
-                </div>
-            `;
+                </div>`;
         }
 
         function backToHome() {
@@ -414,11 +378,7 @@
             document.getElementById('search-input').value = '';
         }
 
-        // Init
-        window.onload = () => {
-            fetchSystemStats();
-            fetchLatestData();
-        };
+        window.onload = () => { fetchSystemStats(); fetchLatestData(); };
     </script>
 </body>
 </html>
