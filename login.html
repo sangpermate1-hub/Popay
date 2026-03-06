@@ -3,25 +3,25 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Đăng nhập - MySPay Wallet</title>
+    <title>Đăng nhập - MetahashPay</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
         :root {
-            --primary-color: #007bff;
-            --primary-light: #e6f2ff;
-            --bg-color: #f8faff;
+            --primary-color: #0066ff;
+            --primary-light: #e6f0ff;
+            --bg-color: #f5f8fa;
             --card-bg: #ffffff;
-            --text-main: #2c3e50;
-            --text-muted: #7f8c8d;
-            --border-color: #e1e8ed;
-            --success: #2ecc71;
-            --danger: #e74c3c;
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --border-color: #e2e8f0;
+            --success: #10b981;
+            --danger: #ef4444;
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
 
         body { 
-            background-color: var(--primary-color); 
+            background: linear-gradient(135deg, var(--primary-color), #004ecc);
             color: var(--text-main); 
             display: flex; 
             align-items: center; 
@@ -33,9 +33,9 @@
         .auth-container {
             background: var(--card-bg);
             width: 100%;
-            max-width: 400px;
-            border-radius: 25px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            max-width: 420px;
+            border-radius: 20px;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.2);
             overflow: hidden;
             animation: slideUp 0.4s ease-out;
         }
@@ -47,26 +47,28 @@
 
         .auth-header {
             text-align: center;
-            padding: 30px 20px 20px;
+            padding: 35px 20px 20px;
         }
 
         .auth-header img {
-            width: 60px;
-            height: 60px;
+            width: 70px;
+            height: 70px;
             border-radius: 50%;
             background: var(--primary-light);
             padding: 5px;
             margin-bottom: 15px;
+            object-fit: cover;
         }
 
         .auth-header h2 {
-            font-size: 1.5rem;
-            font-weight: 700;
+            font-size: 1.6rem;
+            font-weight: 800;
             color: var(--text-main);
+            letter-spacing: 0.5px;
         }
 
         .auth-header p {
-            font-size: 0.9rem;
+            font-size: 0.95rem;
             color: var(--text-muted);
             margin-top: 5px;
         }
@@ -75,16 +77,17 @@
         .auth-tabs {
             display: flex;
             border-bottom: 1px solid var(--border-color);
+            background: #f8fafc;
         }
 
         .tab-btn {
             flex: 1;
-            padding: 15px;
+            padding: 16px;
             text-align: center;
             border: none;
             background: none;
-            font-size: 1rem;
-            font-weight: 600;
+            font-size: 1.05rem;
+            font-weight: 700;
             color: var(--text-muted);
             cursor: pointer;
             border-bottom: 3px solid transparent;
@@ -94,11 +97,12 @@
         .tab-btn.active {
             color: var(--primary-color);
             border-bottom-color: var(--primary-color);
+            background: white;
         }
 
         /* Forms */
         .auth-form {
-            padding: 30px 25px;
+            padding: 35px 25px;
             display: none;
         }
 
@@ -122,17 +126,19 @@
             top: 15px;
             left: 15px;
             color: var(--text-muted);
+            font-size: 1.1rem;
         }
 
         .form-control {
             width: 100%;
-            padding: 14px 15px 14px 45px;
+            padding: 15px 15px 15px 45px;
             border: 1px solid var(--border-color);
             border-radius: 12px;
             font-size: 1rem;
             outline: none;
             background: var(--bg-color);
             transition: 0.2s;
+            font-weight: 500;
         }
 
         .form-control:focus {
@@ -146,13 +152,14 @@
             background: var(--primary-color);
             color: white;
             border: none;
-            padding: 15px;
+            padding: 16px;
             border-radius: 12px;
-            font-size: 1rem;
-            font-weight: 600;
+            font-size: 1.05rem;
+            font-weight: 700;
             cursor: pointer;
             transition: 0.2s;
             margin-top: 10px;
+            letter-spacing: 0.5px;
         }
 
         .btn-primary:active {
@@ -162,11 +169,12 @@
         .btn-primary:disabled {
             background: var(--text-muted);
             cursor: not-allowed;
+            transform: none;
         }
 
-        /* Toast */
-        #toast { visibility: hidden; min-width: 250px; background-color: var(--text-main); color: white; text-align: center; border-radius: 10px; padding: 15px 20px; position: fixed; z-index: 10000; left: 50%; bottom: 30px; transform: translateX(-50%); box-shadow: 0 5px 20px rgba(0,0,0,0.2); display: flex; align-items: center; gap: 12px; opacity: 0; transition: 0.3s; }
-        #toast.show { visibility: visible; opacity: 1; bottom: 50px; }
+        /* Toast - Hiển thị ở trên cùng cho dễ nhìn */
+        #toast { visibility: hidden; min-width: 250px; background-color: var(--text-main); color: white; text-align: center; border-radius: 10px; padding: 15px 20px; position: fixed; z-index: 10000; left: 50%; top: 20px; transform: translateX(-50%); box-shadow: 0 5px 20px rgba(0,0,0,0.2); display: flex; align-items: center; justify-content: center; gap: 12px; opacity: 0; transition: 0.3s; font-weight: 600; }
+        #toast.show { visibility: visible; opacity: 1; top: 40px; }
         #toast.success { background-color: var(--success); }
         #toast.error { background-color: var(--danger); }
     </style>
@@ -175,14 +183,14 @@
 
     <div class="auth-container">
         <div class="auth-header">
-            <img src="logo.png" alt="MySPay Logo" onerror="this.src='https://via.placeholder.com/60/007bff/ffffff?text=M'">
-            <h2>MySPay Wallet</h2>
-            <p>Nền tảng quản lý tài sản số của bạn</p>
+            <img src="logo.png" alt="MetahashPay Logo" onerror="this.src='https://via.placeholder.com/70/0066ff/ffffff?text=M'">
+            <h2>MetahashPay</h2>
+            <p>Nền tảng thanh toán phi tập trung</p>
         </div>
 
         <div class="auth-tabs">
             <button class="tab-btn active" onclick="switchTab('login')">Đăng nhập</button>
-            <button class="tab-btn" onclick="switchTab('register')">Đăng ký</button>
+            <button class="tab-btn" onclick="switchTab('register')">Mở tài khoản</button>
         </div>
 
         <form id="loginForm" class="auth-form active" onsubmit="handleLogin(event)">
@@ -204,21 +212,24 @@
             </div>
             <div class="form-group">
                 <i class="fas fa-envelope"></i>
-                <input type="email" class="form-control" id="reg-email" placeholder="Email" required>
+                <input type="email" class="form-control" id="reg-email" placeholder="Email đăng ký" required>
             </div>
             <div class="form-group">
                 <i class="fas fa-lock"></i>
-                <input type="password" class="form-control" id="reg-password" placeholder="Mật khẩu" required minlength="6">
+                <input type="password" class="form-control" id="reg-password" placeholder="Mật khẩu (Tối thiểu 6 ký tự)" required minlength="6">
             </div>
             <div class="form-group">
                 <i class="fas fa-lock"></i>
                 <input type="password" class="form-control" id="reg-confirm-password" placeholder="Xác nhận mật khẩu" required minlength="6">
             </div>
             <div class="form-group">
-                <i class="fas fa-link"></i>
-                <input type="text" class="form-control" id="reg-referral" placeholder="Mã giới thiệu (Nếu có)">
+                <i class="fas fa-gift"></i>
+                <input type="text" class="form-control" id="reg-referral" placeholder="Mã giới thiệu (Tùy chọn)">
             </div>
-            <button type="submit" class="btn-primary" id="btn-register">Tạo Tài Khoản Mới</button>
+            <p style="font-size: 0.8rem; color: var(--text-muted); text-align: center; margin-bottom: 15px;">
+                Hệ thống sẽ tự động tạo địa chỉ ví MPT Smart Chain cho bạn.
+            </p>
+            <button type="submit" class="btn-primary" id="btn-register">Đăng Ký Ví Mới</button>
         </form>
     </div>
 
@@ -228,10 +239,26 @@
     </div>
 
     <script>
-        // Cấu hình API Server Node.js của bạn
-        const API_BASE_URL = 'http://localhost:3000/api/auth';
+        // Tự động kiểm tra nếu đã đăng nhập thì nhảy thẳng vào ví
+        if(localStorage.getItem('metahashpay_token') && localStorage.getItem('metahashpay_address')) {
+            window.location.href = 'index.html';
+        }
 
-        // Xử lý tự động điền mã giới thiệu nếu có trên thanh URL (VD: myspaywallet.com/login.html?ref=ABCD123)
+        // ============================================================
+        // NHẬN DIỆN DOMAIN TỰ ĐỘNG ĐỂ GỌI API
+        // ============================================================
+        let API_BASE_URL = '';
+        const currentHost = window.location.hostname;
+
+        if (currentHost === 'localhost' || currentHost === '127.0.0.1') {
+            API_BASE_URL = 'http://localhost:3000/api/auth';
+        } else {
+            API_BASE_URL = `https://${currentHost}/api/auth`; 
+            // LƯU Ý: Nếu frontend ở metahash.online nhưng backend chạy ở Railway,
+            // Bạn cần sửa dòng trên thành: API_BASE_URL = 'https://app-name.up.railway.app/api/auth';
+        }
+
+        // Bắt mã giới thiệu từ URL nếu có (VD: metahash.online/login.html?ref=123456)
         window.onload = () => {
             const urlParams = new URLSearchParams(window.location.search);
             const refCode = urlParams.get('ref');
@@ -274,7 +301,7 @@
             const email = document.getElementById('login-email').value;
             const password = document.getElementById('login-password').value;
 
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Đang kết nối...';
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Đang kết nối mạng lưới...';
             btn.disabled = true;
 
             try {
@@ -287,9 +314,9 @@
                 const data = await response.json();
 
                 if (response.ok) {
-                    // Lưu Token và địa chỉ ví định danh do Server trả về
-                    localStorage.setItem('myspay_token', data.token);
-                    localStorage.setItem('myspay_address', data.wallet_address);
+                    // Cấp phát token và địa chỉ ví định dạng M...
+                    localStorage.setItem('metahashpay_token', data.token);
+                    localStorage.setItem('metahashpay_address', data.wallet_address);
                     
                     showToast('Đăng nhập thành công!', 'success');
                     setTimeout(() => {
@@ -299,8 +326,7 @@
                     showToast(data.message || 'Email hoặc mật khẩu không chính xác', 'error');
                 }
             } catch (error) {
-                // Xử lý khi server.js chưa bật
-                showToast('Không thể kết nối đến máy chủ. Vui lòng kiểm tra Server Node.js', 'error');
+                showToast('Không thể kết nối Database. Vui lòng kiểm tra Server.', 'error');
             } finally {
                 btn.innerHTML = 'Đăng Nhập';
                 btn.disabled = false;
@@ -322,7 +348,7 @@
                 return;
             }
 
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Đang khởi tạo ví...';
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Đang khởi tạo Ví MPT...';
             btn.disabled = true;
 
             try {
@@ -340,17 +366,21 @@
                 const data = await response.json();
 
                 if (response.ok) {
-                    showToast('Đăng ký thành công! Vui lòng đăng nhập.', 'success');
+                    showToast(`Tạo ví thành công! Địa chỉ của bạn: ${data.wallet_address.substring(0, 8)}...`, 'success');
                     document.getElementById('registerForm').reset();
-                    switchTab('login');
-                    document.getElementById('login-email').value = email; // Tự điền sẵn email
+                    
+                    // Tự động chuyển qua tab Đăng nhập và điền sẵn email
+                    setTimeout(() => {
+                        switchTab('login');
+                        document.getElementById('login-email').value = email;
+                    }, 2000);
                 } else {
                     showToast(data.message || 'Lỗi đăng ký (Email đã tồn tại)', 'error');
                 }
             } catch (error) {
-                showToast('Không thể kết nối đến máy chủ. Vui lòng kiểm tra Server Node.js', 'error');
+                showToast('Không thể kết nối Database. Vui lòng kiểm tra Server.', 'error');
             } finally {
-                btn.innerHTML = 'Tạo Tài Khoản Mới';
+                btn.innerHTML = 'Đăng Ký Ví Mới';
                 btn.disabled = false;
             }
         }
