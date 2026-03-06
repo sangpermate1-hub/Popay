@@ -4,7 +4,7 @@ const cors = require('cors');
 const { Pool } = require('pg');
 const bcrypt = require('bcrypt');
 const multer = require('multer');
-const path = require('path'); // Thư viện xử lý đường dẫn file HTML
+const path = require('path');
 
 const app = express();
 
@@ -19,14 +19,11 @@ app.use(express.json());
 // ==========================================
 // CẤU HÌNH WEB SERVER (PHỤC VỤ GIAO DIỆN HTML)
 // ==========================================
-// Cho phép server đọc các file html, css, hình ảnh nằm cùng thư mục
 app.use(express.static(path.join(__dirname)));
 
-// Khi người dùng gõ metahash.online, tự động mở trang login.html
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'login.html'));
 });
-
 
 // ==========================================
 // KẾT NỐI DATABASE & THIẾT LẬP LƯU TRỮ
@@ -82,9 +79,7 @@ app.post('/api/auth/register', async (req, res) => {
             [wallet, full_name, email, hash, ref, referred_by]
         );
 
-        // Tặng mặc định 0 MPT để kích hoạt ví trên Explorer
         await recordTx(pool, 'mint', 'SYSTEM', wallet, 0, 'MPT');
-
         res.status(201).json({ message: 'Tạo ví thành công', wallet_address: wallet });
     } catch (e) { 
         res.status(400).json({ message: 'Email đã tồn tại trong hệ thống' }); 
@@ -122,13 +117,10 @@ app.post('/api/wallet/send', async (req, res) => {
     const client = await pool.connect();
     try {
         await client.query('BEGIN');
-        
         const toUser = await client.query(`SELECT * FROM users WHERE wallet_address = $1`, [to_wallet]);
         if(toUser.rows.length === 0) throw new Error('Địa chỉ ví nhận không tồn tại');
-
         const balance = await getBalance(from_wallet, currency);
         if(balance < amount) throw new Error(`Số dư ${currency} không đủ`);
-
         await recordTx(client, 'transfer', from_wallet, to_wallet, amount, currency);
         await client.query('COMMIT');
         res.json({ success: true });
@@ -211,7 +203,6 @@ app.post('/api/p2p/update-status', async (req, res) => {
     try {
         await client.query('BEGIN');
         const order = (await client.query(`SELECT * FROM p2p_orders WHERE id = $1 FOR UPDATE`, [order_id])).rows[0];
-        
         await client.query(`UPDATE p2p_orders SET status = $1 WHERE id = $2`, [status, order_id]);
 
         if (status === 'completed') {
@@ -260,7 +251,6 @@ app.post('/api/staking/deposit', async (req, res) => {
         await client.query('BEGIN');
         const bal = await getBalance(wallet, 'USDT');
         if(bal < amount) throw new Error('Số dư USDT không đủ');
-
         await recordTx(client, 'stake', wallet, 'SYSTEM_STAKING', amount, 'USDT');
         await client.query(`UPDATE user_staking SET staked_usdt = staked_usdt + $1, last_updated = CURRENT_TIMESTAMP WHERE wallet_address = $2`, [amount, wallet]);
         await client.query('COMMIT');
@@ -277,13 +267,10 @@ app.post('/api/staking/withdraw', async (req, res) => {
         await client.query('BEGIN');
         const stk = (await client.query(`SELECT * FROM user_staking WHERE wallet_address = $1 FOR UPDATE`, [wallet])).rows[0];
         if(stk.staked_usdt < amount) throw new Error('Vượt quá số tiền đang Staking');
-
         await recordTx(client, 'unstake', 'SYSTEM_STAKING', wallet, amount, 'USDT');
-        
         if(stk.earned_mpt > 0) {
             await recordTx(client, 'reward', 'SYSTEM_STAKING', wallet, stk.earned_mpt, 'MPT');
         }
-        
         await client.query(`UPDATE user_staking SET staked_usdt = staked_usdt - $1, earned_mpt = 0 WHERE wallet_address = $2`, [amount, wallet]);
         await client.query('COMMIT');
         res.json({ success: true });
@@ -327,13 +314,10 @@ app.get('/api/explorer/search', async (req, res) => {
         if (type === 'address') {
             const userRes = await pool.query(`SELECT * FROM users WHERE wallet_address = $1`, [q]);
             if(userRes.rows.length === 0) return res.status(404).json(null);
-            
             const kycRes = await pool.query(`SELECT status FROM user_kyc WHERE wallet = $1 ORDER BY created_at DESC LIMIT 1`, [q]);
             const txnsRes = await pool.query(`SELECT * FROM transaction_history WHERE from_wallet = $1 OR to_wallet = $1 ORDER BY created_at DESC LIMIT 20`, [q]);
-            
             const mpt = await getBalance(q, 'MPT');
             const usdt = await getBalance(q, 'USDT');
-            
             res.json({
                 wallet_address: q,
                 kyc_status: kycRes.rows.length > 0 ? kycRes.rows[0].status : 'unverified',
@@ -371,7 +355,7 @@ app.get('/api/users/tickets', async (req, res) => {
 });
 
 // ==========================================
-// 7. QUẢN TRỊ ADMIN (DASHBOARD, P2P DISPUTE)
+// 7. QUẢN TRỊ ADMIN
 // ==========================================
 app.get('/api/admin/dashboard', async (req, res) => {
     try {
@@ -403,7 +387,6 @@ app.post('/api/admin/p2p/resolve', async (req, res) => {
     try {
         await client.query('BEGIN');
         const order = (await client.query(`SELECT * FROM p2p_orders WHERE id = $1 FOR UPDATE`, [id])).rows[0];
-        
         if (action === 'force_complete') {
             const buyer = order.type === 'sell' ? order.taker_wallet : order.maker_wallet;
             await recordTx(client, 'p2p_release', 'SYSTEM_ESCROW', buyer, order.amount, 'MPT');
@@ -465,9 +448,46 @@ app.post('/api/admin/tickets', async (req, res) => {
     } catch(e) { res.status(500).send(); }
 });
 
+// ==========================================
+// 8. WEBHOOK SEPAY (NẠP TIỀN TỰ ĐỘNG)
+// ==========================================
+// Tỷ giá cố định: 26.800 VND/USDT
+app.post('/api/webhooks/sepay', async (req, res) => {
+    const { content, amount } = req.body; 
+    if (!content || !amount) return res.status(400).send('Missing data');
+
+    // Tách mã ví: MPHXXXXXX -> XXXXXX (Lấy 6 ký tự cuối của ví khách hàng)
+    const walletTag = content.replace('MPH', '').toUpperCase();
+
+    try {
+        // Tìm ví của khách hàng khớp với tag trong memo
+        const userQuery = await pool.query(
+            `SELECT wallet_address FROM users WHERE wallet_address LIKE $1`,
+            [`%${walletTag}`]
+        );
+
+        if (userQuery.rows.length > 0) {
+            const wallet = userQuery.rows[0].wallet_address;
+            const usdtAmount = parseFloat(amount) / 26800;
+
+            // Ghi chép nạp tiền vào Sổ cái
+            await recordTx(pool, 'deposit_sepay', 'BANK_BIDV', wallet, usdtAmount, 'USDT');
+
+            console.log(`[Webhook] Tự động nạp ${usdtAmount} USDT vào ví ${wallet}`);
+            res.json({ success: true });
+        } else {
+            console.log(`[Webhook] Không tìm thấy ví khớp với tag: ${walletTag}`);
+            res.status(404).json({ message: "Wallet tag not found" });
+        }
+    } catch (e) {
+        console.error('Lỗi xử lý Webhook:', e);
+        res.status(500).send();
+    }
+});
+
 // Khởi chạy Server
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
     console.log(`🚀 Server MetahashPay đang chạy tại cổng ${PORT}`);
-    console.log(`✅ Kết nối Database Ledger & P2P Escrow thành công!`);
+    console.log(`✅ Kết nối Database Ledger & SePay Webhook sẵn sàng!`);
 });
