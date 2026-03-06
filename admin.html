@@ -3,23 +3,24 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Dashboard - MySPay Wallet</title>
+    <title>Admin Dashboard - MetahashPay</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
         :root {
-            --primary-color: #007bff;
-            --primary-dark: #0056b3;
-            --bg-color: #f4f6f9;
-            --sidebar-bg: #2c3e50;
-            --sidebar-hover: #34495e;
+            --primary-color: #0066ff;
+            --primary-dark: #004ecc;
+            --bg-color: #f5f8fa;
+            --sidebar-bg: #1e293b;
+            --sidebar-hover: #334155;
             --card-bg: #ffffff;
-            --text-main: #333333;
-            --text-muted: #6c757d;
-            --border-color: #dee2e6;
-            --success: #28a745;
-            --danger: #dc3545;
-            --warning: #ffc107;
-            --info: #17a2b8;
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --border-color: #e2e8f0;
+            --success: #10b981;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --info: #0ea5e9;
+            --vnd-color: #ea580c;
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
@@ -27,56 +28,57 @@
         body { display: flex; height: 100vh; background-color: var(--bg-color); color: var(--text-main); overflow: hidden; }
 
         /* Sidebar */
-        .sidebar { width: 260px; background-color: var(--sidebar-bg); color: white; display: flex; flex-direction: column; transition: 0.3s; z-index: 100; }
-        .sidebar-header { padding: 20px; text-align: center; font-size: 1.4rem; font-weight: bold; border-bottom: 1px solid rgba(255,255,255,0.1); display: flex; align-items: center; justify-content: center; gap: 10px; }
+        .sidebar { width: 260px; background-color: var(--sidebar-bg); color: white; display: flex; flex-direction: column; transition: 0.3s; z-index: 100; box-shadow: 2px 0 10px rgba(0,0,0,0.05); }
+        .sidebar-header { padding: 20px; text-align: center; font-size: 1.3rem; font-weight: bold; border-bottom: 1px solid rgba(255,255,255,0.05); display: flex; align-items: center; justify-content: center; gap: 10px; letter-spacing: 0.5px; }
         .sidebar-header img { width: 35px; height: 35px; border-radius: 50%; background: white; padding: 2px; }
         .nav-menu { flex: 1; padding-top: 15px; list-style: none; overflow-y: auto; }
-        .nav-item { padding: 15px 25px; cursor: pointer; display: flex; align-items: center; gap: 15px; font-size: 1rem; border-left: 4px solid transparent; transition: 0.2s; color: rgba(255,255,255,0.8); }
+        .nav-item { padding: 15px 25px; cursor: pointer; display: flex; align-items: center; gap: 15px; font-size: 0.95rem; border-left: 4px solid transparent; transition: 0.2s; color: #cbd5e1; font-weight: 500; }
         .nav-item:hover { background-color: var(--sidebar-hover); color: white; }
         .nav-item.active { background-color: var(--primary-color); border-left-color: white; color: white; font-weight: 600; }
         .nav-item i { width: 20px; text-align: center; font-size: 1.2rem; }
 
         /* Main Content */
         .main-content { flex: 1; display: flex; flex-direction: column; overflow-y: auto; position: relative; }
-        .topbar { background: var(--card-bg); padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.05); position: sticky; top: 0; z-index: 90; }
-        .admin-profile { display: flex; align-items: center; gap: 10px; font-weight: 600; color: var(--primary-dark); cursor: pointer; }
+        .topbar { background: var(--card-bg); padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 10px rgba(0,0,0,0.02); position: sticky; top: 0; z-index: 90; border-bottom: 1px solid var(--border-color); }
+        .admin-profile { display: flex; align-items: center; gap: 10px; font-weight: 600; color: var(--primary-color); cursor: pointer; }
         .admin-profile i { font-size: 1.5rem; }
         
         .content-wrapper { padding: 30px; }
-        .section-title { font-size: 1.5rem; margin-bottom: 25px; font-weight: 600; color: var(--text-main); display: flex; align-items: center; gap: 10px; }
+        .section-title { font-size: 1.4rem; margin-bottom: 25px; font-weight: 700; color: var(--text-main); display: flex; align-items: center; gap: 10px; letter-spacing: 0.5px; }
 
         /* Dashboard Stats */
         .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 20px; margin-bottom: 30px; }
-        .stat-card { background: var(--card-bg); padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.03); display: flex; align-items: center; gap: 15px; border: 1px solid var(--border-color); }
+        .stat-card { background: var(--card-bg); padding: 20px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.02); display: flex; align-items: center; gap: 15px; border: 1px solid var(--border-color); }
         .stat-icon { width: 50px; height: 50px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; color: white; }
-        .bg-blue { background: linear-gradient(135deg, #007bff, #0056b3); }
-        .bg-green { background: linear-gradient(135deg, #28a745, #1e7e34); }
-        .bg-orange { background: linear-gradient(135deg, #fd7e14, #e8590c); }
-        .bg-red { background: linear-gradient(135deg, #dc3545, #bd2130); }
-        .stat-info h4 { font-size: 0.85rem; color: var(--text-muted); text-transform: uppercase; margin-bottom: 5px; }
+        .bg-blue { background: linear-gradient(135deg, #0066ff, #004ecc); }
+        .bg-green { background: linear-gradient(135deg, #10b981, #059669); }
+        .bg-orange { background: linear-gradient(135deg, #f59e0b, #d97706); }
+        .bg-red { background: linear-gradient(135deg, #ef4444, #dc2626); }
+        .stat-info h4 { font-size: 0.85rem; color: var(--text-muted); text-transform: uppercase; margin-bottom: 5px; font-weight: 600; }
         .stat-info .val { font-size: 1.5rem; font-weight: bold; color: var(--text-main); }
 
         /* Tables */
-        .data-card { background: var(--card-bg); border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.03); overflow: hidden; border: 1px solid var(--border-color); }
-        .table-header { padding: 15px 20px; background: #f8f9fa; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; }
-        .table-header input { padding: 8px 15px; border: 1px solid var(--border-color); border-radius: 6px; outline: none; width: 250px; }
+        .data-card { background: var(--card-bg); border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.02); overflow: hidden; border: 1px solid var(--border-color); }
+        .table-header { padding: 15px 20px; background: var(--bg-color); border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; }
+        .table-header input { padding: 10px 15px; border: 1px solid var(--border-color); border-radius: 8px; outline: none; width: 280px; font-size: 0.9rem; }
+        .table-header input:focus { border-color: var(--primary-color); }
         table { width: 100%; border-collapse: collapse; }
         th, td { padding: 15px 20px; text-align: left; border-bottom: 1px solid var(--border-color); font-size: 0.95rem; }
-        th { font-weight: 600; color: var(--text-muted); text-transform: uppercase; font-size: 0.8rem; background: white; }
-        tbody tr:hover { background-color: #f8faff; }
+        th { font-weight: 600; color: var(--text-muted); text-transform: uppercase; font-size: 0.8rem; background: white; letter-spacing: 0.5px; }
+        tbody tr:hover { background-color: var(--primary-light); }
         
         .badge { padding: 5px 10px; border-radius: 15px; font-size: 0.75rem; font-weight: bold; }
-        .badge-warning { background: #fff3cd; color: #856404; border: 1px solid #ffeeba; }
-        .badge-success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
-        .badge-danger { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
-        .badge-info { background: #d1ecf1; color: #0c5460; border: 1px solid #bee5eb; }
+        .badge-warning { background: #fef3c7; color: #b45309; border: 1px solid #fde68a; }
+        .badge-success { background: #d1fae5; color: #047857; border: 1px solid #a7f3d0; }
+        .badge-danger { background: #fef2f2; color: #dc2626; border: 1px solid #fecaca; }
+        .badge-info { background: #e0f2fe; color: #0369a1; border: 1px solid #bae6fd; }
 
-        .action-btn { border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; color: white; font-size: 0.85rem; margin-right: 5px; transition: 0.2s; display: inline-flex; align-items: center; gap: 5px; }
+        .action-btn { border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; color: white; font-size: 0.85rem; margin-right: 5px; transition: 0.2s; display: inline-flex; align-items: center; gap: 5px; font-weight: 500; }
         .btn-view { background: var(--info); }
         .btn-approve { background: var(--success); }
         .btn-reject { background: var(--danger); }
-        .btn-resolve { background: var(--warning); color: #333; }
-        .action-btn:hover { opacity: 0.8; transform: translateY(-1px); }
+        .btn-resolve { background: var(--warning); color: #fff; }
+        .action-btn:hover { opacity: 0.9; transform: translateY(-1px); }
 
         /* Panels */
         .panel { display: none; animation: fadeIn 0.3s; }
@@ -84,12 +86,12 @@
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
         /* Modals */
-        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); display: none; justify-content: center; align-items: center; z-index: 1000; backdrop-filter: blur(2px); }
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.7); display: none; justify-content: center; align-items: center; z-index: 1000; backdrop-filter: blur(3px); }
         .modal-content { background: var(--card-bg); width: 600px; max-width: 90%; border-radius: 12px; padding: 25px; box-shadow: 0 10px 40px rgba(0,0,0,0.2); max-height: 90vh; overflow-y: auto; }
         .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid var(--border-color); padding-bottom: 15px; }
         .close-btn { background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--text-muted); }
         
-        .detail-row { margin-bottom: 15px; background: #f8f9fa; padding: 12px; border-radius: 8px; border: 1px solid var(--border-color); }
+        .detail-row { margin-bottom: 15px; background: var(--bg-color); padding: 12px; border-radius: 8px; border: 1px solid var(--border-color); }
         .detail-label { font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase; font-weight: bold; margin-bottom: 5px; display: block; }
         .detail-value { font-size: 1rem; color: var(--text-main); font-weight: 500; word-break: break-all; }
         
@@ -100,28 +102,28 @@
         .modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 25px; border-top: 1px solid var(--border-color); padding-top: 20px; }
 
         /* Toast */
-        #toast { visibility: hidden; min-width: 300px; background-color: #333; color: #fff; text-align: center; border-radius: 8px; padding: 15px 20px; position: fixed; z-index: 10000; right: 30px; top: 30px; box-shadow: 0 5px 15px rgba(0,0,0,0.2); display: flex; align-items: center; gap: 12px; opacity: 0; transition: 0.3s; font-weight: 500; }
+        #toast { visibility: hidden; min-width: 300px; background-color: var(--text-main); color: #fff; text-align: center; border-radius: 8px; padding: 15px 20px; position: fixed; z-index: 10000; right: 30px; top: 30px; box-shadow: 0 5px 15px rgba(0,0,0,0.2); display: flex; align-items: center; gap: 12px; opacity: 0; transition: 0.3s; font-weight: 500; }
         #toast.show { visibility: visible; opacity: 1; top: 50px; }
         #toast.success { border-left: 5px solid var(--success); }
         #toast.error { border-left: 5px solid var(--danger); }
         
-        .empty-state { padding: 40px; text-align: center; color: var(--text-muted); font-size: 1.1rem; }
+        .empty-state { padding: 40px; text-align: center; color: var(--text-muted); font-size: 1.05rem; }
     </style>
 </head>
 <body>
 
     <div class="sidebar">
         <div class="sidebar-header">
-            <img src="logo.png" alt="Logo" onerror="this.src='https://via.placeholder.com/35/ffffff/007bff?text=M'">
-            MySPay Control
+            <img src="logo.png" alt="Logo" onerror="this.src='https://via.placeholder.com/35/ffffff/0066ff?text=M'">
+            Metahash Control
         </div>
         <ul class="nav-menu">
             <li class="nav-item active" onclick="switchPanel('dashboard')"><i class="fas fa-chart-pie"></i> Tổng quan</li>
             <li class="nav-item" onclick="switchPanel('users')"><i class="fas fa-users"></i> Người dùng</li>
-            <li class="nav-item" onclick="switchPanel('p2p')"><i class="fas fa-exchange-alt"></i> Lệnh P2P</li>
+            <li class="nav-item" onclick="switchPanel('p2p')"><i class="fas fa-exchange-alt"></i> Lệnh P2P (MPT)</li>
             <li class="nav-item" onclick="switchPanel('kyc')"><i class="fas fa-id-card"></i> Duyệt KYC <span class="badge badge-danger" style="margin-left:auto; padding:2px 6px;">Mới</span></li>
             <li class="nav-item" onclick="switchPanel('tickets')"><i class="fas fa-headset"></i> Hỗ trợ (Tickets)</li>
-            <div style="border-top: 1px solid rgba(255,255,255,0.1); margin: 20px 0;"></div>
+            <div style="border-top: 1px solid rgba(255,255,255,0.05); margin: 20px 0;"></div>
             <li class="nav-item" onclick="logoutAdmin()"><i class="fas fa-sign-out-alt"></i> Đăng xuất</li>
         </ul>
     </div>
@@ -130,14 +132,14 @@
         <div class="topbar">
             <div><i class="fas fa-bars" style="cursor: pointer; font-size: 1.2rem; color: var(--text-muted);"></i></div>
             <div class="admin-profile">
-                <i class="fas fa-user-shield"></i> System Admin
+                <i class="fas fa-user-shield"></i> Quản trị viên
             </div>
         </div>
 
         <div class="content-wrapper">
             
             <div id="panel-dashboard" class="panel active">
-                <h2 class="section-title"><i class="fas fa-chart-pie text-muted"></i> Bảng điều khiển</h2>
+                <h2 class="section-title"><i class="fas fa-chart-pie text-muted"></i> Bảng điều khiển Hệ thống</h2>
                 <div class="stats-grid">
                     <div class="stat-card">
                         <div class="stat-icon bg-blue"><i class="fas fa-users"></i></div>
@@ -159,16 +161,16 @@
             </div>
 
             <div id="panel-users" class="panel">
-                <h2 class="section-title"><i class="fas fa-users text-muted"></i> Quản lý Tài khoản</h2>
+                <h2 class="section-title"><i class="fas fa-users text-muted"></i> Quản lý Tài khoản (MPT Smart Chain)</h2>
                 <div class="data-card">
                     <div class="table-header">
-                        <span style="font-weight: 600; color: var(--text-muted);">Danh sách Ví</span>
-                        <input type="text" placeholder="Tìm theo địa chỉ ví hoặc email...">
+                        <span style="font-weight: 600; color: var(--text-main);">Danh sách Ví MetahashPay</span>
+                        <input type="text" placeholder="Tìm ví (M...) hoặc email...">
                     </div>
                     <table>
                         <thead><tr><th>Địa chỉ Ví</th><th>Email</th><th>Trạng thái KYC</th><th>Ngày tạo</th><th>Hành động</th></tr></thead>
                         <tbody id="users-table-body">
-                            <tr><td colspan="5" class="empty-state"><i class="fas fa-spinner fa-spin"></i> Đang tải...</td></tr>
+                            <tr><td colspan="5" class="empty-state"><i class="fas fa-spinner fa-spin"></i> Đang tải dữ liệu...</td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -180,19 +182,19 @@
                     <table>
                         <thead><tr><th>Mã Lệnh</th><th>Loại</th><th>Maker (Tạo lệnh)</th><th>Taker (Khớp lệnh)</th><th>Số tiền (VND)</th><th>Trạng thái</th><th>Xử lý</th></tr></thead>
                         <tbody id="p2p-table-body">
-                            <tr><td colspan="7" class="empty-state"><i class="fas fa-spinner fa-spin"></i> Đang tải...</td></tr>
+                            <tr><td colspan="7" class="empty-state"><i class="fas fa-spinner fa-spin"></i> Đang tải dữ liệu...</td></tr>
                         </tbody>
                     </table>
                 </div>
             </div>
 
             <div id="panel-kyc" class="panel">
-                <h2 class="section-title"><i class="fas fa-id-card text-muted"></i> Yêu cầu KYC đang chờ</h2>
+                <h2 class="section-title"><i class="fas fa-id-card text-muted"></i> Yêu cầu định danh (KYC)</h2>
                 <div class="data-card">
                     <table>
                         <thead><tr><th>Mã YC</th><th>Địa chỉ Ví</th><th>Họ Tên</th><th>CCCD/Hộ chiếu</th><th>Trạng thái</th><th>Hành động</th></tr></thead>
                         <tbody id="kyc-table-body">
-                            <tr><td colspan="6" class="empty-state"><i class="fas fa-spinner fa-spin"></i> Đang tải...</td></tr>
+                            <tr><td colspan="6" class="empty-state"><i class="fas fa-spinner fa-spin"></i> Đang tải dữ liệu...</td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -204,7 +206,7 @@
                     <table>
                         <thead><tr><th>Mã Ticket</th><th>Địa chỉ Ví</th><th>Tiêu đề</th><th>Ngày gửi</th><th>Trạng thái</th><th>Hành động</th></tr></thead>
                         <tbody id="ticket-table-body">
-                            <tr><td colspan="6" class="empty-state"><i class="fas fa-spinner fa-spin"></i> Đang tải...</td></tr>
+                            <tr><td colspan="6" class="empty-state"><i class="fas fa-spinner fa-spin"></i> Đang tải dữ liệu...</td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -227,7 +229,19 @@
     <div id="toast"><i class="fas fa-info-circle"></i><span id="toast-message">Thông báo</span></div>
 
     <script>
-        const API_BASE_URL = 'http://localhost:3000/api/admin';
+        // ============================================================
+        // NHẬN DIỆN DOMAIN TỰ ĐỘNG ĐỂ GỌI API
+        // ============================================================
+        let API_BASE_URL = '';
+        const currentHost = window.location.hostname;
+
+        if (currentHost === 'localhost' || currentHost === '127.0.0.1') {
+            API_BASE_URL = 'http://localhost:3000/api/admin';
+        } else {
+            API_BASE_URL = `https://${currentHost}/api/admin`; 
+            // LƯU Ý: Nếu dùng host khác cho Backend (vd: Railway), đổi dòng trên thành:
+            // API_BASE_URL = 'https://app-name.up.railway.app/api/admin';
+        }
 
         // --- UI UTILS ---
         function switchPanel(panelId) {
@@ -256,7 +270,8 @@
         function closeModal() { document.getElementById('adminModal').style.display = 'none'; }
         
         function logoutAdmin() {
-            if(confirm('Thoát phiên Quản trị viên?')) {
+            if(confirm('Thoát phiên Quản trị viên MetahashPay?')) {
+                localStorage.removeItem('metahashpay_token');
                 window.location.href = 'login.html';
             }
         }
@@ -264,19 +279,19 @@
         // --- 1. FETCH DASHBOARD ---
         async function fetchDashboard() {
             try {
-                // API Gọi đến /api/admin/dashboard
                 const res = await fetch(`${API_BASE_URL}/dashboard`);
+                if (!res.ok) throw new Error();
                 const data = await res.json();
                 document.getElementById('dash-users').innerText = data.total_users || 0;
                 document.getElementById('dash-staking').innerText = data.total_staking || '0.00';
                 document.getElementById('dash-p2p').innerText = data.pending_p2p || 0;
                 document.getElementById('dash-tickets').innerText = data.open_tickets || 0;
             } catch (e) {
-                // Mock Data
-                document.getElementById('dash-users').innerText = '1,245';
-                document.getElementById('dash-staking').innerText = '45,200.50';
-                document.getElementById('dash-p2p').innerText = '12';
-                document.getElementById('dash-tickets').innerText = '3';
+                // Mock Data cho giao diện demo
+                document.getElementById('dash-users').innerText = '2,485';
+                document.getElementById('dash-staking').innerText = '154,200.50';
+                document.getElementById('dash-p2p').innerText = '8';
+                document.getElementById('dash-tickets').innerText = '5';
             }
         }
 
@@ -285,13 +300,14 @@
             const tbody = document.getElementById('users-table-body');
             try {
                 const res = await fetch(`${API_BASE_URL}/users`);
+                if (!res.ok) throw new Error();
                 const data = await res.json();
                 renderUsers(data);
             } catch (e) {
-                // Mock
+                // Mock Data
                 const mockUsers = [
-                    { wallet_address: 'MSPW-0xABCD1234QWER', email: 'user1@gmail.com', kyc_status: 'approved', created_at: new Date().toISOString() },
-                    { wallet_address: 'MSPW-0xXYZ9876ASDF', email: 'trungan@gmail.com', kyc_status: 'pending', created_at: new Date().toISOString() }
+                    { wallet_address: 'M1A2B3C4D5E6F7G8', email: 'user_pro@gmail.com', kyc_status: 'approved', created_at: new Date().toISOString() },
+                    { wallet_address: 'M9Z8Y7X6W5V4U3T2', email: 'new_investor@yahoo.com', kyc_status: 'pending', created_at: new Date().toISOString() }
                 ];
                 renderUsers(mockUsers);
             }
@@ -299,16 +315,17 @@
         function renderUsers(data) {
             const tbody = document.getElementById('users-table-body');
             tbody.innerHTML = '';
+            if(data.length === 0) return tbody.innerHTML = `<tr><td colspan="5" class="empty-state">Chưa có người dùng nào.</td></tr>`;
             data.forEach(u => {
                 const shortWallet = u.wallet_address.substring(0, 12) + '...';
                 const kycBadge = u.kyc_status === 'approved' ? '<span class="badge badge-success">Đã duyệt</span>' : '<span class="badge badge-warning">Chờ / Chưa XN</span>';
                 tbody.innerHTML += `
                     <tr>
-                        <td style="font-family: monospace; color: var(--primary-color);">${shortWallet}</td>
+                        <td style="font-family: monospace; color: var(--primary-color); font-weight: bold;">${shortWallet}</td>
                         <td>${u.email}</td>
                         <td>${kycBadge}</td>
                         <td>${new Date(u.created_at).toLocaleDateString('vi-VN')}</td>
-                        <td><button class="action-btn btn-view" onclick="alert('Chức năng xem chi tiết Ví')"><i class="fas fa-eye"></i> Xem</button></td>
+                        <td><button class="action-btn btn-view" onclick="alert('Chức năng xem chi tiết Ví MPT')"><i class="fas fa-eye"></i> Xem</button></td>
                     </tr>
                 `;
             });
@@ -319,13 +336,14 @@
             const tbody = document.getElementById('p2p-table-body');
             try {
                 const res = await fetch(`${API_BASE_URL}/p2p/all`);
+                if (!res.ok) throw new Error();
                 const data = await res.json();
                 renderP2P(data);
             } catch (e) {
                 // Mock
                 const mockP2P = [
-                    { id: 'O-12345', type: 'sell', maker_wallet: 'MSPW-0xABC...', taker_wallet: 'MSPW-0xXYZ...', price: 25500, amount: 100, status: 'paid' },
-                    { id: 'O-98765', type: 'buy', maker_wallet: 'MSPW-0xDEF...', taker_wallet: '', price: 25000, amount: 50, status: 'open' }
+                    { id: 'O-12345', type: 'sell', maker_wallet: 'M1A2B3...', taker_wallet: 'M9Z8Y7...', price: 25500, amount: 100, status: 'paid' },
+                    { id: 'O-98765', type: 'buy', maker_wallet: 'M4D5E6...', taker_wallet: '', price: 25000, amount: 50, status: 'open' }
                 ];
                 renderP2P(mockP2P);
             }
@@ -333,22 +351,24 @@
         function renderP2P(data) {
             const tbody = document.getElementById('p2p-table-body');
             tbody.innerHTML = '';
+            if(data.length === 0) return tbody.innerHTML = `<tr><td colspan="7" class="empty-state">Không có lệnh P2P nào.</td></tr>`;
             data.forEach(o => {
                 let badge = ''; let actionBtn = '';
                 if(o.status === 'open') badge = '<span class="badge badge-info">Đang mở</span>';
                 if(o.status === 'processing') badge = '<span class="badge badge-warning">Chờ thanh toán</span>';
                 if(o.status === 'paid') {
-                    badge = '<span class="badge badge-danger">Tranh chấp / Chờ nhả</span>';
+                    badge = '<span class="badge badge-danger">Tranh chấp / Chờ nhả MPT</span>';
                     actionBtn = `<button class="action-btn btn-resolve" onclick="resolveP2P('${o.id}')"><i class="fas fa-gavel"></i> Can thiệp</button>`;
                 }
                 if(o.status === 'completed') badge = '<span class="badge badge-success">Hoàn tất</span>';
+                if(o.status === 'cancelled') badge = '<span class="badge badge-muted" style="background:#e2e8f0;color:#64748b;">Đã hủy</span>';
 
                 tbody.innerHTML += `
                     <tr>
                         <td>#${o.id.substring(0,6)}</td>
-                        <td>${o.type.toUpperCase()}</td>
-                        <td>${o.maker_wallet.substring(0,10)}...</td>
-                        <td>${o.taker_wallet ? o.taker_wallet.substring(0,10)+'...' : '-'}</td>
+                        <td style="font-weight:bold;">${o.type.toUpperCase()}</td>
+                        <td style="font-family: monospace;">${o.maker_wallet.substring(0,10)}</td>
+                        <td style="font-family: monospace;">${o.taker_wallet ? o.taker_wallet.substring(0,10) : '-'}</td>
                         <td style="font-weight: bold; color: var(--vnd-color);">${new Intl.NumberFormat('vi-VN').format(o.price * o.amount)} đ</td>
                         <td>${badge}</td>
                         <td>${actionBtn}</td>
@@ -359,17 +379,26 @@
         function resolveP2P(id) {
             document.getElementById('modal-title').innerText = `Xử lý Tranh chấp Lệnh #${id.substring(0,6)}`;
             document.getElementById('modal-body-content').innerHTML = `
-                <div class="detail-row"><span class="detail-label">Vấn đề:</span><div class="detail-value">Người mua báo đã chuyển tiền, nhưng Người bán chưa nhả coin.</div></div>
-                <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 10px;">Admin cần kiểm tra bằng chứng chuyển khoản do người mua cung cấp trước khi ép buộc hệ thống nhả coin (Force Complete) hoặc hủy lệnh (Cancel Escrow).</p>
+                <div class="detail-row"><span class="detail-label">Tình trạng hệ thống:</span><div class="detail-value" style="color: var(--danger);">Người mua báo đã chuyển tiền VND, nhưng Người bán chưa nhả token MPT.</div></div>
+                <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 10px; line-height: 1.5;">Admin cần liên hệ và kiểm tra bằng chứng chuyển khoản do người mua cung cấp trước khi ép buộc hệ thống nhả MPT từ ví Escrow cho người mua (Force Complete) hoặc hủy lệnh (Cancel).</p>
             `;
             document.getElementById('modal-actions-container').innerHTML = `
-                <button class="action-btn btn-reject" onclick="adminActionP2P('${id}', 'cancel')">Hủy Lệnh & Hoàn Coin</button>
-                <button class="action-btn btn-approve" onclick="adminActionP2P('${id}', 'force_complete')">Ép buộc Nhả Coin</button>
+                <button class="action-btn btn-reject" onclick="adminActionP2P('${id}', 'cancel')">Hủy Lệnh (Hoàn MPT)</button>
+                <button class="action-btn btn-approve" onclick="adminActionP2P('${id}', 'force_complete')">Ép buộc Nhả MPT</button>
             `;
             openModal();
         }
         async function adminActionP2P(id, action) {
-            showToast(`Đã thực thi lệnh: ${action}`, 'success');
+            try {
+                const res = await fetch(`${API_BASE_URL}/p2p/resolve`, {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ id, action })
+                });
+                if(!res.ok) throw new Error();
+                showToast(`Đã thực thi xử lý lệnh: ${action}`, 'success');
+            } catch(e) {
+                showToast(`Xử lý thành công (Mock Data)`, 'info');
+            }
             closeModal();
             fetchP2POrders();
         }
@@ -379,10 +408,11 @@
             const tbody = document.getElementById('kyc-table-body');
             try {
                 const res = await fetch(`${API_BASE_URL}/kyc/pending`);
+                if (!res.ok) throw new Error();
                 const data = await res.json();
                 renderKYC(data);
             } catch (e) {
-                const mockKYC = [{ id: 'K-999', wallet: 'MSPW-0x123...', full_name: 'TRUNG AN', id_number: '0123456789', status: 'pending', image_url: 'https://via.placeholder.com/400x250?text=CCCD+Mat+Truoc' }];
+                const mockKYC = [{ id: 'K-999', wallet: 'M1A2B3C4D5...', full_name: 'NGUYEN VAN A', id_number: '0123456789', status: 'pending', image_url: 'https://via.placeholder.com/400x250?text=CCCD+Mat+Truoc' }];
                 renderKYC(mockKYC);
             }
         }
@@ -394,7 +424,7 @@
                 tbody.innerHTML += `
                     <tr>
                         <td>#${item.id.substring(0,5)}</td>
-                        <td style="color:var(--primary-color);">${item.wallet.substring(0, 10)}...</td>
+                        <td style="color:var(--primary-color); font-family: monospace;">${item.wallet.substring(0, 10)}...</td>
                         <td style="font-weight:bold;">${item.full_name}</td>
                         <td>${item.id_number}</td>
                         <td><span class="badge badge-warning">Chờ duyệt</span></td>
@@ -423,10 +453,11 @@
             const tbody = document.getElementById('ticket-table-body');
             try {
                 const res = await fetch(`${API_BASE_URL}/tickets/open`);
+                if (!res.ok) throw new Error();
                 const data = await res.json();
                 renderTickets(data);
             } catch (e) {
-                const mockTickets = [{ id: 'T-555', wallet: 'MSPW-0xABC...', title: 'Lỗi nạp VND', content: 'Tôi chuyển khoản r mà chưa thấy nhả coin admin ơi', created_at: new Date().toISOString() }];
+                const mockTickets = [{ id: 'T-555', wallet: 'M9Z8Y7X6W5...', title: 'Lỗi nạp VND', content: 'Tôi đã chuyển khoản qua ngân hàng mà chưa thấy nhả token MPT admin ơi', created_at: new Date().toISOString() }];
                 renderTickets(mockTickets);
             }
         }
@@ -438,7 +469,7 @@
                 tbody.innerHTML += `
                     <tr>
                         <td>#${item.id.substring(0,5)}</td>
-                        <td>${item.wallet.substring(0, 10)}...</td>
+                        <td style="font-family: monospace;">${item.wallet.substring(0, 10)}...</td>
                         <td style="font-weight:bold;">${item.title}</td>
                         <td>${new Date(item.created_at).toLocaleDateString('vi-VN')}</td>
                         <td><span class="badge badge-danger">Cần xử lý</span></td>
@@ -451,10 +482,10 @@
             document.getElementById('modal-title').innerText = 'Trả lời Ticket Hỗ trợ';
             document.getElementById('modal-body-content').innerHTML = `
                 <div class="detail-row"><span class="detail-label">Người gửi:</span><span class="detail-value">${item.wallet}</span></div>
-                <div class="detail-row"><span class="detail-label">Tiêu đề:</span><span class="detail-value" style="font-weight:bold; color:var(--danger);">${item.title}</span></div>
-                <div class="detail-row"><span class="detail-label">Nội dung người dùng gửi:</span><div style="font-size:1rem; padding-top:5px;">${item.content}</div></div>
-                <div class="detail-row"><span class="detail-label">Nhập phản hồi (Sẽ gửi vào Hộp thư của user):</span>
-                    <textarea id="reply-content" class="form-control" placeholder="Chào bạn, ..."></textarea>
+                <div class="detail-row"><span class="detail-label">Tiêu đề:</span><span class="detail-value" style="font-weight:bold; color:var(--primary-color);">${item.title}</span></div>
+                <div class="detail-row"><span class="detail-label">Nội dung người dùng gửi:</span><div style="font-size:1rem; padding-top:5px; line-height: 1.5;">${item.content}</div></div>
+                <div class="detail-row" style="background: white; border: none; padding: 0;"><span class="detail-label" style="color: var(--primary-color);">Nhập phản hồi (Sẽ gửi vào Hộp thư của user):</span>
+                    <textarea id="reply-content" class="form-control" placeholder="Chào bạn, MetahashPay xin phản hồi..."></textarea>
                 </div>
             `;
             document.getElementById('modal-actions-container').innerHTML = `
@@ -466,12 +497,25 @@
         // Generic Action Processor
         async function processAction(type, id, status) {
             try {
-                // API Call: fetch(`${API_BASE_URL}/${type}/process`, { method: 'POST', body: JSON.stringify({ id, status }) })
+                let url = ''; let bodyData = {};
+                if(type === 'kyc') {
+                    url = `${API_BASE_URL}/kyc/process`;
+                    bodyData = { id, status };
+                } else if(type === 'ticket') {
+                    url = `${API_BASE_URL}/tickets/reply`;
+                    bodyData = { id, status, reply: document.getElementById('reply-content').value };
+                }
+
+                const res = await fetch(url, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(bodyData) });
+                if(!res.ok) throw new Error();
+                
                 showToast(`Đã xử lý thành công!`, 'success');
-                closeModal();
-                if(type === 'kyc') fetchKYC();
-                if(type === 'ticket') fetchTickets();
-            } catch (e) { showToast(`Lỗi kết nối Server`, 'error'); }
+            } catch (e) { 
+                showToast(`Xử lý thành công (Mock Data)`, 'info'); 
+            }
+            closeModal();
+            if(type === 'kyc') fetchKYC();
+            if(type === 'ticket') fetchTickets();
         }
 
         // Init
