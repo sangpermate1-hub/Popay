@@ -3,21 +3,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Staking - MySPay Wallet</title>
+    <title>Staking MPT - MetahashPay</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
         :root {
-            --primary-color: #007bff;
-            --primary-light: #e6f2ff;
-            --bg-color: #f8faff;
+            --primary-color: #0066ff;
+            --primary-light: #e6f0ff;
+            --primary-dark: #004ecc;
+            --bg-color: #f5f8fa;
             --card-bg: #ffffff;
-            --text-main: #2c3e50;
-            --text-muted: #7f8c8d;
-            --border-color: #e1e8ed;
-            --success: #2ecc71;
-            --danger: #e74c3c;
-            --warning: #f39c12;
-            --purple: #8e44ad;
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --border-color: #e2e8f0;
+            --success: #10b981;
+            --danger: #ef4444;
+            --warning: #f59e0b;
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
@@ -25,57 +25,58 @@
         body { background-color: var(--bg-color); color: var(--text-main); padding-bottom: 30px; }
 
         /* Header */
-        .header { background: linear-gradient(135deg, var(--primary-color), var(--purple)); padding: 20px; color: white; border-bottom-left-radius: 25px; border-bottom-right-radius: 25px; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1); text-align: center; padding-bottom: 40px; position: relative; }
-        .header-title { font-size: 1.3rem; font-weight: 600; margin-bottom: 10px; display: flex; align-items: center; justify-content: center; gap: 10px; }
-        .back-btn { position: absolute; left: 20px; top: 20px; color: white; text-decoration: none; font-size: 1.2rem; display: flex; align-items: center; justify-content: center; width: 35px; height: 35px; background: rgba(255,255,255,0.2); border-radius: 50%; }
+        .header { background: linear-gradient(135deg, var(--primary-color), var(--primary-dark)); padding: 20px; color: white; border-bottom-left-radius: 25px; border-bottom-right-radius: 25px; box-shadow: 0 4px 15px rgba(0, 102, 255, 0.15); text-align: center; padding-bottom: 50px; position: relative; }
+        .header-title { font-size: 1.3rem; font-weight: 700; margin-bottom: 8px; display: flex; align-items: center; justify-content: center; gap: 10px; letter-spacing: 0.5px; }
+        .back-btn { position: absolute; left: 20px; top: 20px; color: white; text-decoration: none; font-size: 1.2rem; display: flex; align-items: center; justify-content: center; width: 35px; height: 35px; background: rgba(255,255,255,0.2); border-radius: 50%; backdrop-filter: blur(5px); }
         
         /* Dashboard Card */
-        .dashboard-card { background: var(--card-bg); margin: -25px 20px 20px; border-radius: 20px; padding: 25px 20px; box-shadow: 0 5px 20px rgba(0,0,0,0.08); text-align: center; position: relative; }
-        .apr-badge { position: absolute; top: -12px; right: 20px; background: var(--warning); color: white; padding: 5px 15px; border-radius: 20px; font-weight: bold; font-size: 0.85rem; box-shadow: 0 3px 10px rgba(243, 156, 18, 0.3); }
+        .dashboard-card { background: var(--card-bg); margin: -30px 20px 20px; border-radius: 20px; padding: 25px 20px; box-shadow: 0 5px 20px rgba(0,0,0,0.05); text-align: center; position: relative; border: 1px solid var(--border-color); }
+        .apr-badge { position: absolute; top: -12px; right: 20px; background: linear-gradient(135deg, #f59e0b, #d97706); color: white; padding: 6px 16px; border-radius: 20px; font-weight: bold; font-size: 0.85rem; box-shadow: 0 3px 10px rgba(245, 158, 11, 0.3); border: 1px solid #fcd34d; }
         
-        .reward-label { font-size: 0.9rem; color: var(--text-muted); margin-bottom: 5px; }
+        .reward-label { font-size: 0.9rem; color: var(--text-muted); margin-bottom: 5px; font-weight: 500; }
         .reward-value { font-size: 2.2rem; font-weight: bold; color: var(--success); margin-bottom: 5px; font-family: monospace; }
-        .reward-fiat { font-size: 0.85rem; color: var(--text-muted); margin-bottom: 20px; }
+        .reward-fiat { font-size: 0.85rem; color: var(--text-muted); margin-bottom: 25px; }
         
-        .staked-box { background: var(--bg-color); padding: 15px; border-radius: 15px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border: 1px solid var(--border-color); }
+        .staked-box { background: var(--bg-color); padding: 15px 20px; border-radius: 15px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; border: 1px solid var(--border-color); }
         .staked-info { text-align: left; }
-        .staked-val { font-size: 1.2rem; font-weight: bold; color: var(--text-main); }
+        .staked-val { font-size: 1.3rem; font-weight: bold; color: var(--primary-color); margin-top: 3px; }
         
-        .action-buttons { display: flex; gap: 10px; }
-        .btn-action { flex: 1; padding: 12px; border: none; border-radius: 10px; font-weight: 600; cursor: pointer; transition: 0.2s; font-size: 0.95rem; }
-        .btn-stake { background: var(--primary-color); color: white; }
-        .btn-unstake { background: var(--primary-light); color: var(--primary-color); }
+        .action-buttons { display: flex; gap: 12px; }
+        .btn-action { flex: 1; padding: 14px; border: none; border-radius: 12px; font-weight: bold; cursor: pointer; transition: 0.2s; font-size: 0.95rem; }
+        .btn-stake { background: var(--primary-color); color: white; box-shadow: 0 4px 10px rgba(0, 102, 255, 0.2); }
+        .btn-unstake { background: var(--primary-light); color: var(--primary-dark); }
         .btn-action:active { transform: scale(0.96); }
         .btn-action:disabled { opacity: 0.6; cursor: not-allowed; }
 
         /* Market Info */
-        .market-info { margin: 0 20px; background: var(--card-bg); border-radius: 15px; padding: 15px; box-shadow: 0 2px 10px rgba(0,0,0,0.03); display: flex; justify-content: space-between; align-items: center; }
+        .market-info { margin: 0 20px; background: var(--card-bg); border-radius: 15px; padding: 18px; box-shadow: 0 2px 10px rgba(0,0,0,0.02); display: flex; justify-content: space-between; align-items: center; border: 1px solid var(--border-color); }
         .market-item { text-align: center; flex: 1; }
         .market-item:first-child { border-right: 1px solid var(--border-color); }
-        .market-label { font-size: 0.8rem; color: var(--text-muted); }
-        .market-val { font-size: 1rem; font-weight: bold; margin-top: 5px; }
+        .market-label { font-size: 0.8rem; color: var(--text-muted); font-weight: 500; }
+        .market-val { font-size: 1.05rem; font-weight: bold; margin-top: 6px; color: var(--text-main); }
 
         /* Modals & Toast */
-        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: none; justify-content: center; align-items: flex-end; z-index: 1000; }
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.7); display: none; justify-content: center; align-items: flex-end; z-index: 1000; backdrop-filter: blur(2px); }
         .modal-content { background: var(--card-bg); width: 100%; border-radius: 25px 25px 0 0; padding: 25px 20px; animation: slideUp 0.3s ease-out; }
         @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
         .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
         .close-btn { background: none; border: none; font-size: 1.5rem; color: var(--text-muted); cursor: pointer; }
         
         .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; margin-bottom: 8px; font-size: 0.9rem; color: var(--text-muted); font-weight: 500; }
         .input-wrapper { position: relative; display: flex; align-items: center; }
-        .form-control { width: 100%; padding: 15px; border: 1px solid var(--border-color); border-radius: 10px; font-size: 1.2rem; outline: none; background: var(--bg-color); font-weight: bold; }
-        .form-control:focus { border-color: var(--primary-color); }
+        .form-control { width: 100%; padding: 15px; border: 1px solid var(--border-color); border-radius: 12px; font-size: 1.2rem; outline: none; background: var(--bg-color); font-weight: bold; }
+        .form-control:focus { border-color: var(--primary-color); background: white; }
         .currency-suffix { position: absolute; right: 15px; font-weight: bold; color: var(--text-muted); }
         
         .balance-hint { font-size: 0.85rem; color: var(--text-muted); margin-top: 8px; text-align: right; cursor: pointer; }
         .balance-hint span { color: var(--primary-color); font-weight: bold; }
 
-        .btn-primary { width: 100%; background: var(--primary-color); color: white; border: none; padding: 15px; border-radius: 10px; font-size: 1rem; font-weight: 600; cursor: pointer; margin-top: 10px; }
+        .btn-primary { width: 100%; background: var(--primary-color); color: white; border: none; padding: 15px; border-radius: 12px; font-size: 1rem; font-weight: bold; cursor: pointer; margin-top: 10px; transition: 0.2s; }
         
-        #toast { visibility: hidden; min-width: 250px; background-color: var(--card-bg); color: var(--text-main); text-align: center; border-radius: 10px; padding: 15px 20px; position: fixed; z-index: 10000; left: 50%; bottom: 30px; transform: translateX(-50%); box-shadow: 0 5px 20px rgba(0,0,0,0.15); display: flex; align-items: center; gap: 12px; border-left: 5px solid var(--primary-color); opacity: 0; transition: 0.3s; }
+        #toast { visibility: hidden; min-width: 250px; background-color: var(--text-main); color: white; text-align: center; border-radius: 10px; padding: 15px 20px; position: fixed; z-index: 10000; left: 50%; bottom: 30px; transform: translateX(-50%); box-shadow: 0 5px 20px rgba(0,0,0,0.2); display: flex; align-items: center; gap: 12px; opacity: 0; transition: 0.3s; }
         #toast.show { visibility: visible; opacity: 1; bottom: 50px; }
-        #toast.success { border-left-color: var(--success); } #toast.error { border-left-color: var(--danger); }
+        #toast.success { background-color: var(--success); } #toast.error { background-color: var(--danger); }
         #toast i { font-size: 1.2rem; }
     </style>
 </head>
@@ -83,23 +84,23 @@
 
     <header class="header">
         <a href="settings.html" class="back-btn"><i class="fas fa-arrow-left"></i></a>
-        <div class="header-title"><i class="fas fa-layer-group"></i> Staking MSPW</div>
-        <p style="font-size: 0.85rem; opacity: 0.9;">Gửi USDT - Nhận lãi MSPW mỗi phút</p>
+        <div class="header-title"><i class="fas fa-layer-group"></i> MPT Staking</div>
+        <p style="font-size: 0.85rem; opacity: 0.9;">Gửi USDT - Nhận lãi MPT thời gian thực</p>
     </header>
 
     <div class="dashboard-card">
         <div class="apr-badge">2.00% / Ngày</div>
         
         <div class="reward-label">Lợi nhuận đang chờ rút</div>
-        <div class="reward-value" id="earned-mspw">0.000000</div>
+        <div class="reward-value" id="earned-mpt">0.000000</div>
         <div class="reward-fiat">~ <span id="earned-fiat">$0.00</span></div>
         
         <div class="staked-box">
             <div class="staked-info">
-                <div class="reward-label" style="margin-bottom: 0;">Đang Staking</div>
+                <div class="reward-label" style="margin-bottom: 0;">Số vốn đang Staking</div>
                 <div class="staked-val" id="staked-usdt">0.00 USDT</div>
             </div>
-            <i class="fas fa-lock" style="color: var(--text-muted); font-size: 1.2rem;"></i>
+            <i class="fas fa-shield-alt" style="color: var(--success); font-size: 1.5rem; opacity: 0.8;"></i>
         </div>
 
         <div class="action-buttons">
@@ -110,12 +111,12 @@
 
     <div class="market-info">
         <div class="market-item">
-            <div class="market-label">Giá MSPW hiện tại</div>
-            <div class="market-val" id="current-mspw-price">$0.00</div>
+            <div class="market-label">Giá MPT hiện tại</div>
+            <div class="market-val" id="current-mpt-price">$0.00</div>
         </div>
         <div class="market-item">
             <div class="market-label">Tốc độ đào (Ước tính)</div>
-            <div class="market-val" id="mining-speed">0 MSPW/phút</div>
+            <div class="market-val" id="mining-speed">0 MPT/phút</div>
         </div>
     </div>
 
@@ -145,7 +146,9 @@
                 <h3>Rút vốn (Unstake) & Nhận lãi</h3>
                 <button class="close-btn" onclick="closeModal('unstakeModal')">&times;</button>
             </div>
-            <p style="font-size: 0.85rem; color: var(--danger); margin-bottom: 15px; text-align: center;">Khi rút vốn, toàn bộ lãi MSPW đang chờ cũng sẽ được cộng vào ví.</p>
+            <p style="font-size: 0.85rem; color: var(--danger); margin-bottom: 15px; text-align: center; background: #fef2f2; padding: 10px; border-radius: 8px; border: 1px solid #fecaca;">
+                <i class="fas fa-info-circle"></i> Khi rút vốn, toàn bộ lãi MPT đang chờ cũng sẽ được cộng vào ví của bạn.
+            </p>
             <form id="unstakeForm" onsubmit="handleUnstake(event)">
                 <div class="form-group">
                     <label>Số lượng USDT muốn rút</label>
@@ -163,99 +166,106 @@
     <div id="toast"><i class="fas fa-info-circle"></i><span id="toast-message">Thông báo</span></div>
 
     <script>
-        const API_BASE_URL = 'http://localhost:3000/api/staking'; // Server thực tế của bạn
-        
-        let myWalletAddress = localStorage.getItem('myspay_address');
-        if (!myWalletAddress) {
-            alert('Vui lòng đăng nhập trước!');
+        // --- 0. BẢO MẬT ---
+        const userToken = localStorage.getItem('metahashpay_token');
+        let myWalletAddress = localStorage.getItem('metahashpay_address');
+        if (!userToken || !myWalletAddress) {
             window.location.href = 'login.html';
         }
 
-        // Biến toàn cục
-        let currentMspwPrice = 0.5; // Giá mặc định nếu websocket chưa load
-        let stakedAmount = 0;       // USDT đã gửi
-        let availableUsdt = 0;      // USDT trong ví (fetch từ server)
-        let exactEarnedMspw = 0;    // Số MSPW lãi chuẩn xác từ database
-        let lastSyncTime = Date.now(); // Thời điểm đồng bộ cuối cùng
+        // ============================================================
+        // NHẬN DIỆN DOMAIN TỰ ĐỘNG ĐỂ GỌI API
+        // ============================================================
+        let API_BASE_URL = '';
+        const currentHost = window.location.hostname;
+
+        if (currentHost === 'localhost' || currentHost === '127.0.0.1') {
+            API_BASE_URL = 'http://localhost:3000/api/staking';
+        } else {
+            API_BASE_URL = `https://${currentHost}/api/staking`; 
+            // Nếu bạn dùng Railway cho backend nhưng Frontend ở domain khác, hãy sửa dòng dưới:
+            // API_BASE_URL = 'https://app-name.up.railway.app/api/staking';
+        }
         
-        // --- 1. WEBSOCKET CẬP NHẬT GIÁ MSPW TỪ BINANCE ---
+        // Biến toàn cục
+        let currentMptPrice = 0.5; // Giá mặc định
+        let stakedAmount = 0;       // USDT đã gửi
+        let availableUsdt = 0;      // USDT trong ví
+        let exactEarnedMpt = 0;    // Số MPT lãi chuẩn xác từ database
+        let lastSyncTime = Date.now(); 
+        
+        // --- 1. WEBSOCKET CẬP NHẬT GIÁ MPT TỪ BINANCE (Dùng XRP làm tỷ chiếu) ---
         const ws = new WebSocket('wss://stream.binance.com:9443/ws/xrpusdt@ticker');
         ws.onmessage = function(event) {
             const data = JSON.parse(event.data);
-            currentMspwPrice = parseFloat(data.c);
-            document.getElementById('current-mspw-price').innerText = `$${currentMspwPrice.toFixed(4)}`;
+            currentMptPrice = parseFloat(data.c);
+            document.getElementById('current-mpt-price').innerText = `$${currentMptPrice.toFixed(4)}`;
             updateFiatValue();
             updateMiningSpeed();
         };
 
-        // --- 2. FETCH DỮ LIỆU TỪ DATABASE THỰC ---
+        // --- 2. FETCH DỮ LIỆU TỪ DATABASE ---
         async function fetchStakingData() {
             try {
-                // Gọi API lấy thông tin staking
                 const res = await fetch(`${API_BASE_URL}/info?wallet=${myWalletAddress}`);
                 if (!res.ok) throw new Error();
                 const data = await res.json();
                 
                 stakedAmount = parseFloat(data.staked_usdt);
                 availableUsdt = parseFloat(data.available_usdt);
-                exactEarnedMspw = parseFloat(data.earned_mspw);
+                exactEarnedMpt = parseFloat(data.earned_mpt || data.earned_mspw || 0); // Hỗ trợ cả 2 key
                 lastSyncTime = Date.now();
 
-                // Cập nhật UI
                 document.getElementById('staked-usdt').innerText = `${stakedAmount.toFixed(2)} USDT`;
                 document.getElementById('modal-staked-usdt').innerText = `${stakedAmount.toFixed(2)} USDT`;
                 document.getElementById('available-usdt').innerText = `${availableUsdt.toFixed(2)} USDT`;
                 
                 updateMiningSpeed();
             } catch (error) {
-                console.warn('Đang chờ kết nối với Server Node.js...');
+                console.warn('Lỗi gọi API Staking. Chạy chế độ hiển thị tĩnh.');
             }
         }
 
         // --- 3. THUẬT TOÁN NHẢY LÃI (REAL-TIME VISUALIZATION) ---
-        // Lãi = 2%/ngày. => Lãi USDT/ngày = stakedAmount * 0.02
-        // => Lãi MSPW/ngày = (stakedAmount * 0.02) / currentMspwPrice
-        // => Lãi MSPW/giây = Lãi MSPW/ngày / 86400
-        
         setInterval(() => {
-            if (stakedAmount > 0 && currentMspwPrice > 0) {
+            if (stakedAmount > 0 && currentMptPrice > 0) {
                 const secondsPassed = (Date.now() - lastSyncTime) / 1000;
                 
-                const dailyRewardUsdt = stakedAmount * 0.02; // 2% 
-                const dailyRewardMspw = dailyRewardUsdt / currentMspwPrice;
-                const rewardPerSecond = dailyRewardMspw / 86400;
+                const dailyRewardUsdt = stakedAmount * 0.02; // Lãi 2% 
+                const dailyRewardMpt = dailyRewardUsdt / currentMptPrice;
+                const rewardPerSecond = dailyRewardMpt / 86400;
 
                 // Cộng dồn phần hiển thị
-                const displayMspw = exactEarnedMspw + (rewardPerSecond * secondsPassed);
-                document.getElementById('earned-mspw').innerText = displayMspw.toFixed(6);
+                const displayMpt = exactEarnedMpt + (rewardPerSecond * secondsPassed);
+                document.getElementById('earned-mpt').innerText = displayMpt.toFixed(6);
                 
                 // Đồng bộ ngầm với Server mỗi 1 phút (60 giây)
                 if (secondsPassed >= 60) {
-                    syncRewardToServer(displayMspw);
+                    syncRewardToServer(displayMpt);
                 }
             }
-        }, 1000); // Cập nhật UI mỗi giây
+        }, 1000); 
 
         function updateFiatValue() {
-            const currentDisplay = parseFloat(document.getElementById('earned-mspw').innerText);
+            const currentDisplay = parseFloat(document.getElementById('earned-mpt').innerText);
             if(!isNaN(currentDisplay)) {
-                const fiat = currentDisplay * currentMspwPrice;
+                const fiat = currentDisplay * currentMptPrice;
                 document.getElementById('earned-fiat').innerText = `$${fiat.toFixed(4)}`;
             }
         }
 
         function updateMiningSpeed() {
-            if (stakedAmount > 0 && currentMspwPrice > 0) {
+            if (stakedAmount > 0 && currentMptPrice > 0) {
                 const dailyUsdt = stakedAmount * 0.02;
-                const dailyMspw = dailyUsdt / currentMspwPrice;
-                const mspwPerMinute = dailyMspw / 1440;
-                document.getElementById('mining-speed').innerText = `${mspwPerMinute.toFixed(4)} MSPW/phút`;
+                const dailyMpt = dailyUsdt / currentMptPrice;
+                const mptPerMinute = dailyMpt / 1440;
+                document.getElementById('mining-speed').innerText = `${mptPerMinute.toFixed(4)} MPT/phút`;
             } else {
-                document.getElementById('mining-speed').innerText = `0 MSPW/phút`;
+                document.getElementById('mining-speed').innerText = `0 MPT/phút`;
             }
         }
 
-        // --- 4. GIAO TIẾP DATABASE (POST) ---
+        // --- 4. GIAO TIẾP DATABASE ---
         async function syncRewardToServer(calculatedReward) {
             try {
                 await fetch(`${API_BASE_URL}/sync-reward`, {
@@ -264,7 +274,7 @@
                     body: JSON.stringify({ wallet: myWalletAddress, new_reward: calculatedReward })
                 });
                 lastSyncTime = Date.now();
-                exactEarnedMspw = calculatedReward;
+                exactEarnedMpt = calculatedReward;
             } catch (e) {
                 // Lỗi mạng bỏ qua, tiếp tục đếm frontend
             }
@@ -275,13 +285,11 @@
             const amount = parseFloat(document.getElementById('stake-amount').value);
             const btn = document.getElementById('btn-submit-stake');
 
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Đang xử lý...';
-            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Đang xử lý...'; btn.disabled = true;
 
             try {
                 const res = await fetch(`${API_BASE_URL}/deposit`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ wallet: myWalletAddress, amount: amount })
                 });
                 
@@ -294,10 +302,9 @@
                     showToast(data.message || 'Lỗi gửi tiền', 'error');
                 }
             } catch (error) {
-                showToast('Không thể kết nối Server', 'error');
+                showToast('Chưa kết nối Server thực', 'error');
             } finally {
-                btn.innerHTML = 'Xác nhận Stake';
-                btn.disabled = false;
+                btn.innerHTML = 'Xác nhận Stake'; btn.disabled = false;
                 document.getElementById('stakeForm').reset();
             }
         }
@@ -307,13 +314,11 @@
             const amount = parseFloat(document.getElementById('unstake-amount').value);
             const btn = document.getElementById('btn-submit-unstake');
 
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Đang xử lý...';
-            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Đang xử lý...'; btn.disabled = true;
 
             try {
                 const res = await fetch(`${API_BASE_URL}/withdraw`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ wallet: myWalletAddress, amount: amount })
                 });
                 
@@ -325,10 +330,9 @@
                     showToast('Lỗi khi rút vốn', 'error');
                 }
             } catch (error) {
-                showToast('Không thể kết nối Server', 'error');
+                showToast('Chưa kết nối Server thực', 'error');
             } finally {
-                btn.innerHTML = 'Xác nhận Rút';
-                btn.disabled = false;
+                btn.innerHTML = 'Xác nhận Rút'; btn.disabled = false;
                 document.getElementById('unstakeForm').reset();
             }
         }
@@ -341,8 +345,13 @@
 
         function showToast(message, type = 'info') {
             const toast = document.getElementById("toast");
-            toast.className = ""; document.getElementById("toast-message").innerText = message;
-            toast.classList.add(type); toast.classList.add("show");
+            const icon = toast.querySelector('i');
+            toast.className = ""; icon.className = ""; document.getElementById("toast-message").innerText = message;
+            toast.classList.add(type); 
+            if(type === 'success') icon.className = "fas fa-check-circle";
+            else if(type === 'error') icon.className = "fas fa-exclamation-circle";
+            else icon.className = "fas fa-info-circle";
+            toast.classList.add("show");
             setTimeout(() => toast.classList.remove("show"), 3000);
         }
 
@@ -350,7 +359,6 @@
         function closeModal(id) { document.getElementById(id).style.display = 'none'; }
         window.onclick = function(event) { if (event.target.classList.contains('modal-overlay')) event.target.style.display = 'none'; }
 
-        // Init
         window.onload = () => { fetchStakingData(); };
     </script>
 </body>
