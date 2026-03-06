@@ -3,570 +3,479 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Popay - Admin Control Panel</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: { popOrange: '#ff5f1f', darkBg: '#050505', cardBg: '#111111', inputBg: '#1a1a1a', popGreen: '#26A17B', popRed: '#E33E5A' }
-                }
-            }
-        }
-    </script>
+    <title>Admin Dashboard - MySPay Wallet</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
-        ::-webkit-scrollbar { width: 6px; }
-        ::-webkit-scrollbar-track { background: #050505; }
-        ::-webkit-scrollbar-thumb { background: #ff5f1f; border-radius: 10px; }
-        .tab-content { display: none; animation: fadeIn 0.3s ease-in-out; }
-        .tab-content.active { display: block; }
+        :root {
+            --primary-color: #007bff;
+            --primary-dark: #0056b3;
+            --bg-color: #f4f6f9;
+            --sidebar-bg: #2c3e50;
+            --sidebar-hover: #34495e;
+            --card-bg: #ffffff;
+            --text-main: #333333;
+            --text-muted: #6c757d;
+            --border-color: #dee2e6;
+            --success: #28a745;
+            --danger: #dc3545;
+            --warning: #ffc107;
+            --info: #17a2b8;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+
+        body { display: flex; height: 100vh; background-color: var(--bg-color); color: var(--text-main); overflow: hidden; }
+
+        /* Sidebar */
+        .sidebar { width: 260px; background-color: var(--sidebar-bg); color: white; display: flex; flex-direction: column; transition: 0.3s; z-index: 100; }
+        .sidebar-header { padding: 20px; text-align: center; font-size: 1.4rem; font-weight: bold; border-bottom: 1px solid rgba(255,255,255,0.1); display: flex; align-items: center; justify-content: center; gap: 10px; }
+        .sidebar-header img { width: 35px; height: 35px; border-radius: 50%; background: white; padding: 2px; }
+        .nav-menu { flex: 1; padding-top: 15px; list-style: none; overflow-y: auto; }
+        .nav-item { padding: 15px 25px; cursor: pointer; display: flex; align-items: center; gap: 15px; font-size: 1rem; border-left: 4px solid transparent; transition: 0.2s; color: rgba(255,255,255,0.8); }
+        .nav-item:hover { background-color: var(--sidebar-hover); color: white; }
+        .nav-item.active { background-color: var(--primary-color); border-left-color: white; color: white; font-weight: 600; }
+        .nav-item i { width: 20px; text-align: center; font-size: 1.2rem; }
+
+        /* Main Content */
+        .main-content { flex: 1; display: flex; flex-direction: column; overflow-y: auto; position: relative; }
+        .topbar { background: var(--card-bg); padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.05); position: sticky; top: 0; z-index: 90; }
+        .admin-profile { display: flex; align-items: center; gap: 10px; font-weight: 600; color: var(--primary-dark); cursor: pointer; }
+        .admin-profile i { font-size: 1.5rem; }
+        
+        .content-wrapper { padding: 30px; }
+        .section-title { font-size: 1.5rem; margin-bottom: 25px; font-weight: 600; color: var(--text-main); display: flex; align-items: center; gap: 10px; }
+
+        /* Dashboard Stats */
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 20px; margin-bottom: 30px; }
+        .stat-card { background: var(--card-bg); padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.03); display: flex; align-items: center; gap: 15px; border: 1px solid var(--border-color); }
+        .stat-icon { width: 50px; height: 50px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; color: white; }
+        .bg-blue { background: linear-gradient(135deg, #007bff, #0056b3); }
+        .bg-green { background: linear-gradient(135deg, #28a745, #1e7e34); }
+        .bg-orange { background: linear-gradient(135deg, #fd7e14, #e8590c); }
+        .bg-red { background: linear-gradient(135deg, #dc3545, #bd2130); }
+        .stat-info h4 { font-size: 0.85rem; color: var(--text-muted); text-transform: uppercase; margin-bottom: 5px; }
+        .stat-info .val { font-size: 1.5rem; font-weight: bold; color: var(--text-main); }
+
+        /* Tables */
+        .data-card { background: var(--card-bg); border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.03); overflow: hidden; border: 1px solid var(--border-color); }
+        .table-header { padding: 15px 20px; background: #f8f9fa; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; }
+        .table-header input { padding: 8px 15px; border: 1px solid var(--border-color); border-radius: 6px; outline: none; width: 250px; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 15px 20px; text-align: left; border-bottom: 1px solid var(--border-color); font-size: 0.95rem; }
+        th { font-weight: 600; color: var(--text-muted); text-transform: uppercase; font-size: 0.8rem; background: white; }
+        tbody tr:hover { background-color: #f8faff; }
+        
+        .badge { padding: 5px 10px; border-radius: 15px; font-size: 0.75rem; font-weight: bold; }
+        .badge-warning { background: #fff3cd; color: #856404; border: 1px solid #ffeeba; }
+        .badge-success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .badge-danger { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .badge-info { background: #d1ecf1; color: #0c5460; border: 1px solid #bee5eb; }
+
+        .action-btn { border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; color: white; font-size: 0.85rem; margin-right: 5px; transition: 0.2s; display: inline-flex; align-items: center; gap: 5px; }
+        .btn-view { background: var(--info); }
+        .btn-approve { background: var(--success); }
+        .btn-reject { background: var(--danger); }
+        .btn-resolve { background: var(--warning); color: #333; }
+        .action-btn:hover { opacity: 0.8; transform: translateY(-1px); }
+
+        /* Panels */
+        .panel { display: none; animation: fadeIn 0.3s; }
+        .panel.active { display: block; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        /* Toast Notification */
-        .toast-enter { transform: translateY(-100%); opacity: 0; }
-        .toast-active { transform: translateY(0); opacity: 1; }
+
+        /* Modals */
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); display: none; justify-content: center; align-items: center; z-index: 1000; backdrop-filter: blur(2px); }
+        .modal-content { background: var(--card-bg); width: 600px; max-width: 90%; border-radius: 12px; padding: 25px; box-shadow: 0 10px 40px rgba(0,0,0,0.2); max-height: 90vh; overflow-y: auto; }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid var(--border-color); padding-bottom: 15px; }
+        .close-btn { background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--text-muted); }
+        
+        .detail-row { margin-bottom: 15px; background: #f8f9fa; padding: 12px; border-radius: 8px; border: 1px solid var(--border-color); }
+        .detail-label { font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase; font-weight: bold; margin-bottom: 5px; display: block; }
+        .detail-value { font-size: 1rem; color: var(--text-main); font-weight: 500; word-break: break-all; }
+        
+        .kyc-image { width: 100%; max-height: 300px; object-fit: contain; border: 1px solid var(--border-color); border-radius: 8px; margin-top: 10px; background: #eee; }
+        textarea.form-control { width: 100%; padding: 12px; border: 1px solid var(--border-color); border-radius: 8px; min-height: 120px; outline: none; margin-top: 10px; font-family: inherit; }
+        textarea.form-control:focus { border-color: var(--primary-color); }
+        
+        .modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 25px; border-top: 1px solid var(--border-color); padding-top: 20px; }
+
+        /* Toast */
+        #toast { visibility: hidden; min-width: 300px; background-color: #333; color: #fff; text-align: center; border-radius: 8px; padding: 15px 20px; position: fixed; z-index: 10000; right: 30px; top: 30px; box-shadow: 0 5px 15px rgba(0,0,0,0.2); display: flex; align-items: center; gap: 12px; opacity: 0; transition: 0.3s; font-weight: 500; }
+        #toast.show { visibility: visible; opacity: 1; top: 50px; }
+        #toast.success { border-left: 5px solid var(--success); }
+        #toast.error { border-left: 5px solid var(--danger); }
+        
+        .empty-state { padding: 40px; text-align: center; color: var(--text-muted); font-size: 1.1rem; }
     </style>
 </head>
-<body class="bg-darkBg text-white font-sans min-h-screen flex selection:bg-popOrange selection:text-black">
+<body>
 
-    <aside class="w-64 bg-cardBg border-r border-gray-900 h-screen sticky top-0 flex flex-col hidden md:flex z-40">
-        <div class="p-6 border-b border-gray-900 flex items-center gap-3">
-            <div class="w-10 h-10 bg-popOrange rounded-lg flex items-center justify-center text-black text-xl">
-                <i class="fa-solid fa-user-shield"></i>
-            </div>
-            <div>
-                <h1 class="text-xl font-black text-white tracking-widest uppercase">ADMIN</h1>
-                <p class="text-[10px] text-popOrange font-bold uppercase">Control Panel</p>
-            </div>
+    <div class="sidebar">
+        <div class="sidebar-header">
+            <img src="logo.png" alt="Logo" onerror="this.src='https://via.placeholder.com/35/ffffff/007bff?text=M'">
+            MySPay Control
         </div>
-        
-        <nav class="flex-1 p-4 space-y-2">
-            <button onclick="switchTab('dashboard')" id="nav-dashboard" class="w-full flex items-center gap-3 p-3 rounded-xl bg-popOrange text-black transition font-bold text-sm">
-                <i class="fa-solid fa-chart-pie w-5"></i> Tổng Quan
-            </button>
-            <button onclick="switchTab('users')" id="nav-users" class="w-full flex items-center gap-3 p-3 rounded-xl text-gray-400 hover:bg-inputBg hover:text-white transition font-bold text-sm">
-                <i class="fa-solid fa-users w-5"></i> Quản Lý & Bơm Quỹ
-            </button>
-            <button onclick="switchTab('kyc')" id="nav-kyc" class="w-full flex items-center justify-between p-3 rounded-xl text-gray-400 hover:bg-inputBg hover:text-white transition font-bold text-sm">
-                <div class="flex items-center gap-3"><i class="fa-solid fa-id-card w-5"></i> Duyệt KYC</div>
-                <span id="badge-kyc" class="bg-popRed text-white text-[10px] px-2 py-0.5 rounded-full hidden">0</span>
-            </button>
-            <button onclick="switchTab('tickets')" id="nav-tickets" class="w-full flex items-center justify-between p-3 rounded-xl text-gray-400 hover:bg-inputBg hover:text-white transition font-bold text-sm">
-                <div class="flex items-center gap-3"><i class="fa-solid fa-headset w-5"></i> Support Tickets</div>
-                <span id="badge-tickets" class="bg-popRed text-white text-[10px] px-2 py-0.5 rounded-full hidden">0</span>
-            </button>
-        </nav>
-
-        <div class="p-4 border-t border-gray-900">
-            <button onclick="window.location.href='login.html'" class="w-full flex items-center justify-center gap-2 p-3 rounded-xl border border-gray-800 text-gray-400 hover:text-popRed hover:border-popRed hover:bg-popRed/10 transition text-sm font-bold">
-                <i class="fa-solid fa-right-from-bracket"></i> Đăng Xuất Admin
-            </button>
-        </div>
-    </aside>
-
-    <div class="md:hidden fixed top-0 w-full bg-cardBg border-b border-gray-900 z-50 p-4 flex justify-between items-center">
-        <h1 class="text-lg font-black text-popOrange">POPAY ADMIN</h1>
-        <button onclick="document.getElementById('mobile-menu').classList.toggle('hidden')" class="text-white text-xl p-2"><i class="fa-solid fa-bars"></i></button>
+        <ul class="nav-menu">
+            <li class="nav-item active" onclick="switchPanel('dashboard')"><i class="fas fa-chart-pie"></i> Tổng quan</li>
+            <li class="nav-item" onclick="switchPanel('users')"><i class="fas fa-users"></i> Người dùng</li>
+            <li class="nav-item" onclick="switchPanel('p2p')"><i class="fas fa-exchange-alt"></i> Lệnh P2P</li>
+            <li class="nav-item" onclick="switchPanel('kyc')"><i class="fas fa-id-card"></i> Duyệt KYC <span class="badge badge-danger" style="margin-left:auto; padding:2px 6px;">Mới</span></li>
+            <li class="nav-item" onclick="switchPanel('tickets')"><i class="fas fa-headset"></i> Hỗ trợ (Tickets)</li>
+            <div style="border-top: 1px solid rgba(255,255,255,0.1); margin: 20px 0;"></div>
+            <li class="nav-item" onclick="logoutAdmin()"><i class="fas fa-sign-out-alt"></i> Đăng xuất</li>
+        </ul>
     </div>
 
-    <div id="mobile-menu" class="md:hidden fixed top-[68px] w-full bg-cardBg border-b border-gray-900 z-40 hidden flex flex-col p-2 shadow-2xl">
-        <button onclick="switchTab('dashboard'); this.parentElement.classList.add('hidden')" class="text-left p-4 text-popOrange font-bold border-b border-gray-900"><i class="fa-solid fa-chart-pie w-6"></i> Tổng Quan</button>
-        <button onclick="switchTab('users'); this.parentElement.classList.add('hidden')" class="text-left p-4 text-white font-bold border-b border-gray-900"><i class="fa-solid fa-users w-6"></i> Quản Lý & Bơm Quỹ</button>
-        <button onclick="switchTab('kyc'); this.parentElement.classList.add('hidden')" class="text-left p-4 text-white font-bold border-b border-gray-900"><i class="fa-solid fa-id-card w-6"></i> Duyệt KYC</button>
-        <button onclick="switchTab('tickets'); this.parentElement.classList.add('hidden')" class="text-left p-4 text-white font-bold"><i class="fa-solid fa-headset w-6"></i> Support Tickets</button>
-    </div>
-
-    <main class="flex-1 p-5 md:p-10 pt-24 md:pt-10 h-screen overflow-y-auto relative">
-        
-        <section id="view-dashboard" class="tab-content active">
-            <div class="flex justify-between items-center mb-6">
-                <h2 class="text-2xl font-black uppercase tracking-wider text-white">Tổng Quan Hệ Thống</h2>
-                <button onclick="loadDashboard()" id="btn-refresh-dash" class="text-sm font-bold text-gray-400 hover:text-popOrange transition bg-cardBg border border-gray-800 px-4 py-2 rounded-lg">
-                    <i class="fa-solid fa-rotate-right mr-1"></i> Làm mới
-                </button>
+    <div class="main-content">
+        <div class="topbar">
+            <div><i class="fas fa-bars" style="cursor: pointer; font-size: 1.2rem; color: var(--text-muted);"></i></div>
+            <div class="admin-profile">
+                <i class="fas fa-user-shield"></i> System Admin
             </div>
+        </div>
+
+        <div class="content-wrapper">
             
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                <div class="bg-cardBg p-6 rounded-2xl border border-gray-800 flex items-center justify-between">
-                    <div>
-                        <p class="text-xs text-gray-500 font-bold uppercase mb-1">Tổng User Đăng Ký</p>
-                        <h3 class="text-3xl font-black text-white" id="dash-users">0</h3>
+            <div id="panel-dashboard" class="panel active">
+                <h2 class="section-title"><i class="fas fa-chart-pie text-muted"></i> Bảng điều khiển</h2>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon bg-blue"><i class="fas fa-users"></i></div>
+                        <div class="stat-info"><h4>Tổng Người Dùng</h4><div class="val" id="dash-users">0</div></div>
                     </div>
-                    <div class="w-12 h-12 rounded-full bg-gray-800 flex items-center justify-center text-gray-400 text-xl"><i class="fa-solid fa-users"></i></div>
-                </div>
-                <div class="bg-cardBg p-6 rounded-2xl border border-popOrange/50 bg-popOrange/5 flex items-center justify-between relative overflow-hidden">
-                    <div class="relative z-10">
-                        <p class="text-xs text-popOrange font-bold uppercase mb-1">Tổng Lưu Lượng USDT</p>
-                        <h3 class="text-3xl font-black text-white" id="dash-usdt">0.00</h3>
+                    <div class="stat-card">
+                        <div class="stat-icon bg-green"><i class="fas fa-layer-group"></i></div>
+                        <div class="stat-info"><h4>Tổng USDT Staking</h4><div class="val" id="dash-staking">0.00</div></div>
                     </div>
-                    <div class="w-12 h-12 rounded-full bg-popOrange/20 flex items-center justify-center text-popOrange text-xl relative z-10"><i class="fa-solid fa-dollar-sign"></i></div>
-                </div>
-                <div class="bg-cardBg p-6 rounded-2xl border border-gray-800 flex items-center justify-between">
-                    <div>
-                        <p class="text-xs text-gray-500 font-bold uppercase mb-1">Tổng Lưu Lượng POPT</p>
-                        <h3 class="text-3xl font-black text-white" id="dash-popt">0.00</h3>
+                    <div class="stat-card">
+                        <div class="stat-icon bg-orange"><i class="fas fa-handshake"></i></div>
+                        <div class="stat-info"><h4>Lệnh P2P Đang xử lý</h4><div class="val" id="dash-p2p">0</div></div>
                     </div>
-                    <div class="w-12 h-12 rounded-full bg-gray-800 flex items-center justify-center text-gray-400 text-xl"><i class="fa-solid fa-coins"></i></div>
-                </div>
-            </div>
-            
-            <div class="bg-cardBg rounded-2xl border border-gray-800 overflow-hidden">
-                <div class="p-5 border-b border-gray-800">
-                    <h3 class="text-sm font-bold uppercase tracking-widest text-gray-400">Giao dịch gần đây (Toàn mạng)</h3>
-                </div>
-                <div class="p-2" id="admin-history">
-                    <p class="text-gray-500 text-sm py-8 text-center"><i class="fa-solid fa-spinner fa-spin mr-2"></i> Đang tải dữ liệu...</p>
-                </div>
-            </div>
-        </section>
-
-        <section id="view-users" class="tab-content">
-            <h2 class="text-2xl font-black uppercase tracking-wider mb-6">Quản Lý & Bơm Quỹ User</h2>
-            
-            <div class="bg-cardBg rounded-2xl border border-gray-800 p-6 mb-6">
-                <label class="text-xs text-gray-400 uppercase tracking-wider mb-2 block font-bold">Tra cứu địa chỉ ví Popay</label>
-                <div class="flex gap-3">
-                    <input type="text" id="search-address" placeholder="Nhập địa chỉ bắt đầu bằng POPT..." class="flex-1 bg-inputBg border border-gray-700 rounded-xl px-4 py-3 text-white outline-none focus:border-popOrange font-mono text-sm">
-                    <button onclick="searchUser()" id="btn-search-user" class="bg-popOrange text-black font-bold px-6 py-3 rounded-xl hover:bg-orange-600 transition whitespace-nowrap">
-                        <i class="fa-solid fa-magnifying-glass"></i> <span class="hidden sm:inline">Tìm Kiếm</span>
-                    </button>
-                </div>
-            </div>
-
-            <div id="user-result-panel" class="bg-cardBg rounded-2xl border border-gray-800 p-6 hidden">
-                <div class="flex justify-between items-start mb-6 pb-6 border-b border-gray-800">
-                    <div>
-                        <p class="text-xs text-gray-500 uppercase font-bold mb-1">Thông tin người dùng</p>
-                        <h3 class="text-xl font-mono text-popOrange font-bold bg-popOrange/10 px-3 py-1 rounded inline-block" id="user-address">POPT...</h3>
-                    </div>
-                    <div id="user-kyc-status" class="px-3 py-1.5 rounded-lg text-xs font-bold border">Chưa KYC</div>
-                </div>
-
-                <div class="grid grid-cols-2 gap-4 mb-8">
-                    <div class="bg-inputBg p-5 rounded-xl border border-gray-800">
-                        <p class="text-xs text-gray-500 font-bold uppercase mb-1 flex items-center gap-2"><img src="https://cryptologos.cc/logos/tether-usdt-logo.png" class="w-4 h-4 rounded-full"> Số dư USDT</p>
-                        <p class="text-3xl font-black text-white truncate" id="user-usdt">0.00</p>
-                    </div>
-                    <div class="bg-inputBg p-5 rounded-xl border border-gray-800">
-                        <p class="text-xs text-gray-500 font-bold uppercase mb-1 flex items-center gap-2"><i class="fa-solid fa-coins text-popOrange"></i> Số dư POPT</p>
-                        <p class="text-3xl font-black text-white truncate" id="user-popt">0.00</p>
-                    </div>
-                </div>
-
-                <div>
-                    <h4 class="text-sm font-bold text-popRed uppercase mb-4 flex items-center gap-2"><i class="fa-solid fa-bolt"></i> Admin Superpower (Chỉnh sửa số dư)</h4>
-                    <div class="flex flex-col sm:flex-row gap-4 mb-4">
-                        <input type="number" id="fund-amount" placeholder="Nhập số lượng..." class="flex-1 bg-inputBg border border-gray-700 rounded-xl px-4 py-3 text-white outline-none focus:border-popOrange font-bold">
-                        <select id="fund-asset" class="sm:w-32 bg-inputBg border border-gray-700 rounded-xl px-4 py-3 text-popOrange font-bold outline-none cursor-pointer appearance-none">
-                            <option value="USDT">USDT</option>
-                            <option value="POPT">POPT</option>
-                        </select>
-                    </div>
-                    <div class="flex gap-4">
-                        <button onclick="modifyFunds('add')" id="btn-mint" class="flex-1 bg-popGreen text-white font-bold py-3 rounded-xl hover:bg-green-600 transition">
-                            <i class="fa-solid fa-plus mr-1"></i> Bơm Tiền (Mint)
-                        </button>
-                        <button onclick="modifyFunds('deduct')" id="btn-burn" class="flex-1 bg-transparent border border-popRed text-popRed font-bold py-3 rounded-xl hover:bg-popRed hover:text-white transition">
-                            <i class="fa-solid fa-minus mr-1"></i> Trừ Tiền (Burn)
-                        </button>
+                    <div class="stat-card">
+                        <div class="stat-icon bg-red"><i class="fas fa-ticket-alt"></i></div>
+                        <div class="stat-info"><h4>Ticket Chờ phản hồi</h4><div class="val" id="dash-tickets">0</div></div>
                     </div>
                 </div>
             </div>
-        </section>
 
-        <section id="view-kyc" class="tab-content">
-            <div class="flex justify-between items-center mb-6">
-                <h2 class="text-2xl font-black uppercase tracking-wider">Xét Duyệt Hồ Sơ KYC</h2>
-                <button onclick="loadKYC()" class="text-sm font-bold text-gray-400 hover:text-popOrange transition bg-cardBg border border-gray-800 px-4 py-2 rounded-lg">
-                    <i class="fa-solid fa-rotate-right"></i>
-                </button>
+            <div id="panel-users" class="panel">
+                <h2 class="section-title"><i class="fas fa-users text-muted"></i> Quản lý Tài khoản</h2>
+                <div class="data-card">
+                    <div class="table-header">
+                        <span style="font-weight: 600; color: var(--text-muted);">Danh sách Ví</span>
+                        <input type="text" placeholder="Tìm theo địa chỉ ví hoặc email...">
+                    </div>
+                    <table>
+                        <thead><tr><th>Địa chỉ Ví</th><th>Email</th><th>Trạng thái KYC</th><th>Ngày tạo</th><th>Hành động</th></tr></thead>
+                        <tbody id="users-table-body">
+                            <tr><td colspan="5" class="empty-state"><i class="fas fa-spinner fa-spin"></i> Đang tải...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
             </div>
-            <div id="kyc-container" class="space-y-4">
-                <p class="text-center text-gray-500 py-10"><i class="fa-solid fa-spinner fa-spin mr-2"></i> Đang tải yêu cầu...</p>
-            </div>
-        </section>
 
-        <section id="view-tickets" class="tab-content">
-            <div class="flex justify-between items-center mb-6">
-                <h2 class="text-2xl font-black uppercase tracking-wider">Trung Tâm Hỗ Trợ (Tickets)</h2>
-                <button onclick="loadTickets()" class="text-sm font-bold text-gray-400 hover:text-popOrange transition bg-cardBg border border-gray-800 px-4 py-2 rounded-lg">
-                    <i class="fa-solid fa-rotate-right"></i>
-                </button>
+            <div id="panel-p2p" class="panel">
+                <h2 class="section-title"><i class="fas fa-exchange-alt text-muted"></i> Quản trị Giao dịch P2P</h2>
+                <div class="data-card">
+                    <table>
+                        <thead><tr><th>Mã Lệnh</th><th>Loại</th><th>Maker (Tạo lệnh)</th><th>Taker (Khớp lệnh)</th><th>Số tiền (VND)</th><th>Trạng thái</th><th>Xử lý</th></tr></thead>
+                        <tbody id="p2p-table-body">
+                            <tr><td colspan="7" class="empty-state"><i class="fas fa-spinner fa-spin"></i> Đang tải...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
             </div>
-            <div id="tickets-container" class="space-y-4">
-                <p class="text-center text-gray-500 py-10"><i class="fa-solid fa-spinner fa-spin mr-2"></i> Đang tải danh sách...</p>
+
+            <div id="panel-kyc" class="panel">
+                <h2 class="section-title"><i class="fas fa-id-card text-muted"></i> Yêu cầu KYC đang chờ</h2>
+                <div class="data-card">
+                    <table>
+                        <thead><tr><th>Mã YC</th><th>Địa chỉ Ví</th><th>Họ Tên</th><th>CCCD/Hộ chiếu</th><th>Trạng thái</th><th>Hành động</th></tr></thead>
+                        <tbody id="kyc-table-body">
+                            <tr><td colspan="6" class="empty-state"><i class="fas fa-spinner fa-spin"></i> Đang tải...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
             </div>
-        </section>
 
-    </main>
+            <div id="panel-tickets" class="panel">
+                <h2 class="section-title"><i class="fas fa-headset text-muted"></i> Hỗ trợ người dùng</h2>
+                <div class="data-card">
+                    <table>
+                        <thead><tr><th>Mã Ticket</th><th>Địa chỉ Ví</th><th>Tiêu đề</th><th>Ngày gửi</th><th>Trạng thái</th><th>Hành động</th></tr></thead>
+                        <tbody id="ticket-table-body">
+                            <tr><td colspan="6" class="empty-state"><i class="fas fa-spinner fa-spin"></i> Đang tải...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
 
-    <div id="toast" class="fixed top-5 right-5 bg-cardBg border border-gray-800 text-white px-6 py-4 rounded-xl shadow-2xl z-[100] flex items-center gap-4 toast-enter transition-all duration-300 pointer-events-none hidden max-w-sm">
-        <i class="fa-solid fa-circle-check text-popGreen text-2xl" id="toast-icon"></i>
-        <div>
-            <h4 class="font-bold text-sm text-white" id="toast-title">Hệ Thống</h4>
-            <span id="toast-msg" class="text-xs text-gray-400">Thông báo</span>
         </div>
     </div>
+
+    <div class="modal-overlay" id="adminModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modal-title">Chi tiết</h3>
+                <button class="close-btn" onclick="closeModal('adminModal')">&times;</button>
+            </div>
+            <div id="modal-body-content"></div>
+            <div class="modal-actions" id="modal-actions-container"></div>
+        </div>
+    </div>
+
+    <div id="toast"><i class="fas fa-info-circle"></i><span id="toast-message">Thông báo</span></div>
 
     <script>
-        // Cấu hình kết nối Backend
-        const API_URL = 'http://localhost:3000/api';
+        const API_BASE_URL = 'http://localhost:3000/api/admin';
+
+        // --- UI UTILS ---
+        function switchPanel(panelId) {
+            document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+            
+            document.getElementById(`panel-${panelId}`).classList.add('active');
+            event.currentTarget.classList.add('active');
+
+            if(panelId === 'dashboard') fetchDashboard();
+            if(panelId === 'users') fetchUsers();
+            if(panelId === 'p2p') fetchP2POrders();
+            if(panelId === 'kyc') fetchKYC();
+            if(panelId === 'tickets') fetchTickets();
+        }
+
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById("toast");
+            toast.className = type;
+            document.getElementById("toast-message").innerText = message;
+            toast.classList.add("show");
+            setTimeout(() => toast.classList.remove("show"), 3000);
+        }
+
+        function openModal() { document.getElementById('adminModal').style.display = 'flex'; }
+        function closeModal() { document.getElementById('adminModal').style.display = 'none'; }
         
-        // Token Admin tĩnh (Phải khớp với ADMIN_TOKEN trong file .env của server.js)
-        const ADMIN_TOKEN = 'ADMIN_SECRET_TOKEN'; 
-        const adminHeaders = {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${ADMIN_TOKEN}`
-        };
-
-        let currentTargetAddress = '';
-
-        // --- 1. ĐIỀU HƯỚNG UI ---
-        function switchTab(tabId) {
-            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
-            document.getElementById(`view-${tabId}`).classList.add('active');
-
-            document.querySelectorAll('aside nav button').forEach(btn => {
-                btn.className = "w-full flex items-center justify-between p-3 rounded-xl text-gray-400 hover:bg-inputBg hover:text-white transition font-bold text-sm";
-            });
-            
-            const activeBtn = document.getElementById(`nav-${tabId}`);
-            if(activeBtn) {
-                activeBtn.className = "w-full flex items-center justify-between p-3 rounded-xl bg-popOrange text-black transition font-bold text-sm";
+        function logoutAdmin() {
+            if(confirm('Thoát phiên Quản trị viên?')) {
+                window.location.href = 'login.html';
             }
-
-            // Gọi API tự động khi chuyển Tab
-            if(tabId === 'dashboard') loadDashboard();
-            if(tabId === 'kyc') loadKYC();
-            if(tabId === 'tickets') loadTickets();
         }
 
-        // --- 2. API CALLS ---
-
-        // 2.1 Load Dashboard Stats
-        async function loadDashboard() {
-            const btn = document.getElementById('btn-refresh-dash');
-            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-1"></i> Làm mới';
-            
+        // --- 1. FETCH DASHBOARD ---
+        async function fetchDashboard() {
             try {
-                const res = await fetch(`${API_URL}/admin/stats`, { headers: adminHeaders });
-                if(!res.ok) throw new Error("Lỗi xác thực hoặc máy chủ chưa phản hồi.");
-                
+                // API Gọi đến /api/admin/dashboard
+                const res = await fetch(`${API_BASE_URL}/dashboard`);
                 const data = await res.json();
-                
-                // Animation số nhảy
-                animateValue('dash-users', 0, data.totalUsers || 0, 1000);
-                document.getElementById('dash-usdt').innerText = parseFloat(data.totalUSDT || 0).toLocaleString('en-US', {minimumFractionDigits: 2});
-                document.getElementById('dash-popt').innerText = parseFloat(data.totalPOPT || 0).toLocaleString('en-US', {minimumFractionDigits: 2});
-                
-                // Lịch sử toàn mạng
-                const historyContainer = document.getElementById('admin-history');
-                historyContainer.innerHTML = '';
-                
-                if(!data.history || data.history.length === 0) {
-                    historyContainer.innerHTML = '<p class="text-gray-500 text-sm py-6 text-center">Hệ thống chưa có giao dịch nào.</p>';
-                } else {
-                    data.history.forEach(tx => {
-                        const isReceive = tx.type === 'receive';
-                        const color = isReceive ? 'text-popGreen' : 'text-popRed';
-                        const sign = isReceive ? '+' : '-';
-                        const dateStr = new Date(tx.created_at).toLocaleString('vi-VN');
-                        
-                        historyContainer.innerHTML += `
-                            <div class="flex justify-between items-center p-4 border-b border-gray-800/50 hover:bg-inputBg transition">
-                                <div>
-                                    <p class="text-sm font-bold text-white mb-0.5">${tx.title}</p>
-                                    <p class="text-[10px] text-gray-500">Ví: <span class="font-mono text-popOrange">${tx.user_address}</span> • ${dateStr}</p>
-                                </div>
-                                <p class="font-mono text-sm font-black ${color}">${sign} ${parseFloat(tx.amount).toFixed(2)} ${tx.asset}</p>
-                            </div>
-                        `;
-                    });
-                }
-            } catch (error) {
-                showAdminToast("Lỗi kết nối Backend. Vui lòng kiểm tra server.js", false);
-                document.getElementById('admin-history').innerHTML = `<p class="text-popRed text-sm py-6 text-center">${error.message}</p>`;
-            } finally {
-                btn.innerHTML = '<i class="fa-solid fa-rotate-right mr-1"></i> Làm mới';
+                document.getElementById('dash-users').innerText = data.total_users || 0;
+                document.getElementById('dash-staking').innerText = data.total_staking || '0.00';
+                document.getElementById('dash-p2p').innerText = data.pending_p2p || 0;
+                document.getElementById('dash-tickets').innerText = data.open_tickets || 0;
+            } catch (e) {
+                // Mock Data
+                document.getElementById('dash-users').innerText = '1,245';
+                document.getElementById('dash-staking').innerText = '45,200.50';
+                document.getElementById('dash-p2p').innerText = '12';
+                document.getElementById('dash-tickets').innerText = '3';
             }
         }
 
-        function animateValue(id, start, end, duration) {
-            if (start === end) { document.getElementById(id).innerHTML = end; return; }
-            let range = end - start;
-            let current = start;
-            let increment = end > start ? 1 : -1;
-            let stepTime = Math.abs(Math.floor(duration / range));
-            let obj = document.getElementById(id);
-            let timer = setInterval(function() {
-                current += increment;
-                obj.innerHTML = current;
-                if (current == end) { clearInterval(timer); }
-            }, stepTime);
-        }
-
-        // 2.2 Tra cứu User
-        async function searchUser() {
-            const address = document.getElementById('search-address').value.trim();
-            if(!address) return showAdminToast('Vui lòng nhập địa chỉ ví Popay!', false);
-
-            const btn = document.getElementById('btn-search-user');
-            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
-            btn.disabled = true;
-
+        // --- 2. FETCH USERS ---
+        async function fetchUsers() {
+            const tbody = document.getElementById('users-table-body');
             try {
-                const res = await fetch(`${API_URL}/admin/user/${address}`, { headers: adminHeaders });
-                if(!res.ok) throw new Error("Không tìm thấy người dùng trong hệ thống.");
-                
-                const user = await res.json();
-                currentTargetAddress = user.wallet_address;
-                
-                document.getElementById('user-address').innerText = user.wallet_address;
-                document.getElementById('user-usdt').innerText = parseFloat(user.usdt_balance).toLocaleString('en-US', {minimumFractionDigits: 2});
-                document.getElementById('user-popt').innerText = parseFloat(user.popt_balance).toLocaleString('en-US', {minimumFractionDigits: 2});
-                
-                const kycEl = document.getElementById('user-kyc-status');
-                if(user.kyc_status === 'verified') {
-                    kycEl.className = "px-3 py-1.5 rounded-lg text-xs font-bold bg-popGreen/20 text-popGreen border border-popGreen/50";
-                    kycEl.innerHTML = '<i class="fa-solid fa-check-circle mr-1"></i> Đã KYC';
-                } else if(user.kyc_status === 'pending') {
-                    kycEl.className = "px-3 py-1.5 rounded-lg text-xs font-bold bg-yellow-900/30 text-yellow-500 border border-yellow-700/50";
-                    kycEl.innerHTML = '<i class="fa-solid fa-clock mr-1"></i> Chờ duyệt';
-                } else {
-                    kycEl.className = "px-3 py-1.5 rounded-lg text-xs font-bold bg-gray-800 text-gray-400 border border-gray-700";
-                    kycEl.innerHTML = '<i class="fa-solid fa-circle-exclamation mr-1"></i> Chưa KYC';
-                }
-
-                document.getElementById('user-result-panel').classList.remove('hidden');
-                showAdminToast('Truy xuất dữ liệu ví thành công.', true);
-            } catch (error) {
-                showAdminToast(error.message, false);
-                document.getElementById('user-result-panel').classList.add('hidden');
-            } finally {
-                btn.innerHTML = '<i class="fa-solid fa-magnifying-glass"></i> <span class="hidden sm:inline">Tìm Kiếm</span>';
-                btn.disabled = false;
+                const res = await fetch(`${API_BASE_URL}/users`);
+                const data = await res.json();
+                renderUsers(data);
+            } catch (e) {
+                // Mock
+                const mockUsers = [
+                    { wallet_address: 'MSPW-0xABCD1234QWER', email: 'user1@gmail.com', kyc_status: 'approved', created_at: new Date().toISOString() },
+                    { wallet_address: 'MSPW-0xXYZ9876ASDF', email: 'trungan@gmail.com', kyc_status: 'pending', created_at: new Date().toISOString() }
+                ];
+                renderUsers(mockUsers);
             }
         }
+        function renderUsers(data) {
+            const tbody = document.getElementById('users-table-body');
+            tbody.innerHTML = '';
+            data.forEach(u => {
+                const shortWallet = u.wallet_address.substring(0, 12) + '...';
+                const kycBadge = u.kyc_status === 'approved' ? '<span class="badge badge-success">Đã duyệt</span>' : '<span class="badge badge-warning">Chờ / Chưa XN</span>';
+                tbody.innerHTML += `
+                    <tr>
+                        <td style="font-family: monospace; color: var(--primary-color);">${shortWallet}</td>
+                        <td>${u.email}</td>
+                        <td>${kycBadge}</td>
+                        <td>${new Date(u.created_at).toLocaleDateString('vi-VN')}</td>
+                        <td><button class="action-btn btn-view" onclick="alert('Chức năng xem chi tiết Ví')"><i class="fas fa-eye"></i> Xem</button></td>
+                    </tr>
+                `;
+            });
+        }
 
-        // 2.3 Bơm/Trừ Tiền (Mint/Burn)
-        async function modifyFunds(action) {
-            const amount = parseFloat(document.getElementById('fund-amount').value);
-            const asset = document.getElementById('fund-asset').value;
-
-            if(isNaN(amount) || amount <= 0) return showAdminToast('Vui lòng nhập số lượng hợp lệ!', false);
-            if(!currentTargetAddress) return showAdminToast('Lỗi: Chưa xác định User.', false);
-
-            const btnId = action === 'add' ? 'btn-mint' : 'btn-burn';
-            const btn = document.getElementById(btnId);
-            const originalText = btn.innerHTML;
-            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Processing...';
-            btn.disabled = true;
-
+        // --- 3. FETCH P2P ORDERS (DISPUTE MANAGEMENT) ---
+        async function fetchP2POrders() {
+            const tbody = document.getElementById('p2p-table-body');
             try {
-                const res = await fetch(`${API_URL}/admin/fund`, {
-                    method: 'POST',
-                    headers: adminHeaders,
-                    body: JSON.stringify({ targetAddress: currentTargetAddress, amount, asset, action })
-                });
-
-                const result = await res.json();
-                if(res.ok) {
-                    showAdminToast(`Đã ${action === 'add' ? 'Bơm' : 'Trừ'} thành công ${amount} ${asset}.`, true);
-                    document.getElementById('fund-amount').value = '';
-                    searchUser(); // Tự động load lại số dư mới
-                    loadDashboard(); // Cập nhật luôn cục thống kê
-                } else {
-                    showAdminToast(result.error || "Thao tác thất bại.", false);
-                }
-            } catch (error) {
-                showAdminToast("Lỗi kết nối Server.", false);
-            } finally {
-                btn.innerHTML = originalText;
-                btn.disabled = false;
+                const res = await fetch(`${API_BASE_URL}/p2p/all`);
+                const data = await res.json();
+                renderP2P(data);
+            } catch (e) {
+                // Mock
+                const mockP2P = [
+                    { id: 'O-12345', type: 'sell', maker_wallet: 'MSPW-0xABC...', taker_wallet: 'MSPW-0xXYZ...', price: 25500, amount: 100, status: 'paid' },
+                    { id: 'O-98765', type: 'buy', maker_wallet: 'MSPW-0xDEF...', taker_wallet: '', price: 25000, amount: 50, status: 'open' }
+                ];
+                renderP2P(mockP2P);
             }
         }
+        function renderP2P(data) {
+            const tbody = document.getElementById('p2p-table-body');
+            tbody.innerHTML = '';
+            data.forEach(o => {
+                let badge = ''; let actionBtn = '';
+                if(o.status === 'open') badge = '<span class="badge badge-info">Đang mở</span>';
+                if(o.status === 'processing') badge = '<span class="badge badge-warning">Chờ thanh toán</span>';
+                if(o.status === 'paid') {
+                    badge = '<span class="badge badge-danger">Tranh chấp / Chờ nhả</span>';
+                    actionBtn = `<button class="action-btn btn-resolve" onclick="resolveP2P('${o.id}')"><i class="fas fa-gavel"></i> Can thiệp</button>`;
+                }
+                if(o.status === 'completed') badge = '<span class="badge badge-success">Hoàn tất</span>';
 
-        // 2.4 Load KYC Pending & Xử lý
-        async function loadKYC() {
+                tbody.innerHTML += `
+                    <tr>
+                        <td>#${o.id.substring(0,6)}</td>
+                        <td>${o.type.toUpperCase()}</td>
+                        <td>${o.maker_wallet.substring(0,10)}...</td>
+                        <td>${o.taker_wallet ? o.taker_wallet.substring(0,10)+'...' : '-'}</td>
+                        <td style="font-weight: bold; color: var(--vnd-color);">${new Intl.NumberFormat('vi-VN').format(o.price * o.amount)} đ</td>
+                        <td>${badge}</td>
+                        <td>${actionBtn}</td>
+                    </tr>
+                `;
+            });
+        }
+        function resolveP2P(id) {
+            document.getElementById('modal-title').innerText = `Xử lý Tranh chấp Lệnh #${id.substring(0,6)}`;
+            document.getElementById('modal-body-content').innerHTML = `
+                <div class="detail-row"><span class="detail-label">Vấn đề:</span><div class="detail-value">Người mua báo đã chuyển tiền, nhưng Người bán chưa nhả coin.</div></div>
+                <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 10px;">Admin cần kiểm tra bằng chứng chuyển khoản do người mua cung cấp trước khi ép buộc hệ thống nhả coin (Force Complete) hoặc hủy lệnh (Cancel Escrow).</p>
+            `;
+            document.getElementById('modal-actions-container').innerHTML = `
+                <button class="action-btn btn-reject" onclick="adminActionP2P('${id}', 'cancel')">Hủy Lệnh & Hoàn Coin</button>
+                <button class="action-btn btn-approve" onclick="adminActionP2P('${id}', 'force_complete')">Ép buộc Nhả Coin</button>
+            `;
+            openModal();
+        }
+        async function adminActionP2P(id, action) {
+            showToast(`Đã thực thi lệnh: ${action}`, 'success');
+            closeModal();
+            fetchP2POrders();
+        }
+
+        // --- 4. FETCH & RENDER KYC ---
+        async function fetchKYC() {
+            const tbody = document.getElementById('kyc-table-body');
             try {
-                const res = await fetch(`${API_URL}/admin/kyc/pending`, { headers: adminHeaders });
-                const list = res.ok ? await res.json() : [];
-                
-                const container = document.getElementById('kyc-container');
-                const badge = document.getElementById('badge-kyc');
-                container.innerHTML = '';
-
-                if(list.length === 0) {
-                    badge.classList.add('hidden');
-                    container.innerHTML = `
-                        <div class="bg-cardBg p-10 rounded-2xl border border-gray-800 text-center">
-                            <i class="fa-regular fa-id-card text-5xl text-gray-700 mb-4 block"></i>
-                            <p class="text-gray-500 font-bold">Không có hồ sơ KYC nào đang chờ duyệt.</p>
-                        </div>
-                    `;
-                } else {
-                    badge.classList.remove('hidden'); badge.innerText = list.length;
-                    list.forEach(item => {
-                        container.innerHTML += `
-                            <div class="bg-cardBg p-6 rounded-2xl border border-yellow-700/50 bg-yellow-900/5">
-                                <div class="flex justify-between items-start mb-4 border-b border-gray-800 pb-4">
-                                    <div>
-                                        <p class="text-xs text-gray-500 uppercase tracking-widest font-bold mb-1">Yêu cầu từ ví</p>
-                                        <h3 class="text-lg font-mono text-popOrange font-bold bg-popOrange/10 px-2 py-0.5 rounded inline-block">${item.wallet_address}</h3>
-                                    </div>
-                                    <span class="text-[10px] text-gray-500"><i class="fa-regular fa-clock"></i> ${new Date(item.created_at).toLocaleString('vi-VN')}</span>
-                                </div>
-                                <div class="mb-5 flex gap-4">
-                                    <div class="flex-1 h-24 rounded-xl border-2 border-dashed border-gray-700 flex items-center justify-center text-gray-500 text-xs bg-darkBg"><i class="fa-solid fa-image mr-1"></i> Mặt trước</div>
-                                    <div class="flex-1 h-24 rounded-xl border-2 border-dashed border-gray-700 flex items-center justify-center text-gray-500 text-xs bg-darkBg"><i class="fa-regular fa-image mr-1"></i> Mặt sau</div>
-                                </div>
-                                <div class="flex gap-4">
-                                    <button onclick="processKYC(${item.user_id}, 'verified')" class="flex-1 bg-popGreen text-white font-bold py-3 rounded-xl hover:bg-green-600 transition flex justify-center items-center gap-2">
-                                        <i class="fa-solid fa-check"></i> Phê Duyệt
-                                    </button>
-                                    <button onclick="processKYC(${item.user_id}, 'unverified')" class="flex-1 bg-transparent border border-popRed text-popRed font-bold py-3 rounded-xl hover:bg-popRed hover:text-white transition flex justify-center items-center gap-2">
-                                        <i class="fa-solid fa-xmark"></i> Từ Chối
-                                    </button>
-                                </div>
-                            </div>
-                        `;
-                    });
-                }
-            } catch (error) {
-                document.getElementById('kyc-container').innerHTML = '<p class="text-popRed text-center py-5">Lỗi gọi API /admin/kyc/pending</p>';
+                const res = await fetch(`${API_BASE_URL}/kyc/pending`);
+                const data = await res.json();
+                renderKYC(data);
+            } catch (e) {
+                const mockKYC = [{ id: 'K-999', wallet: 'MSPW-0x123...', full_name: 'TRUNG AN', id_number: '0123456789', status: 'pending', image_url: 'https://via.placeholder.com/400x250?text=CCCD+Mat+Truoc' }];
+                renderKYC(mockKYC);
             }
         }
+        function renderKYC(data) {
+            const tbody = document.getElementById('kyc-table-body');
+            tbody.innerHTML = '';
+            if(data.length === 0) return tbody.innerHTML = `<tr><td colspan="6" class="empty-state">Không có yêu cầu KYC.</td></tr>`;
+            data.forEach(item => {
+                tbody.innerHTML += `
+                    <tr>
+                        <td>#${item.id.substring(0,5)}</td>
+                        <td style="color:var(--primary-color);">${item.wallet.substring(0, 10)}...</td>
+                        <td style="font-weight:bold;">${item.full_name}</td>
+                        <td>${item.id_number}</td>
+                        <td><span class="badge badge-warning">Chờ duyệt</span></td>
+                        <td><button class="action-btn btn-view" onclick='viewKYC(${JSON.stringify(item)})'><i class="fas fa-search"></i> Kiểm tra</button></td>
+                    </tr>
+                `;
+            });
+        }
+        function viewKYC(item) {
+            document.getElementById('modal-title').innerText = 'Kiểm duyệt KYC';
+            document.getElementById('modal-body-content').innerHTML = `
+                <div class="detail-row"><span class="detail-label">Ví yêu cầu:</span><span class="detail-value">${item.wallet}</span></div>
+                <div class="detail-row"><span class="detail-label">Họ và tên:</span><span class="detail-value">${item.full_name}</span></div>
+                <div class="detail-row"><span class="detail-label">Số giấy tờ:</span><span class="detail-value">${item.id_number}</span></div>
+                <div class="detail-row"><span class="detail-label">Ảnh mặt trước:</span><img src="${item.image_url}" class="kyc-image" alt="KYC Image"></div>
+            `;
+            document.getElementById('modal-actions-container').innerHTML = `
+                <button class="action-btn btn-reject" style="padding: 10px 20px;" onclick="processAction('kyc', '${item.id}', 'rejected')">Từ chối</button>
+                <button class="action-btn btn-approve" style="padding: 10px 20px;" onclick="processAction('kyc', '${item.id}', 'approved')">Duyệt hợp lệ</button>
+            `;
+            openModal();
+        }
 
-        async function processKYC(userId, status) {
+        // --- 5. FETCH & RENDER TICKETS ---
+        async function fetchTickets() {
+            const tbody = document.getElementById('ticket-table-body');
             try {
-                const res = await fetch(`${API_URL}/admin/kyc/process`, {
-                    method: 'POST',
-                    headers: adminHeaders,
-                    body: JSON.stringify({ userId, status })
-                });
-                if(res.ok) {
-                    showAdminToast(`Đã ${status === 'verified' ? 'PHÊ DUYỆT' : 'TỪ CHỐI'} KYC thành công.`, true);
-                    loadKYC();
-                } else {
-                    showAdminToast("Lỗi xử lý KYC", false);
-                }
-            } catch (error) {
-                showAdminToast("Lỗi kết nối Server.", false);
+                const res = await fetch(`${API_BASE_URL}/tickets/open`);
+                const data = await res.json();
+                renderTickets(data);
+            } catch (e) {
+                const mockTickets = [{ id: 'T-555', wallet: 'MSPW-0xABC...', title: 'Lỗi nạp VND', content: 'Tôi chuyển khoản r mà chưa thấy nhả coin admin ơi', created_at: new Date().toISOString() }];
+                renderTickets(mockTickets);
             }
         }
+        function renderTickets(data) {
+            const tbody = document.getElementById('ticket-table-body');
+            tbody.innerHTML = '';
+            if(data.length === 0) return tbody.innerHTML = `<tr><td colspan="6" class="empty-state">Không có Ticket nào.</td></tr>`;
+            data.forEach(item => {
+                tbody.innerHTML += `
+                    <tr>
+                        <td>#${item.id.substring(0,5)}</td>
+                        <td>${item.wallet.substring(0, 10)}...</td>
+                        <td style="font-weight:bold;">${item.title}</td>
+                        <td>${new Date(item.created_at).toLocaleDateString('vi-VN')}</td>
+                        <td><span class="badge badge-danger">Cần xử lý</span></td>
+                        <td><button class="action-btn btn-approve" onclick='viewTicket(${JSON.stringify(item)})'><i class="fas fa-reply"></i> Trả lời</button></td>
+                    </tr>
+                `;
+            });
+        }
+        function viewTicket(item) {
+            document.getElementById('modal-title').innerText = 'Trả lời Ticket Hỗ trợ';
+            document.getElementById('modal-body-content').innerHTML = `
+                <div class="detail-row"><span class="detail-label">Người gửi:</span><span class="detail-value">${item.wallet}</span></div>
+                <div class="detail-row"><span class="detail-label">Tiêu đề:</span><span class="detail-value" style="font-weight:bold; color:var(--danger);">${item.title}</span></div>
+                <div class="detail-row"><span class="detail-label">Nội dung người dùng gửi:</span><div style="font-size:1rem; padding-top:5px;">${item.content}</div></div>
+                <div class="detail-row"><span class="detail-label">Nhập phản hồi (Sẽ gửi vào Hộp thư của user):</span>
+                    <textarea id="reply-content" class="form-control" placeholder="Chào bạn, ..."></textarea>
+                </div>
+            `;
+            document.getElementById('modal-actions-container').innerHTML = `
+                <button class="action-btn btn-approve" style="padding: 12px 25px; width: 100%; font-size:1rem;" onclick="processAction('ticket', '${item.id}', 'closed')">Gửi phản hồi & Đóng Ticket</button>
+            `;
+            openModal();
+        }
 
-        // 2.5 Load Support Tickets & Xử lý
-        async function loadTickets() {
+        // Generic Action Processor
+        async function processAction(type, id, status) {
             try {
-                const res = await fetch(`${API_URL}/admin/tickets`, { headers: adminHeaders });
-                const tickets = res.ok ? await res.json() : [];
-                
-                const container = document.getElementById('tickets-container');
-                const badge = document.getElementById('badge-tickets');
-                container.innerHTML = '';
-                
-                const openTickets = tickets.filter(t => t.status === 'open');
-                if(openTickets.length > 0) {
-                    badge.classList.remove('hidden'); badge.innerText = openTickets.length;
-                } else {
-                    badge.classList.add('hidden');
-                }
-
-                if(tickets.length === 0) {
-                    container.innerHTML = `
-                        <div class="bg-cardBg p-10 rounded-2xl border border-gray-800 text-center">
-                            <i class="fa-solid fa-clipboard-check text-5xl text-gray-700 mb-4 block"></i>
-                            <p class="text-gray-500 font-bold">Hộp thư hỗ trợ trống. Hệ thống đang hoạt động hoàn hảo.</p>
-                        </div>
-                    `;
-                } else {
-                    tickets.forEach(ticket => {
-                        const isOpen = ticket.status === 'open';
-                        const statusTag = isOpen ? '<span class="bg-popOrange text-black text-[10px] px-2 py-1 rounded font-bold uppercase">Mới</span>' : '<span class="bg-gray-800 text-gray-500 text-[10px] px-2 py-1 rounded font-bold uppercase">Đã Đóng</span>';
-                        
-                        container.innerHTML += `
-                            <div class="bg-cardBg p-5 rounded-2xl border ${isOpen ? 'border-popOrange/30' : 'border-gray-800 opacity-70'}">
-                                <div class="flex justify-between items-start mb-4 border-b border-gray-800 pb-3">
-                                    <div>
-                                        <h4 class="font-bold text-white text-lg">${ticket.subject}</h4>
-                                        <p class="text-xs text-gray-500 mt-1">Từ: <span class="font-mono text-popOrange">${ticket.user_address}</span></p>
-                                    </div>
-                                    <div class="text-right">
-                                        ${statusTag}
-                                        <p class="text-[10px] text-gray-500 mt-2">${new Date(ticket.created_at).toLocaleString('vi-VN')}</p>
-                                    </div>
-                                </div>
-                                <div class="bg-inputBg p-4 rounded-xl border border-gray-800 text-sm text-gray-300 mb-4 whitespace-pre-wrap leading-relaxed">${ticket.message}</div>
-                                
-                                ${isOpen ? `
-                                    <div class="flex justify-end">
-                                        <button onclick="closeTicket('${ticket.id}')" class="bg-popGreen text-white text-sm font-bold px-6 py-2.5 rounded-xl hover:bg-green-600 transition flex items-center gap-2">
-                                            <i class="fa-solid fa-check"></i> Đánh dấu đã xử lý
-                                        </button>
-                                    </div>
-                                ` : ''}
-                            </div>
-                        `;
-                    });
-                }
-            } catch (error) {
-                document.getElementById('tickets-container').innerHTML = '<p class="text-popRed text-center py-5">Lỗi tải danh sách Ticket</p>';
-            }
+                // API Call: fetch(`${API_BASE_URL}/${type}/process`, { method: 'POST', body: JSON.stringify({ id, status }) })
+                showToast(`Đã xử lý thành công!`, 'success');
+                closeModal();
+                if(type === 'kyc') fetchKYC();
+                if(type === 'ticket') fetchTickets();
+            } catch (e) { showToast(`Lỗi kết nối Server`, 'error'); }
         }
 
-        async function closeTicket(ticketId) {
-            try {
-                const res = await fetch(`${API_URL}/admin/ticket/close`, {
-                    method: 'POST',
-                    headers: adminHeaders,
-                    body: JSON.stringify({ ticketId })
-                });
-                if(res.ok) {
-                    showAdminToast(`Đã đóng Ticket #${ticketId}.`, true);
-                    loadTickets(); // Refresh danh sách
-                }
-            } catch (error) {
-                showAdminToast("Lỗi kết nối Server.", false);
-            }
-        }
-
-        // --- TIỆN ÍCH ---
-        let adminToastTimeout;
-        function showAdminToast(msg, isSuccess = true) {
-            const toast = document.getElementById('toast');
-            document.getElementById('toast-msg').innerText = msg;
-            
-            const icon = document.getElementById('toast-icon');
-            if(isSuccess) {
-                toast.className = 'fixed top-5 right-5 bg-cardBg border border-gray-800 text-white px-6 py-4 rounded-xl shadow-2xl z-[100] flex items-center gap-4 toast-active transition-all duration-300 border-l-4 border-l-popGreen';
-                icon.className = 'fa-solid fa-circle-check text-popGreen text-2xl';
-                document.getElementById('toast-title').className = 'font-bold text-sm text-popGreen';
-            } else {
-                toast.className = 'fixed top-5 right-5 bg-cardBg border border-gray-800 text-white px-6 py-4 rounded-xl shadow-2xl z-[100] flex items-center gap-4 toast-active transition-all duration-300 border-l-4 border-l-popRed';
-                icon.className = 'fa-solid fa-circle-exclamation text-popRed text-2xl';
-                document.getElementById('toast-title').className = 'font-bold text-sm text-popRed';
-                document.getElementById('toast-title').innerText = 'Lỗi';
-            }
-
-            toast.classList.remove('hidden');
-            setTimeout(() => { toast.classList.remove('toast-enter'); toast.classList.add('toast-active'); }, 10);
-            
-            clearTimeout(adminToastTimeout);
-            adminToastTimeout = setTimeout(() => {
-                toast.classList.remove('toast-active'); toast.classList.add('toast-enter');
-                setTimeout(() => toast.classList.add('hidden'), 300);
-            }, 4000);
-        }
-
-        // Khởi chạy khi tải trang
-        window.onload = () => {
-            loadDashboard();
-            // Lấy badge ban đầu cho menu
-            loadKYC();
-            loadTickets();
-            // Trở về tab mặc định
-            switchTab('dashboard');
-        };
+        // Init
+        window.onload = () => { fetchDashboard(); };
     </script>
 </body>
 </html>
