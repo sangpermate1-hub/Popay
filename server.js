@@ -137,7 +137,7 @@ app.post('/api/wallet/send', async (req, res) => {
 });
 
 // ==========================================
-// 3. MODULE P2P ESCROW
+// 3. MODULE P2P ESCROW (Giữ nguyên theo yêu cầu)
 // ==========================================
 app.get('/api/p2p/orders', async (req, res) => {
     const { type } = req.query;
@@ -292,7 +292,7 @@ app.post('/api/staking/withdraw', async (req, res) => {
 });
 
 // ==========================================
-// 5. MODULE EXPLORER (MPT SCAN)
+// 5. MODULE EXPLORER (CẬP NHẬT HOÀN THIỆN)
 // ==========================================
 app.get('/api/explorer/stats', async (req, res) => {
     try {
@@ -320,27 +320,44 @@ app.get('/api/explorer/latest-txns', async (req, res) => {
     } catch(e) { res.status(500).send(); }
 });
 
+// CẬP NHẬT CHÍNH: API Search của Explorer để lấy thông tin ví và Hash
 app.get('/api/explorer/search', async (req, res) => {
     const { type, q } = req.query;
     try {
-        // Fix search chi tiết Address hoặc Hash
-        if (type === 'address' || q.startsWith('M')) {
+        // 1. Nếu người dùng tìm kiếm bằng địa chỉ Ví (bắt đầu bằng 'M')
+        if (type === 'address' || (q && q.startsWith('M'))) {
+            // Kiểm tra ví có tồn tại trong hệ thống không
             const userRes = await pool.query(`SELECT * FROM users WHERE wallet_address = $1`, [q]);
+            if(userRes.rows.length === 0) return res.status(404).json(null);
+            
+            // Lấy 20 giao dịch gần nhất của ví này
             const txnsRes = await pool.query(`SELECT * FROM transaction_history WHERE from_wallet = $1 OR to_wallet = $1 ORDER BY created_at DESC LIMIT 20`, [q]);
+            
+            // Lấy số dư MPT và USDT để hiển thị chi tiết tài sản
             const mpt = await getBalance(q, 'MPT');
             const usdt = await getBalance(q, 'USDT');
+            
             res.json({
                 wallet_address: q,
-                kyc_status: 'approved',
+                kyc_status: 'unverified', // Mặc định nếu không có bảng KYC
                 balance_mspw: mpt,
                 balance_usdt: usdt,
                 txns: txnsRes.rows
             });
-        } else {
+        } 
+        // 2. Nếu người dùng tìm kiếm bằng mã Giao dịch (Hash) (bắt đầu bằng 'TX')
+        else if (q && q.startsWith('TX')) {
             const txRes = await pool.query(`SELECT * FROM transaction_history WHERE tx_hash = $1`, [q]);
-            res.json(txRes.rows[0] || null);
+            if(txRes.rows.length === 0) return res.status(404).json(null);
+            res.json(txRes.rows[0]);
+        } 
+        else {
+            res.status(400).json({ message: "Invalid search query format" });
         }
-    } catch (e) { res.status(500).send(); }
+    } catch (e) { 
+        console.error('Lỗi API Search Explorer:', e);
+        res.status(500).send(); 
+    }
 });
 
 // ==========================================
@@ -378,15 +395,18 @@ app.get('/api/admin/dashboard', async (req, res) => {
 
 app.get('/api/admin/users', async (req, res) => {
     try {
-        const result = await pool.query(`SELECT u.wallet_address, u.email, u.created_at, COALESCE(k.status, 'unverified') as kyc_status FROM users u LEFT JOIN user_kyc k ON u.wallet_address = k.wallet`);
+        // Loại bỏ JOIN với user_kyc vì bảng đó có thể chưa tồn tại
+        const result = await pool.query(`SELECT wallet_address, email, created_at FROM users`);
         res.json(result.rows);
     } catch(e) { res.status(500).send(); }
 });
 
 // BỔ SUNG: API Duyệt Rút Tiền
 app.get('/api/admin/withdraws/pending', async (req, res) => {
-    const r = await pool.query(`SELECT * FROM withdraw_requests WHERE status = 'pending' ORDER BY created_at DESC`);
-    res.json(r.rows);
+    try {
+        const r = await pool.query(`SELECT * FROM withdraw_requests WHERE status = 'pending' ORDER BY created_at DESC`);
+        res.json(r.rows);
+    } catch(e) { res.status(500).send(); }
 });
 
 app.post('/api/admin/withdraws/process', async (req, res) => {
@@ -412,11 +432,18 @@ app.post('/api/admin/withdraws/process', async (req, res) => {
 // Tỷ giá cố định: 26.800 VND/USDT
 app.post('/api/webhooks/sepay', async (req, res) => {
     const { content, amount } = req.body; 
-    if (!content || !amount) return res.status(400).send('Missing data');
+    
+    // Kiểm tra dữ liệu webhook có hợp lệ không
+    if (!content || !amount) {
+        console.error('Webhook nhận được dữ liệu trống.');
+        return res.status(400).send('Missing data');
+    }
 
-    const walletTag = content.replace('MPH', '').toUpperCase();
+    // Xử lý chuỗi (Loại bỏ khoảng trắng và ký tự lạ, lấy phần đuôi sau MPH)
+    const walletTag = content.replace(/[^a-zA-Z0-9]/g, '').replace('MPH', '').toUpperCase();
 
     try {
+        // Tìm ví của khách hàng khớp với tag trong memo
         const userQuery = await pool.query(
             `SELECT wallet_address FROM users WHERE wallet_address LIKE $1`,
             [`%${walletTag}`]
@@ -424,13 +451,15 @@ app.post('/api/webhooks/sepay', async (req, res) => {
 
         if (userQuery.rows.length > 0) {
             const wallet = userQuery.rows[0].wallet_address;
-            const usdtAmount = parseFloat(amount) / 26800;
+            const usdtAmount = parseFloat(amount) / 26800; // Quy đổi VNĐ sang USDT
 
+            // Ghi chép nạp tiền vào Sổ cái
             await recordTx(pool, 'deposit_sepay', 'BANK_BIDV', wallet, usdtAmount, 'USDT');
 
             console.log(`[Webhook] Tự động nạp ${usdtAmount} USDT vào ví ${wallet}`);
             res.json({ success: true });
         } else {
+            console.log(`[Webhook] Không tìm thấy ví khớp với tag: ${walletTag} (Nội dung gốc: ${content})`);
             res.status(404).json({ message: "Wallet tag not found" });
         }
     } catch (e) {
