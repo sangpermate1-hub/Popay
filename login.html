@@ -2,310 +2,358 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Popay Wallet - Nền Tảng Tài Chính</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        popOrange: '#ff5f1f',
-                        darkBg: '#0a0a0a',
-                        cardBg: '#141414',
-                        inputBg: '#1f1f1f',
-                        popGreen: '#26A17B',
-                        popRed: '#E33E5A'
-                    }
-                }
-            }
-        }
-    </script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Đăng nhập - MySPay Wallet</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
-        ::-webkit-scrollbar { display: none; }
-        body { -ms-overflow-style: none; scrollbar-width: none; }
-        
-        /* Smooth form transition */
-        .form-container { transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
-        .form-hidden { opacity: 0; pointer-events: none; position: absolute; transform: translateX(20px); width: 100%; }
-        .form-active { opacity: 1; pointer-events: auto; position: relative; transform: translateX(0); width: 100%; }
-        
+        :root {
+            --primary-color: #007bff;
+            --primary-light: #e6f2ff;
+            --bg-color: #f8faff;
+            --card-bg: #ffffff;
+            --text-main: #2c3e50;
+            --text-muted: #7f8c8d;
+            --border-color: #e1e8ed;
+            --success: #2ecc71;
+            --danger: #e74c3c;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+
+        body { 
+            background-color: var(--primary-color); 
+            color: var(--text-main); 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .auth-container {
+            background: var(--card-bg);
+            width: 100%;
+            max-width: 400px;
+            border-radius: 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            overflow: hidden;
+            animation: slideUp 0.4s ease-out;
+        }
+
+        @keyframes slideUp {
+            from { transform: translateY(30px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        .auth-header {
+            text-align: center;
+            padding: 30px 20px 20px;
+        }
+
+        .auth-header img {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: var(--primary-light);
+            padding: 5px;
+            margin-bottom: 15px;
+        }
+
+        .auth-header h2 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--text-main);
+        }
+
+        .auth-header p {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            margin-top: 5px;
+        }
+
+        /* Tabs */
+        .auth-tabs {
+            display: flex;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .tab-btn {
+            flex: 1;
+            padding: 15px;
+            text-align: center;
+            border: none;
+            background: none;
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            transition: 0.3s;
+        }
+
+        .tab-btn.active {
+            color: var(--primary-color);
+            border-bottom-color: var(--primary-color);
+        }
+
+        /* Forms */
+        .auth-form {
+            padding: 30px 25px;
+            display: none;
+        }
+
+        .auth-form.active {
+            display: block;
+            animation: fadeIn 0.3s;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+            position: relative;
+        }
+
+        .form-group i {
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            color: var(--text-muted);
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 14px 15px 14px 45px;
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            font-size: 1rem;
+            outline: none;
+            background: var(--bg-color);
+            transition: 0.2s;
+        }
+
+        .form-control:focus {
+            border-color: var(--primary-color);
+            background: white;
+            box-shadow: 0 0 0 3px var(--primary-light);
+        }
+
+        .btn-primary {
+            width: 100%;
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 15px;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.2s;
+            margin-top: 10px;
+        }
+
+        .btn-primary:active {
+            transform: scale(0.98);
+        }
+
+        .btn-primary:disabled {
+            background: var(--text-muted);
+            cursor: not-allowed;
+        }
+
         /* Toast */
-        .toast-enter { transform: translateY(-100%); opacity: 0; }
-        .toast-active { transform: translateY(0); opacity: 1; }
-        
-        .fade-in { animation: fadeIn 0.5s ease-out forwards; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        #toast { visibility: hidden; min-width: 250px; background-color: var(--text-main); color: white; text-align: center; border-radius: 10px; padding: 15px 20px; position: fixed; z-index: 10000; left: 50%; bottom: 30px; transform: translateX(-50%); box-shadow: 0 5px 20px rgba(0,0,0,0.2); display: flex; align-items: center; gap: 12px; opacity: 0; transition: 0.3s; }
+        #toast.show { visibility: visible; opacity: 1; bottom: 50px; }
+        #toast.success { background-color: var(--success); }
+        #toast.error { background-color: var(--danger); }
     </style>
 </head>
-<body class="bg-darkBg text-white font-sans min-h-screen flex flex-col justify-center items-center p-5 selection:bg-popOrange selection:text-black overflow-x-hidden">
+<body>
 
-    <div class="w-full max-w-sm fade-in relative">
-        
-        <div class="text-center mb-8">
-            <img src="logo.png" alt="Popay Logo" class="w-20 h-20 mx-auto rounded-full border border-popOrange object-cover mb-4" onerror="this.src='https://via.placeholder.com/80/ff5f1f/000000?text=P'">
-            <h1 class="text-3xl font-black tracking-widest text-white uppercase">Popay</h1>
-            <p class="text-xs text-gray-500 tracking-widest uppercase mt-2">Quyền lực tài chính trong tay bạn</p>
+    <div class="auth-container">
+        <div class="auth-header">
+            <img src="logo.png" alt="MySPay Logo" onerror="this.src='https://via.placeholder.com/60/007bff/ffffff?text=M'">
+            <h2>MySPay Wallet</h2>
+            <p>Nền tảng quản lý tài sản số của bạn</p>
         </div>
 
-        <div class="flex bg-cardBg rounded-xl p-1 border border-gray-800 mb-6">
-            <button onclick="switchView('login')" id="tab-login" class="flex-1 bg-popOrange text-black font-bold py-2.5 rounded-lg text-sm transition">Đăng Nhập</button>
-            <button onclick="switchView('register')" id="tab-register" class="flex-1 text-gray-400 font-bold py-2.5 rounded-lg text-sm hover:text-white transition bg-transparent">Đăng Ký</button>
+        <div class="auth-tabs">
+            <button class="tab-btn active" onclick="switchTab('login')">Đăng nhập</button>
+            <button class="tab-btn" onclick="switchTab('register')">Đăng ký</button>
         </div>
 
-        <div class="relative w-full overflow-hidden">
-            <div id="form-login" class="form-container form-active space-y-4">
-                <div class="bg-inputBg border border-gray-800 rounded-xl p-3.5 focus-within:border-popOrange transition">
-                    <label class="text-[10px] text-gray-500 uppercase tracking-wider block mb-1 pl-1">Tài khoản</label>
-                    <div class="flex items-center gap-3">
-                        <i class="fa-regular fa-user text-gray-500"></i>
-                        <input type="text" id="login-username" class="bg-transparent text-white w-full outline-none font-bold" placeholder="Email hoặc Số điện thoại">
-                    </div>
-                </div>
-
-                <div class="bg-inputBg border border-gray-800 rounded-xl p-3.5 focus-within:border-popOrange transition">
-                    <label class="text-[10px] text-gray-500 uppercase tracking-wider block mb-1 pl-1">Mật khẩu</label>
-                    <div class="flex items-center gap-3">
-                        <i class="fa-solid fa-lock text-gray-500"></i>
-                        <input type="password" id="login-password" class="bg-transparent text-white w-full outline-none font-bold tracking-widest" placeholder="••••••••">
-                        <button onclick="togglePassword('login-password', this)" class="text-gray-500 hover:text-white transition"><i class="fa-regular fa-eye"></i></button>
-                    </div>
-                </div>
-
-                <div class="text-right">
-                    <a href="#" class="text-xs text-popOrange hover:underline font-bold">Quên mật khẩu?</a>
-                </div>
-
-                <button onclick="handleLogin()" id="btn-login" class="w-full bg-popOrange text-black font-black uppercase tracking-wider py-4 rounded-xl mt-4 hover:bg-orange-600 transition flex justify-center items-center gap-2">
-                    Vào Ví Popay <i class="fa-solid fa-arrow-right"></i>
-                </button>
+        <form id="loginForm" class="auth-form active" onsubmit="handleLogin(event)">
+            <div class="form-group">
+                <i class="fas fa-envelope"></i>
+                <input type="email" class="form-control" id="login-email" placeholder="Email của bạn" required>
             </div>
-
-            <div id="form-register" class="form-container form-hidden space-y-4">
-                <div class="bg-inputBg border border-gray-800 rounded-xl p-3.5 focus-within:border-popOrange transition">
-                    <label class="text-[10px] text-gray-500 uppercase tracking-wider block mb-1 pl-1">Tài khoản mới</label>
-                    <div class="flex items-center gap-3">
-                        <i class="fa-regular fa-user text-gray-500"></i>
-                        <input type="text" id="reg-username" class="bg-transparent text-white w-full outline-none font-bold" placeholder="Email hoặc Số điện thoại">
-                    </div>
-                </div>
-
-                <div class="bg-inputBg border border-gray-800 rounded-xl p-3.5 focus-within:border-popOrange transition">
-                    <label class="text-[10px] text-gray-500 uppercase tracking-wider block mb-1 pl-1">Mật khẩu</label>
-                    <div class="flex items-center gap-3">
-                        <i class="fa-solid fa-lock text-gray-500"></i>
-                        <input type="password" id="reg-password" class="bg-transparent text-white w-full outline-none font-bold tracking-widest" placeholder="Tạo mật khẩu (>6 ký tự)">
-                        <button onclick="togglePassword('reg-password', this)" class="text-gray-500 hover:text-white transition"><i class="fa-regular fa-eye"></i></button>
-                    </div>
-                </div>
-
-                <div class="bg-inputBg border border-gray-800 rounded-xl p-3.5 focus-within:border-popOrange transition">
-                    <label class="text-[10px] text-gray-500 uppercase tracking-wider block mb-1 pl-1">Xác nhận mật khẩu</label>
-                    <div class="flex items-center gap-3">
-                        <i class="fa-solid fa-shield-halved text-gray-500"></i>
-                        <input type="password" id="reg-confirm" class="bg-transparent text-white w-full outline-none font-bold tracking-widest" placeholder="Nhập lại mật khẩu">
-                    </div>
-                </div>
-
-                <div class="bg-inputBg border border-gray-800 rounded-xl p-3.5 focus-within:border-popOrange transition">
-                    <label class="text-[10px] text-popOrange font-bold uppercase tracking-wider block mb-1 pl-1">Mã Giới Thiệu (Tùy chọn)</label>
-                    <div class="flex items-center gap-3">
-                        <i class="fa-solid fa-gift text-popOrange"></i>
-                        <input type="text" id="reg-ref" class="bg-transparent text-white w-full outline-none font-bold uppercase" placeholder="Nhập mã giới thiệu">
-                    </div>
-                </div>
-
-                <button onclick="handleRegister()" id="btn-register" class="w-full bg-transparent border-2 border-popOrange text-popOrange font-black uppercase tracking-wider py-4 rounded-xl mt-4 hover:bg-popOrange hover:text-black transition flex justify-center items-center gap-2">
-                    Tạo Ví Mới <i class="fa-solid fa-user-plus"></i>
-                </button>
-                <p class="text-[10px] text-center text-gray-500 mt-2">Bằng việc đăng ký, bạn đồng ý với Điều khoản sử dụng của Popay.</p>
+            <div class="form-group">
+                <i class="fas fa-lock"></i>
+                <input type="password" class="form-control" id="login-password" placeholder="Mật khẩu" required>
             </div>
-        </div>
+            <button type="submit" class="btn-primary" id="btn-login">Đăng Nhập</button>
+        </form>
+
+        <form id="registerForm" class="auth-form" onsubmit="handleRegister(event)">
+            <div class="form-group">
+                <i class="fas fa-user"></i>
+                <input type="text" class="form-control" id="reg-name" placeholder="Họ và Tên" required>
+            </div>
+            <div class="form-group">
+                <i class="fas fa-envelope"></i>
+                <input type="email" class="form-control" id="reg-email" placeholder="Email" required>
+            </div>
+            <div class="form-group">
+                <i class="fas fa-lock"></i>
+                <input type="password" class="form-control" id="reg-password" placeholder="Mật khẩu" required minlength="6">
+            </div>
+            <div class="form-group">
+                <i class="fas fa-lock"></i>
+                <input type="password" class="form-control" id="reg-confirm-password" placeholder="Xác nhận mật khẩu" required minlength="6">
+            </div>
+            <div class="form-group">
+                <i class="fas fa-link"></i>
+                <input type="text" class="form-control" id="reg-referral" placeholder="Mã giới thiệu (Nếu có)">
+            </div>
+            <button type="submit" class="btn-primary" id="btn-register">Tạo Tài Khoản Mới</button>
+        </form>
     </div>
 
-    <div id="toast" class="fixed top-5 left-1/2 transform -translate-x-1/2 bg-cardBg border border-gray-800 text-white px-6 py-3 rounded-full flex items-center gap-3 toast-enter transition-all duration-300 pointer-events-none hidden w-max z-[60]">
-        <i class="fa-solid fa-circle-exclamation text-popOrange"></i>
-        <span id="toast-msg" class="font-bold text-sm">Thông báo</span>
+    <div id="toast">
+        <i class="fas fa-info-circle"></i>
+        <span id="toast-message">Thông báo</span>
     </div>
 
     <script>
-        const API_URL = 'http://localhost:3000/api';
+        // Cấu hình API Server Node.js của bạn
+        const API_BASE_URL = 'http://localhost:3000/api/auth';
 
-        // 1. Kiểm tra nếu đã có Token thì cho vào thẳng Index
-        function checkToken() {
-            const token = localStorage.getItem('token');
-            if(token) {
-                window.location.href = 'index.html';
-            }
-        }
-
-        // 2. LOGIC GIAO DIỆN (UI)
-        function switchView(view) {
-            const loginForm = document.getElementById('form-login');
-            const registerForm = document.getElementById('form-register');
-            const tabLogin = document.getElementById('tab-login');
-            const tabRegister = document.getElementById('tab-register');
-
-            if(view === 'login') {
-                loginForm.classList.replace('form-hidden', 'form-active');
-                registerForm.classList.replace('form-active', 'form-hidden');
-                
-                tabLogin.className = "flex-1 bg-popOrange text-black font-bold py-2.5 rounded-lg text-sm transition";
-                tabRegister.className = "flex-1 text-gray-400 font-bold py-2.5 rounded-lg text-sm hover:text-white transition bg-transparent";
-            } else {
-                registerForm.classList.replace('form-hidden', 'form-active');
-                loginForm.classList.replace('form-active', 'form-hidden');
-                
-                tabRegister.className = "flex-1 bg-popOrange text-black font-bold py-2.5 rounded-lg text-sm transition";
-                tabLogin.className = "flex-1 text-gray-400 font-bold py-2.5 rounded-lg text-sm hover:text-white transition bg-transparent";
-            }
-        }
-
-        function togglePassword(inputId, btn) {
-            const input = document.getElementById(inputId);
-            const icon = btn.querySelector('i');
-            if(input.type === 'password') {
-                input.type = 'text';
-                icon.classList.replace('fa-eye', 'fa-eye-slash');
-                icon.classList.add('text-popOrange');
-            } else {
-                input.type = 'password';
-                icon.classList.replace('fa-eye-slash', 'fa-eye');
-                icon.classList.remove('text-popOrange');
-            }
-        }
-
-        let toastTimeout;
-        function showToast(message, isSuccess = false) {
-            const toast = document.getElementById('toast');
-            const icon = toast.querySelector('i');
-            document.getElementById('toast-msg').innerText = message;
-            
-            if(isSuccess) {
-                icon.className = "fa-solid fa-circle-check text-popGreen";
-                toast.classList.replace('border-gray-800', 'border-popGreen');
-            } else {
-                icon.className = "fa-solid fa-circle-exclamation text-popOrange";
-                toast.classList.replace('border-popGreen', 'border-gray-800');
-            }
-
-            toast.classList.remove('hidden');
-            setTimeout(() => { toast.classList.remove('toast-enter'); toast.classList.add('toast-active'); }, 10);
-            
-            clearTimeout(toastTimeout);
-            toastTimeout = setTimeout(() => {
-                toast.classList.remove('toast-active'); toast.classList.add('toast-enter');
-                setTimeout(() => toast.classList.add('hidden'), 300);
-            }, 3000);
-        }
-
-        // 3. LOGIC XỬ LÝ DỮ LIỆU VỚI BACKEND
-
-        // Kiểm tra URL xem có chứa mã giới thiệu không (?ref=...)
-        function checkReferral() {
+        // Xử lý tự động điền mã giới thiệu nếu có trên thanh URL (VD: myspaywallet.com/login.html?ref=ABCD123)
+        window.onload = () => {
             const urlParams = new URLSearchParams(window.location.search);
             const refCode = urlParams.get('ref');
             if(refCode) {
-                switchView('register');
-                document.getElementById('reg-ref').value = refCode.toUpperCase();
-                showToast('Đã áp dụng mã giới thiệu: ' + refCode.toUpperCase(), true);
+                switchTab('register');
+                document.getElementById('reg-referral').value = refCode;
             }
+        };
+
+        function showToast(message, type = 'info') {
+            const toast = document.getElementById("toast");
+            const icon = toast.querySelector('i');
+            toast.className = ""; icon.className = "";
+            document.getElementById("toast-message").innerText = message;
+            toast.classList.add(type);
+            if(type === 'success') icon.className = "fas fa-check-circle";
+            else if(type === 'error') icon.className = "fas fa-exclamation-circle";
+            else icon.className = "fas fa-info-circle";
+            toast.classList.add("show");
+            setTimeout(() => toast.classList.remove("show"), 3000);
         }
 
-        // Đăng Ký API
-        async function handleRegister() {
-            const username = document.getElementById('reg-username').value.trim();
-            const password = document.getElementById('reg-password').value;
-            const confirm = document.getElementById('reg-confirm').value;
-            const refCode = document.getElementById('reg-ref').value.trim();
-            const btn = document.getElementById('btn-register');
-
-            if(!username) return showToast('Vui lòng nhập tài khoản!');
-            if(password.length < 6) return showToast('Mật khẩu phải từ 6 ký tự trở lên!');
-            if(password !== confirm) return showToast('Mật khẩu xác nhận không khớp!');
-
-            // Hiệu ứng Loading
-            btn.disabled = true;
-            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Đang xử lý...';
+        function switchTab(tab) {
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.auth-form').forEach(form => form.classList.remove('active'));
             
-            try {
-                const response = await fetch(`${API_URL}/auth/register`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ username, password, refCode })
-                });
-
-                const data = await response.json();
-
-                if (response.ok) {
-                    showToast('Tạo ví thành công! Quà tân thủ đã được nạp.', true);
-                    // Tự động chuyển qua đăng nhập và điền sẵn ID
-                    setTimeout(() => {
-                        switchView('login');
-                        document.getElementById('login-username').value = username;
-                        document.getElementById('login-password').value = '';
-                        btn.disabled = false;
-                        btn.innerHTML = 'Tạo Ví Mới <i class="fa-solid fa-user-plus"></i>';
-                    }, 1500);
-                } else {
-                    showToast(data.error || 'Đăng ký thất bại!');
-                    btn.disabled = false;
-                    btn.innerHTML = 'Tạo Ví Mới <i class="fa-solid fa-user-plus"></i>';
-                }
-            } catch (error) {
-                showToast('Lỗi kết nối máy chủ!');
-                btn.disabled = false;
-                btn.innerHTML = 'Tạo Ví Mới <i class="fa-solid fa-user-plus"></i>';
+            if(tab === 'login') {
+                document.querySelectorAll('.tab-btn')[0].classList.add('active');
+                document.getElementById('loginForm').classList.add('active');
+            } else {
+                document.querySelectorAll('.tab-btn')[1].classList.add('active');
+                document.getElementById('registerForm').classList.add('active');
             }
         }
 
-        // Đăng Nhập API
-        async function handleLogin() {
-            const username = document.getElementById('login-username').value.trim();
-            const password = document.getElementById('login-password').value;
+        // --- GỬI YÊU CẦU ĐĂNG NHẬP ---
+        async function handleLogin(event) {
+            event.preventDefault();
             const btn = document.getElementById('btn-login');
+            const email = document.getElementById('login-email').value;
+            const password = document.getElementById('login-password').value;
 
-            if(!username || !password) return showToast('Vui lòng nhập đầy đủ thông tin!');
-
-            // Hiệu ứng Loading
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Đang kết nối...';
             btn.disabled = true;
-            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Đang xác thực...';
 
             try {
-                const response = await fetch(`${API_URL}/auth/login`, {
+                const response = await fetch(`${API_BASE_URL}/login`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ username, password })
+                    body: JSON.stringify({ email, password })
                 });
 
                 const data = await response.json();
 
                 if (response.ok) {
-                    // Lưu Token thật vào LocalStorage
-                    localStorage.setItem('token', data.token);
-                    showToast('Đăng nhập thành công! Đang tải ví...', true);
+                    // Lưu Token và địa chỉ ví định danh do Server trả về
+                    localStorage.setItem('myspay_token', data.token);
+                    localStorage.setItem('myspay_address', data.wallet_address);
                     
+                    showToast('Đăng nhập thành công!', 'success');
                     setTimeout(() => {
                         window.location.href = 'index.html';
                     }, 1000);
                 } else {
-                    showToast(data.error || 'Sai tài khoản hoặc mật khẩu!');
-                    btn.disabled = false;
-                    btn.innerHTML = 'Vào Ví Popay <i class="fa-solid fa-arrow-right"></i>';
+                    showToast(data.message || 'Email hoặc mật khẩu không chính xác', 'error');
                 }
             } catch (error) {
-                showToast('Lỗi kết nối máy chủ!');
+                // Xử lý khi server.js chưa bật
+                showToast('Không thể kết nối đến máy chủ. Vui lòng kiểm tra Server Node.js', 'error');
+            } finally {
+                btn.innerHTML = 'Đăng Nhập';
                 btn.disabled = false;
-                btn.innerHTML = 'Vào Ví Popay <i class="fa-solid fa-arrow-right"></i>';
             }
         }
 
-        // Khởi chạy khi load trang
-        window.onload = () => {
-            checkToken();
-            checkReferral();
-        };
+        // --- GỬI YÊU CẦU ĐĂNG KÝ ---
+        async function handleRegister(event) {
+            event.preventDefault();
+            const btn = document.getElementById('btn-register');
+            const fullName = document.getElementById('reg-name').value;
+            const email = document.getElementById('reg-email').value;
+            const password = document.getElementById('reg-password').value;
+            const confirmPassword = document.getElementById('reg-confirm-password').value;
+            const referralCode = document.getElementById('reg-referral').value;
+
+            if (password !== confirmPassword) {
+                showToast('Mật khẩu xác nhận không khớp!', 'error');
+                return;
+            }
+
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Đang khởi tạo ví...';
+            btn.disabled = true;
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/register`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        full_name: fullName, 
+                        email: email, 
+                        password: password,
+                        referred_by: referralCode 
+                    })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    showToast('Đăng ký thành công! Vui lòng đăng nhập.', 'success');
+                    document.getElementById('registerForm').reset();
+                    switchTab('login');
+                    document.getElementById('login-email').value = email; // Tự điền sẵn email
+                } else {
+                    showToast(data.message || 'Lỗi đăng ký (Email đã tồn tại)', 'error');
+                }
+            } catch (error) {
+                showToast('Không thể kết nối đến máy chủ. Vui lòng kiểm tra Server Node.js', 'error');
+            } finally {
+                btn.innerHTML = 'Tạo Tài Khoản Mới';
+                btn.disabled = false;
+            }
+        }
     </script>
 </body>
 </html>
