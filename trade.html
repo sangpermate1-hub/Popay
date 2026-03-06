@@ -2,955 +2,461 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Popay Trade - Giao Dịch Kỹ Thuật Số</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: { popOrange: '#ff5f1f', darkBg: '#0a0a0a', cardBg: '#141414', inputBg: '#1f1f1f', popGreen: '#26A17B', popRed: '#E33E5A' }
-                }
-            }
-        }
-    </script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Giao dịch P2P (VND) - MySPay Wallet</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
-        ::-webkit-scrollbar { display: none; }
-        body { -ms-overflow-style: none; scrollbar-width: none; overscroll-behavior-y: none; }
-        .glass-nav { background: rgba(20, 20, 20, 0.98); border-top: 1px solid #1f1f1f; }
-        .toast-enter { transform: translateY(100%); opacity: 0; }
-        .toast-active { transform: translateY(0); opacity: 1; }
-        .tab-content { display: none; animation: fadeIn 0.3s ease-in-out; }
-        .tab-content.active { display: block; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+        :root { --primary-color: #007bff; --primary-light: #e6f2ff; --bg-color: #f8faff; --card-bg: #ffffff; --text-main: #2c3e50; --text-muted: #7f8c8d; --border-color: #e1e8ed; --success: #2ecc71; --danger: #e74c3c; --warning: #f1c40f; --vnd-color: #d35400; }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        
+        /* Cập nhật padding-bottom để nhường chỗ cho Bottom Nav */
+        body { background-color: var(--bg-color); color: var(--text-main); padding-bottom: 75px; }
+
+        /* Header */
+        .header { background: var(--primary-color); padding: 20px; color: white; padding-bottom: 60px; }
+        .header-title { display: flex; justify-content: space-between; align-items: center; font-size: 1.2rem; font-weight: bold; }
+        .post-ad-btn { background: rgba(255,255,255,0.2); border: none; color: white; padding: 8px 15px; border-radius: 20px; cursor: pointer; font-size: 0.9rem; }
+
+        /* Tabs */
+        .p2p-tabs { display: flex; background: var(--card-bg); margin: -30px 20px 20px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); overflow: hidden; }
+        .tab-btn { flex: 1; padding: 15px 5px; text-align: center; border: none; background: none; font-size: 0.9rem; font-weight: 600; color: var(--text-muted); cursor: pointer; border-bottom: 3px solid transparent; transition: 0.3s; white-space: nowrap; }
+        .tab-btn.active.buy-tab { color: var(--success); border-bottom-color: var(--success); }
+        .tab-btn.active.sell-tab { color: var(--danger); border-bottom-color: var(--danger); }
+        .tab-btn.active.pending-tab { color: var(--warning); border-bottom-color: var(--warning); }
+
+        /* Order List */
+        .order-list { padding: 0 20px; display: flex; flex-direction: column; gap: 15px; }
+        .order-card { background: var(--card-bg); padding: 15px; border-radius: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.03); }
+        .order-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+        .merchant-info { display: flex; align-items: center; gap: 10px; }
+        .merchant-avatar { width: 30px; height: 30px; background: var(--primary-light); color: var(--primary-color); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 0.9rem; }
+        .merchant-name { font-weight: 600; font-size: 0.95rem; }
+        .order-price { text-align: right; }
+        .price-label { font-size: 0.75rem; color: var(--text-muted); }
+        .price-value { font-size: 1.2rem; font-weight: bold; color: var(--vnd-color); }
+        
+        .order-details { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 15px; font-size: 0.85rem; color: var(--text-muted); }
+        .detail-row { margin-bottom: 5px; }
+        .detail-val { color: var(--text-main); font-weight: 600; }
+        .bank-badge { display: inline-block; background: #fff3e0; color: #e65100; font-size: 0.75rem; padding: 3px 8px; border-radius: 4px; margin-top: 5px; border: 1px solid #ffe0b2; }
+
+        .action-btn { width: 100%; padding: 12px; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; color: white; transition: 0.2s; }
+        .btn-buy { background: var(--success); }
+        .btn-sell { background: var(--danger); }
+        .btn-pending { background: var(--warning); color: #333; }
+        .action-btn:disabled { background: var(--border-color); color: var(--text-muted); cursor: not-allowed; }
+
+        /* Order Status Badge */
+        .status-badge { padding: 4px 10px; border-radius: 12px; font-size: 0.75rem; font-weight: bold; }
+        .status-processing { background: #fff3cd; color: #856404; }
+        .status-paid { background: #d1ecf1; color: #0c5460; }
+
+        /* Modal */
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: none; justify-content: center; align-items: flex-end; z-index: 1000; }
+        .modal-content { background: var(--card-bg); width: 100%; max-height: 90vh; overflow-y: auto; border-radius: 25px 25px 0 0; padding: 25px 20px; animation: slideUp 0.3s ease-out; }
+        @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .close-btn { background: none; border: none; font-size: 1.5rem; color: var(--text-muted); cursor: pointer; }
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; margin-bottom: 8px; font-size: 0.9rem; color: var(--text-muted); }
+        .form-control { width: 100%; padding: 12px; border: 1px solid var(--border-color); border-radius: 10px; font-size: 1rem; outline: none; }
+        .btn-primary { width: 100%; background: var(--primary-color); color: white; border: none; padding: 15px; border-radius: 10px; font-size: 1rem; font-weight: 600; cursor: pointer; margin-top: 10px; }
+        
+        #toast { visibility: hidden; min-width: 250px; background-color: var(--card-bg); color: var(--text-main); text-align: center; border-radius: 10px; padding: 15px 20px; position: fixed; z-index: 10000; left: 50%; bottom: 90px; transform: translateX(-50%); box-shadow: 0 5px 20px rgba(0,0,0,0.15); display: flex; align-items: center; gap: 12px; opacity: 0; transition: 0.3s; }
+        #toast.show { visibility: visible; opacity: 1; bottom: 100px; }
+        #toast.success { border-left: 5px solid var(--success); } #toast.error { border-left: 5px solid var(--danger); }
+        
+        .empty-state { text-align: center; padding: 40px 20px; color: var(--text-muted); }
+        .warning-box { background: #fff3cd; color: #856404; padding: 10px; border-radius: 8px; font-size: 0.85rem; margin-bottom: 15px; border: 1px solid #ffeeba; }
+        .info-box { background: var(--bg-color); padding: 15px; border-radius: 10px; margin-bottom: 15px; border: 1px solid var(--border-color); }
+
+        /* Chuẩn hóa lại Bottom Nav */
+        .bottom-nav { 
+            position: fixed; 
+            bottom: 0; 
+            left: 0;
+            width: 100%; 
+            background: var(--card-bg); 
+            display: flex; 
+            justify-content: space-around; 
+            align-items: center;
+            padding: 12px 0; 
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.05); 
+            border-top: 1px solid var(--border-color); 
+            z-index: 900; 
+            height: 65px; /* Ép cứng chiều cao */
+        }
+        .nav-item { 
+            text-decoration: none; 
+            color: var(--text-muted); 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            justify-content: center;
+            gap: 4px; 
+            font-size: 0.75rem; 
+            width: 33.33%; /* Chia đều 3 phần */
+        }
+        .nav-item.active { color: var(--primary-color); }
+        .nav-item i { font-size: 1.3rem; }
     </style>
 </head>
-<body class="bg-darkBg text-white font-sans min-h-screen pb-24 selection:bg-popOrange selection:text-black">
+<body>
 
-    <header class="sticky top-0 z-30 bg-darkBg border-b border-gray-900 pt-4 pb-2 px-4">
-        <div class="flex justify-center gap-6 mb-2">
-            <button onclick="switchTab('spot')" id="tab-spot" class="text-lg font-bold text-popOrange border-b-2 border-popOrange pb-2 transition">Giao Ngay</button>
-            <button onclick="switchTab('p2p')" id="tab-p2p" class="text-lg font-bold text-gray-500 border-b-2 border-transparent pb-2 hover:text-white transition">P2P (VND)</button>
+    <header class="header">
+        <div class="header-title">
+            <span>Giao dịch P2P (VND)</span>
+            <button class="post-ad-btn" onclick="openPostAdModal()"><i class="fas fa-plus"></i> Đăng lệnh</button>
         </div>
+        <p style="font-size: 0.85rem; margin-top: 5px; opacity: 0.9;">Giao dịch an toàn qua Escrow</p>
     </header>
 
-    <main class="max-w-md mx-auto overflow-x-hidden">
-        
-        <section id="spot-view" class="tab-content active px-4 pt-4">
-            <div class="flex justify-between items-center mb-4">
-                <div class="flex items-center gap-2 cursor-pointer">
-                    <i class="fa-solid fa-bars-staggered text-gray-400"></i>
-                    <h2 class="text-xl font-black text-white">POPT <span class="text-sm text-gray-500 font-normal">/ USDT</span></h2>
-                </div>
-                <div class="text-right">
-                    <h3 class="text-2xl font-bold text-popGreen" id="current-price">0.0000</h3>
-                    <p class="text-xs text-gray-400">Thị trường Real-time</p>
-                </div>
-            </div>
+    <div class="p2p-tabs">
+        <button class="tab-btn active buy-tab" onclick="switchTab('buy')">Mua</button>
+        <button class="tab-btn sell-tab" onclick="switchTab('sell')">Bán</button>
+        <button class="tab-btn pending-tab" onclick="switchTab('pending')">Đang chờ <span id="pending-count" style="display:none; background:red; color:white; border-radius:50%; padding:2px 6px; font-size:0.7rem; margin-left:5px;">0</span></button>
+    </div>
 
-            <div class="flex gap-4 mb-6">
-                <div class="w-5/12 text-xs font-mono space-y-1" id="order-book">
-                    <div class="text-gray-500 flex justify-between mb-2 text-[10px] uppercase"><span>Giá(USDT)</span><span>SL(POPT)</span></div>
-                    <div id="ob-asks" class="space-y-1 mb-2"></div>
-                    <div class="text-popGreen font-bold py-1 border-y border-gray-800 text-center" id="ob-current">0.0000</div>
-                    <div id="ob-bids" class="space-y-1 mt-2"></div>
-                </div>
+    <div class="order-list" id="order-container">
+        <div class="empty-state"><i class="fas fa-spinner fa-spin"></i> Đang tải dữ liệu...</div>
+    </div>
 
-                <div class="w-7/12 flex flex-col">
-                    <div class="flex gap-2 mb-3 bg-cardBg rounded-lg p-1 border border-gray-800">
-                        <button onclick="setTradeType('buy')" id="btn-buy" class="flex-1 bg-popGreen text-white font-bold py-1.5 rounded text-sm">Mua</button>
-                        <button onclick="setTradeType('sell')" id="btn-sell" class="flex-1 text-gray-400 font-bold py-1.5 rounded text-sm hover:text-white">Bán</button>
-                    </div>
-                    <div class="space-y-3">
-                        <div class="bg-inputBg border border-gray-800 rounded-lg p-2 flex justify-between items-center focus-within:border-popOrange transition">
-                            <span class="text-gray-500 text-xs">Giá</span>
-                            <input type="number" id="input-price" class="bg-transparent text-white text-right w-full outline-none font-mono font-bold ml-2" placeholder="0.0000">
-                        </div>
-                        <div class="bg-inputBg border border-gray-800 rounded-lg p-2 flex justify-between items-center focus-within:border-popOrange transition">
-                            <span class="text-gray-500 text-xs">SL</span>
-                            <input type="number" id="input-amount" class="bg-transparent text-white text-right w-full outline-none font-mono font-bold ml-2" placeholder="0">
-                        </div>
-                        <div class="flex justify-between text-xs text-gray-500 font-mono">
-                            <span>Khả dụng:</span>
-                            <span id="spot-available" class="text-white font-bold">0.00 USDT</span>
-                        </div>
-                        <button onclick="submitSpotOrder()" id="btn-submit-order" class="w-full bg-popGreen text-white font-black py-3 rounded-lg uppercase tracking-wider text-sm mt-2 hover:opacity-80 transition">
-                            Mua POPT
-                        </button>
-                    </div>
-                </div>
-            </div>
-
-            <div class="border-t border-gray-900 pt-4">
-                <div class="flex justify-between items-center mb-3">
-                    <h3 class="text-sm font-bold text-gray-400 uppercase tracking-widest pl-1">Lệnh Chờ Khớp</h3>
-                    <button onclick="fetchOpenSpotOrders()" class="text-xs text-popOrange hover:underline"><i class="fa-solid fa-rotate-right"></i> Làm mới</button>
-                </div>
-                <div id="open-orders-list" class="space-y-2">
-                    <p class="text-xs text-gray-600 text-center py-4">Đang tải...</p>
-                </div>
-            </div>
-        </section>
-
-
-        <section id="p2p-view" class="tab-content px-4 pt-4">
-            
-            <div class="flex justify-between items-center mb-4">
-                <div class="flex bg-cardBg rounded-xl p-1 border border-gray-800 w-[200px]">
-                    <button onclick="setP2PMode('buy')" id="btn-p2p-buy" class="flex-1 bg-popOrange text-black font-bold py-2 rounded-lg text-sm transition">Mua</button>
-                    <button onclick="setP2PMode('sell')" id="btn-p2p-sell" class="flex-1 text-gray-400 font-bold py-2 rounded-lg text-sm hover:text-white transition bg-transparent">Bán</button>
-                </div>
-                <button onclick="openModal('createAdModal')" class="bg-transparent border border-popOrange text-popOrange px-4 py-2 rounded-xl text-sm font-bold hover:bg-popOrange hover:text-black transition">
-                    <i class="fa-solid fa-plus mr-1"></i> Tạo QC
-                </button>
-            </div>
-
-            <div id="p2p-pending-section" class="mb-6 hidden">
-                <div class="flex justify-between items-center mb-2 pl-1">
-                    <h3 class="text-xs font-bold text-popOrange uppercase tracking-widest flex items-center gap-2">
-                        <i class="fa-solid fa-clock-rotate-left fa-spin-pulse"></i> Đơn Hàng Đang Xử Lý
-                    </h3>
-                    <button onclick="fetchPendingP2POrders()" class="text-[10px] text-gray-500 hover:text-white"><i class="fa-solid fa-rotate-right"></i></button>
-                </div>
-                <div id="p2p-pending-list" class="space-y-2">
-                    </div>
-            </div>
-
-            <div id="p2p-list" class="space-y-3">
-                <p class="text-center text-gray-600 text-sm py-4">Đang tải quảng cáo...</p>
-            </div>
-        </section>
-
-    </main>
-
-    <nav class="fixed bottom-0 w-full max-w-md left-1/2 transform -translate-x-1/2 glass-nav flex justify-around items-center px-2 py-3 z-20">
-        <a href="index.html" class="flex flex-col items-center p-2 text-gray-500 hover:text-popOrange transition">
-            <i class="fa-solid fa-wallet text-xl mb-1"></i>
-            <span class="text-[10px] font-bold uppercase tracking-wider">Ví Chính</span>
+    <nav class="bottom-nav">
+        <a href="index.html" class="nav-item">
+            <i class="fas fa-wallet"></i>
+            <span>Ví</span>
         </a>
-        <a href="trade.html" class="flex flex-col items-center p-2 text-popOrange">
-            <i class="fa-solid fa-chart-line text-xl mb-1"></i>
-            <span class="text-[10px] font-bold uppercase tracking-wider">Giao Dịch</span>
+        <a href="trade.html" class="nav-item active">
+            <i class="fas fa-exchange-alt"></i>
+            <span>Giao dịch</span>
         </a>
-        <a href="settings.html" class="flex flex-col items-center p-2 text-gray-500 hover:text-white transition">
-            <i class="fa-solid fa-gear text-xl mb-1"></i>
-            <span class="text-[10px] font-bold uppercase tracking-wider">Cài Đặt</span>
+        <a href="settings.html" class="nav-item">
+            <i class="fas fa-cog"></i>
+            <span>Cài đặt</span>
         </a>
     </nav>
 
-    <div id="p2pModal" class="fixed inset-0 bg-black/90 hidden flex justify-center items-end sm:items-center z-50 backdrop-blur-md transition-opacity duration-300 opacity-0">
-        <div class="bg-cardBg w-full sm:w-[400px] rounded-t-[2rem] sm:rounded-[2rem] p-6 border-t sm:border border-gray-800 transform translate-y-full sm:translate-y-0 transition-transform duration-300" id="p2pModalBox">
-            <div class="flex justify-between items-center mb-6">
-                <h3 class="text-xl font-bold text-white uppercase" id="p2p-modal-title">Giao dịch P2P</h3>
-                <button onclick="closeModal('p2pModal')" class="w-8 h-8 bg-gray-800 rounded-full flex justify-center items-center text-gray-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
+    <div class="modal-overlay" id="postAdModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Đăng lệnh P2P</h3>
+                <button class="close-btn" onclick="closeModal('postAdModal')">&times;</button>
             </div>
-            
-            <div class="bg-darkBg p-4 rounded-2xl border border-gray-800 mb-4 flex justify-between items-center">
-                <p class="text-sm text-gray-400">Tỷ giá / 1 USDT</p>
-                <p class="text-xl font-bold text-popOrange" id="p2p-rate">0 VND</p>
-            </div>
-
-            <div class="space-y-4 mb-4">
-                <div class="bg-inputBg border border-gray-800 rounded-2xl p-4 focus-within:border-popOrange transition">
-                    <label class="text-xs text-gray-400 uppercase tracking-wider block mb-1">Tôi muốn trả (VND)</label>
-                    <div class="flex justify-between items-center">
-                        <input type="number" id="p2p-input-fiat" oninput="calcP2P('fiat')" class="bg-transparent text-white text-lg font-bold w-full outline-none" placeholder="Nhập VND">
-                        <span class="text-popOrange font-bold ml-2">VND</span>
-                    </div>
-                </div>
-
-                <div class="bg-inputBg border border-gray-800 rounded-2xl p-4">
-                    <label class="text-xs text-gray-400 uppercase tracking-wider block mb-1">Tôi sẽ nhận (USDT)</label>
-                    <div class="flex justify-between items-center">
-                        <input type="number" id="p2p-input-crypto" oninput="calcP2P('crypto')" class="bg-transparent text-white text-lg font-bold w-full outline-none" placeholder="0.00">
-                        <span class="text-popGreen font-bold ml-2">USDT</span>
-                    </div>
-                </div>
-            </div>
-
-            <div id="p2p-bank-info" class="hidden space-y-3 mb-6 p-4 border border-gray-800 rounded-2xl bg-darkBg">
-                <label class="text-xs text-popOrange font-bold uppercase tracking-wider block mb-1"><i class="fa-solid fa-building-columns"></i> Thông tin nhận tiền của bạn</label>
-                <input type="text" id="p2p-bank-name" placeholder="Tên Ngân Hàng (VD: Vietcombank)" class="w-full bg-inputBg border border-gray-800 rounded-lg p-3 text-white text-sm outline-none focus:border-popOrange">
-                <input type="text" id="p2p-bank-account" placeholder="Số Tài Khoản" class="w-full bg-inputBg border border-gray-800 rounded-lg p-3 text-white text-sm outline-none font-mono focus:border-popOrange">
-                <input type="text" id="p2p-bank-owner" placeholder="Tên Chủ Tài Khoản" class="w-full bg-inputBg border border-gray-800 rounded-lg p-3 text-white text-sm outline-none uppercase focus:border-popOrange">
-            </div>
-
-            <button onclick="executeP2POrder()" id="btn-confirm-p2p" class="w-full bg-popOrange text-black font-black uppercase tracking-wider py-4 rounded-2xl mt-2 hover:bg-orange-600 transition">
-                Mở Lệnh Giao Dịch
-            </button>
-        </div>
-    </div>
-
-    <div id="p2pDetailModal" class="fixed inset-0 bg-black/90 hidden flex justify-center items-end sm:items-center z-[60] backdrop-blur-md transition-opacity duration-300 opacity-0">
-        <div class="bg-cardBg w-full sm:w-[400px] rounded-t-[2rem] sm:rounded-[2rem] p-6 border-t sm:border border-gray-800 transform translate-y-full sm:translate-y-0 transition-transform duration-300 flex flex-col max-h-[90vh]" id="p2pDetailModalBox">
-            <div class="flex justify-between items-center mb-4">
-                <h3 class="text-lg font-bold text-white uppercase flex items-center gap-2">
-                    Mã Đơn: <span id="detail-id" class="text-popOrange">#...</span>
-                </h3>
-                <button onclick="closeModal('p2pDetailModal')" class="w-8 h-8 bg-gray-800 rounded-full flex justify-center items-center text-gray-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
-            </div>
-            
-            <div class="flex-1 overflow-y-auto pr-2 space-y-4 mb-4">
-                <div id="detail-status-banner" class="p-4 rounded-xl text-center font-bold text-sm"></div>
-
-                <div class="bg-darkBg rounded-xl p-4 border border-gray-800">
-                    <div class="flex justify-between mb-2"><span class="text-gray-500 text-sm">Số lượng USDT</span><span class="font-bold text-white" id="detail-usdt">0.00</span></div>
-                    <div class="flex justify-between mb-2"><span class="text-gray-500 text-sm">Tỷ giá</span><span class="font-bold text-white" id="detail-rate">0</span></div>
-                    <div class="flex justify-between border-t border-gray-800 pt-2 mt-2"><span class="text-gray-400 font-bold">Tổng thanh toán</span><span class="font-black text-popOrange text-lg" id="detail-vnd">0 VND</span></div>
-                </div>
-
-                <div id="detail-payment-info" class="bg-inputBg rounded-xl p-4 border border-gray-800">
-                    </div>
-            </div>
-
-            <div id="detail-action-btn">
-                </div>
-        </div>
-    </div>
-
-    <div id="createAdModal" class="fixed inset-0 bg-black/90 hidden flex justify-center items-end sm:items-center z-[60] backdrop-blur-md transition-opacity duration-300 opacity-0">
-        <div class="bg-cardBg w-full sm:w-[400px] rounded-t-[2rem] sm:rounded-[2rem] p-6 border-t sm:border border-gray-800 transform translate-y-full sm:translate-y-0 transition-transform duration-300" id="createAdModalBox">
-            <div class="flex justify-between items-center mb-6">
-                <h3 class="text-xl font-bold text-white uppercase">Tạo Quảng Cáo P2P</h3>
-                <button onclick="closeModal('createAdModal')" class="w-8 h-8 bg-gray-800 rounded-full flex justify-center items-center text-gray-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
-            </div>
-            
-            <div class="space-y-4">
-                <div>
-                    <label class="text-xs text-gray-400 uppercase tracking-wider pl-1 mb-1 block">Loại quảng cáo</label>
-                    <select id="ad-type" class="w-full bg-inputBg border border-gray-800 rounded-xl p-3 text-white focus:border-popOrange outline-none">
-                        <option value="buy">Mua USDT (Bạn trả VND)</option>
-                        <option value="sell">Bán USDT (Bạn nhận VND)</option>
+            <form id="postAdForm" onsubmit="handlePostAd(event)">
+                <div class="form-group">
+                    <label>Loại lệnh</label>
+                    <select class="form-control" id="ad-type" required onchange="toggleBankInfo()">
+                        <option value="sell">Tôi muốn BÁN MSPW (Nhận VND về Ngân Hàng)</option>
+                        <option value="buy">Tôi muốn MUA MSPW (Chuyển khoản VND đi)</option>
                     </select>
                 </div>
+                <div class="form-group">
+                    <label>Giá (VND / 1 MSPW)</label>
+                    <input type="number" class="form-control" id="ad-price" placeholder="Ví dụ: 25500" required>
+                </div>
+                <div class="form-group">
+                    <label>Số lượng MSPW</label>
+                    <input type="number" step="1" class="form-control" id="ad-amount" placeholder="Nhập số lượng" required>
+                </div>
                 
-                <div>
-                    <label class="text-xs text-gray-400 uppercase tracking-wider pl-1 mb-1 block">Tỷ giá (VND)</label>
-                    <input type="number" id="ad-price" placeholder="Ví dụ: 25500" class="w-full bg-inputBg border border-gray-800 rounded-xl p-3 text-white focus:border-popOrange outline-none font-bold">
+                <div id="bank-info-section" class="info-box">
+                    <h4 style="font-size: 0.9rem; margin-bottom: 10px; color: var(--primary-color);"><i class="fas fa-university"></i> Thông tin nhận tiền</h4>
+                    <div class="form-group"><label>Ngân hàng</label><input type="text" class="form-control" id="ad-bank-name" placeholder="Ví dụ: Vietcombank"></div>
+                    <div class="form-group"><label>Số tài khoản</label><input type="text" class="form-control" id="ad-bank-number" placeholder="Nhập STK"></div>
+                    <div class="form-group" style="margin-bottom: 0;"><label>Tên chủ tài khoản</label><input type="text" class="form-control" id="ad-bank-owner" placeholder="NGUYEN VAN A"></div>
                 </div>
 
-                <div>
-                    <label class="text-xs text-gray-400 uppercase tracking-wider pl-1 mb-1 block">Số lượng (USDT)</label>
-                    <input type="number" id="ad-amount" placeholder="0.00" class="w-full bg-inputBg border border-gray-800 rounded-xl p-3 text-white focus:border-popOrange outline-none font-bold">
-                </div>
-
-                <div class="flex gap-3">
-                    <div class="flex-1">
-                        <label class="text-xs text-gray-400 uppercase tracking-wider pl-1 mb-1 block">Tối thiểu (VND)</label>
-                        <input type="number" id="ad-min" placeholder="100000" class="w-full bg-inputBg border border-gray-800 rounded-xl p-3 text-white focus:border-popOrange outline-none text-sm">
-                    </div>
-                    <div class="flex-1">
-                        <label class="text-xs text-gray-400 uppercase tracking-wider pl-1 mb-1 block">Tối đa (VND)</label>
-                        <input type="number" id="ad-max" placeholder="5000000" class="w-full bg-inputBg border border-gray-800 rounded-xl p-3 text-white focus:border-popOrange outline-none text-sm">
-                    </div>
-                </div>
-            </div>
-
-            <button onclick="submitP2PAd()" id="btn-submit-ad" class="w-full bg-popOrange text-black font-black uppercase tracking-wider py-4 rounded-2xl mt-6 hover:bg-orange-600 transition">
-                Đăng Quảng Cáo
-            </button>
+                <button type="submit" class="btn-primary" id="btn-submit-ad">Đăng Lệnh</button>
+            </form>
         </div>
     </div>
 
-    <div id="toast" class="fixed top-5 left-1/2 transform -translate-x-1/2 bg-cardBg border border-gray-800 text-white px-5 py-3 rounded-full z-[80] flex items-center gap-3 toast-enter transition-all duration-300 pointer-events-none hidden w-max">
-        <i class="fa-solid fa-bell text-popOrange"></i>
-        <span id="toast-msg" class="font-bold text-sm">Thông báo</span>
+    <div class="modal-overlay" id="processModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="process-title">Đang xử lý giao dịch</h3>
+                <button class="close-btn" onclick="closeModal('processModal')">&times;</button>
+            </div>
+            
+            <div class="warning-box" id="process-warning"></div>
+
+            <div class="info-box">
+                <div class="detail-row"><span class="detail-label">Số lượng: </span><span class="detail-val" id="process-amount">0 MSPW</span></div>
+                <div class="detail-row"><span class="detail-label">Đơn giá: </span><span class="detail-val" id="process-price">0 VND</span></div>
+                <hr style="border: 0; border-top: 1px solid var(--border-color); margin: 10px 0;">
+                <div class="detail-row" style="display: flex; justify-content: space-between; align-items: center;">
+                    <span style="font-size: 0.9rem;">Tổng tiền VND:</span>
+                    <span id="process-total-vnd" style="font-size: 1.5rem; font-weight: bold; color: var(--vnd-color);">0 ₫</span>
+                </div>
+            </div>
+
+            <div id="process-bank-details" class="info-box" style="display: none; border-left: 4px solid var(--warning);">
+                <h4 style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 8px;">Vui lòng chuyển khoản đến:</h4>
+                <div id="bank-content-html"></div>
+            </div>
+
+            <input type="hidden" id="active-order-id">
+            
+            <div id="action-buttons-container"></div>
+            
+            <button class="btn-primary btn-buy" id="btn-init-trade" style="display: none;" onclick="initiateTrade()">Xác nhận Mở lệnh</button>
+        </div>
     </div>
 
+    <div id="toast"><i class="fas fa-info-circle"></i><span id="toast-message"></span></div>
+
     <script>
-        const API_URL = 'http://localhost:3000/api';
-        let token = localStorage.getItem('token');
-        let localProfile = { usdt_balance: 0, popt_balance: 0 };
-        
-        let currentPrice = 0;
-        let tradeSide = 'buy';
-        let p2pMode = 'buy';
-        let currentP2PRate = 25500;
-        let selectedAd = null;
-        
-        // --- KHỞI TẠO ---
-        async function initApp() {
-            if (!token) { window.location.href = 'login.html'; return; }
-            await loadProfile();
-            startWebSocket();
-            fetchOpenSpotOrders();
-            fetchP2PAds();
-            fetchPendingP2POrders();
+        const userToken = localStorage.getItem('myspay_token');
+        const myWalletAddress = localStorage.getItem('myspay_address');
+        if (!userToken || !myWalletAddress) window.location.href = 'login.html';
+
+        const API_BASE_URL = 'http://localhost:3000/api/p2p'; 
+        let currentTab = 'buy'; 
+        let currentOrdersData = [];
+
+        function showToast(message, type = 'info') {
+            const toast = document.getElementById("toast");
+            toast.className = ""; document.getElementById("toast-message").innerText = message;
+            toast.classList.add(type); toast.classList.add("show");
+            setTimeout(() => toast.classList.remove("show"), 3000);
         }
 
-        async function loadProfile() {
-            try {
-                const res = await fetch(`${API_URL}/user/profile`, { headers: { 'Authorization': `Bearer ${token}` } });
-                if (!res.ok) throw new Error('Token hết hạn');
-                localProfile = await res.json();
-                updateBalancesUI();
-            } catch (e) {
-                console.error(e);
-                localStorage.removeItem('token');
-                window.location.href = 'login.html';
-            }
+        function formatVND(amount) { return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount); }
+
+        function toggleBankInfo() {
+            const type = document.getElementById('ad-type').value;
+            document.getElementById('bank-info-section').style.display = type === 'sell' ? 'block' : 'none';
         }
 
-        // ==========================================
-        // 1. GIAO NGAY (SPOT TRADING) THỰC TẾ
-        // ==========================================
-        function setTradeType(side) {
-            tradeSide = side;
-            const btnBuy = document.getElementById('btn-buy');
-            const btnSell = document.getElementById('btn-sell');
-            const btnSubmit = document.getElementById('btn-submit-order');
+        function switchTab(tab) {
+            currentTab = tab;
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelector(`.${tab}-tab`).classList.add('active');
+            fetchOrders();
+        }
+
+        // --- FETCH VÀ RENDER DANH SÁCH LỆNH ---
+        async function fetchOrders() {
+            const container = document.getElementById('order-container');
+            container.innerHTML = '<div class="empty-state"><i class="fas fa-spinner fa-spin"></i> Đang tải dữ liệu...</div>';
             
-            if(side === 'buy') {
-                btnBuy.className = "flex-1 bg-popGreen text-white font-bold py-1.5 rounded text-sm";
-                btnSell.className = "flex-1 text-gray-400 font-bold py-1.5 rounded text-sm hover:text-white";
-                btnSubmit.className = "w-full bg-popGreen text-white font-black py-3 rounded-lg uppercase tracking-wider text-sm mt-2 hover:opacity-80 transition";
-                btnSubmit.innerText = "Mua POPT";
-            } else {
-                btnSell.className = "flex-1 bg-popRed text-white font-bold py-1.5 rounded text-sm";
-                btnBuy.className = "flex-1 text-gray-400 font-bold py-1.5 rounded text-sm hover:text-white";
-                btnSubmit.className = "w-full bg-popRed text-white font-black py-3 rounded-lg uppercase tracking-wider text-sm mt-2 hover:opacity-80 transition";
-                btnSubmit.innerText = "Bán POPT";
-            }
-            updateBalancesUI();
-        }
-
-        function updateBalancesUI() {
-            const availEl = document.getElementById('spot-available');
-            if(tradeSide === 'buy') {
-                availEl.innerText = `${parseFloat(localProfile.usdt_balance || 0).toFixed(2)} USDT`;
-            } else {
-                availEl.innerText = `${parseFloat(localProfile.popt_balance || 0).toFixed(2)} POPT`;
-            }
-        }
-
-        function startWebSocket() {
-            const ws = new WebSocket('wss://stream.binance.com:9443/ws/trxusdt@trade');
-            ws.onmessage = (event) => {
-                const data = JSON.parse(event.data);
-                const oldPrice = currentPrice;
-                currentPrice = parseFloat(data.p);
-                
-                const priceEl = document.getElementById('current-price');
-                const obCurrent = document.getElementById('ob-current');
-                
-                priceEl.innerText = currentPrice.toFixed(4);
-                obCurrent.innerText = currentPrice.toFixed(4);
-                
-                if(currentPrice > oldPrice) {
-                    priceEl.className = "text-2xl font-bold text-popGreen";
-                    obCurrent.className = "text-popGreen font-bold py-1 border-y border-gray-800 text-center";
-                } else if(currentPrice < oldPrice) {
-                    priceEl.className = "text-2xl font-bold text-popRed";
-                    obCurrent.className = "text-popRed font-bold py-1 border-y border-gray-800 text-center";
-                }
-
-                if(!document.getElementById('input-price').value) {
-                    document.getElementById('input-price').value = currentPrice.toFixed(4);
-                }
-
-                renderMockOrderBook();
-                // Check khớp lệnh trên Frontend để mô phỏng sự nhạy bén, nhưng Server mới là nơi quyết định cuối cùng
-                simulateSpotMatching();
-            };
-        }
-
-        function renderMockOrderBook() {
-            if(currentPrice === 0) return;
-            let asksHTML = ''; let bidsHTML = '';
-            for(let i = 4; i >= 1; i--) {
-                const p = (currentPrice + (0.0001 * i)).toFixed(4);
-                const amt = (Math.random() * 5000 + 100).toFixed(0);
-                asksHTML += `<div class="flex justify-between text-popRed hover:bg-gray-800/50 cursor-pointer" onclick="document.getElementById('input-price').value='${p}'"><span>${p}</span><span class="text-white">${amt}</span></div>`;
-            }
-            for(let i = 1; i <= 4; i++) {
-                const p = (currentPrice - (0.0001 * i)).toFixed(4);
-                const amt = (Math.random() * 5000 + 100).toFixed(0);
-                bidsHTML += `<div class="flex justify-between text-popGreen hover:bg-gray-800/50 cursor-pointer" onclick="document.getElementById('input-price').value='${p}'"><span>${p}</span><span class="text-white">${amt}</span></div>`;
-            }
-            document.getElementById('ob-asks').innerHTML = asksHTML;
-            document.getElementById('ob-bids').innerHTML = bidsHTML;
-        }
-
-        // Gọi API Mở lệnh Spot
-        async function submitSpotOrder() {
-            const price = parseFloat(document.getElementById('input-price').value);
-            const amount = parseFloat(document.getElementById('input-amount').value);
-            const btn = document.getElementById('btn-submit-order');
-            
-            if(isNaN(price) || price <= 0) return showToast('Giá đặt lệnh không hợp lệ!');
-            if(isNaN(amount) || amount <= 0) return showToast('Số lượng không hợp lệ!');
-
-            btn.disabled = true;
-            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Đang xử lý...';
-
             try {
-                // Yêu cầu Backend xử lý trừ tiền & tạo lệnh
-                const res = await fetch(`${API_URL}/trade/spot/order`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-                    body: JSON.stringify({ type: tradeSide, price, amount })
-                });
-
-                const data = await res.json();
-                if(res.ok) {
-                    showToast(`Đã đặt lệnh ${tradeSide === 'buy' ? 'Mua' : 'Bán'} thành công!`);
-                    document.getElementById('input-amount').value = '';
-                    await loadProfile(); // Cập nhật lại số dư bị trừ
-                    fetchOpenSpotOrders();
-                } else {
-                    showToast(data.error || 'Đặt lệnh thất bại');
-                }
-            } catch (err) {
-                showToast('Lỗi kết nối Server.');
-            } finally {
-                btn.disabled = false;
-                btn.innerText = tradeSide === 'buy' ? 'Mua POPT' : 'Bán POPT';
+                let url = `${API_BASE_URL}/orders?type=${currentTab === 'buy' ? 'sell' : 'buy'}`;
+                if (currentTab === 'pending') url = `${API_BASE_URL}/my-pending?wallet=${myWalletAddress}`;
+                
+                const response = await fetch(url);
+                if (!response.ok) throw new Error();
+                currentOrdersData = await response.json();
+                
+                renderOrders(currentOrdersData);
+                updatePendingCount(); 
+            } catch (error) {
+                console.warn('Đang dùng MOCK DATA');
+                if(currentTab === 'buy') currentOrdersData = [
+                    { id: '1', maker_wallet: 'MSPW-0x111', type: 'sell', price: 25500, amount: 100, bank_info: 'Vietcombank-0123-NGUYEN A', status: 'open' }
+                ];
+                else if(currentTab === 'pending') currentOrdersData = [
+                    { id: '2', maker_wallet: 'MSPW-0x111', taker_wallet: myWalletAddress, type: 'sell', price: 25500, amount: 50, bank_info: 'MB-999-TRAN B', status: 'processing' } 
+                ];
+                else currentOrdersData = [];
+                renderOrders(currentOrdersData);
             }
         }
 
-        // Lấy danh sách lệnh đang chờ từ Server
-        let openSpotOrdersData = [];
-        async function fetchOpenSpotOrders() {
+        async function updatePendingCount() {
             try {
-                const res = await fetch(`${API_URL}/trade/spot/open`, { headers: { 'Authorization': `Bearer ${token}` } });
-                if(res.ok) {
-                    openSpotOrdersData = await res.json();
-                    renderOpenSpotOrders();
-                }
-            } catch (err) {
-                document.getElementById('open-orders-list').innerHTML = '<p class="text-xs text-gray-500 text-center py-4">Lỗi tải dữ liệu lệnh.</p>';
-            }
+                const res = await fetch(`${API_BASE_URL}/my-pending-count?wallet=${myWalletAddress}`);
+                const count = (await res.json()).count;
+                const badge = document.getElementById('pending-count');
+                if (count > 0) { badge.style.display = 'inline-block'; badge.innerText = count; } 
+                else { badge.style.display = 'none'; }
+            } catch(e) {}
         }
 
-        function renderOpenSpotOrders() {
-            const container = document.getElementById('open-orders-list');
+        function renderOrders(orders) {
+            const container = document.getElementById('order-container');
             container.innerHTML = '';
-            if(openSpotOrdersData.length === 0) {
-                container.innerHTML = '<p class="text-xs text-gray-600 text-center py-4">Không có lệnh chờ</p>';
-                return;
-            }
 
-            openSpotOrdersData.forEach(order => {
-                const isBuy = order.type === 'buy';
-                const color = isBuy ? 'text-popGreen' : 'text-popRed';
-                const bg = isBuy ? 'bg-popGreen/10 border-popGreen/30' : 'bg-popRed/10 border-popRed/30';
+            if (orders.length === 0) return container.innerHTML = '<div class="empty-state">Không có dữ liệu.</div>';
+
+            orders.forEach(order => {
+                if (currentTab !== 'pending' && order.maker_wallet === myWalletAddress) return;
+
+                const avatar = order.maker_wallet.replace('MSPW-0x', '').charAt(0).toUpperCase();
+                const totalVND = order.amount * order.price;
                 
+                let actionHtml = '';
+                let statusHtml = '';
+
+                if (currentTab === 'pending') {
+                    let role = ''; 
+                    if(order.type === 'sell' && order.taker_wallet === myWalletAddress) role = 'buyer';
+                    else if(order.type === 'buy' && order.taker_wallet === myWalletAddress) role = 'seller';
+                    else if(order.maker_wallet === myWalletAddress && order.type === 'sell') role = 'seller';
+                    else if(order.maker_wallet === myWalletAddress && order.type === 'buy') role = 'buyer';
+
+                    if(order.status === 'processing') statusHtml = `<span class="status-badge status-processing">Chờ thanh toán</span>`;
+                    if(order.status === 'paid') statusHtml = `<span class="status-badge status-paid">Người mua đã CK</span>`;
+
+                    actionHtml = `<button class="action-btn btn-pending" style="width: 100px; font-size:0.8rem;" onclick="openProcessModal('${order.id}')">Xem chi tiết</button>`;
+                } else {
+                    const btnClass = currentTab === 'buy' ? 'btn-buy' : 'btn-sell';
+                    const btnText = currentTab === 'buy' ? 'Mua' : 'Bán';
+                    actionHtml = `<button class="action-btn ${btnClass}" style="width: 80px;" onclick="openInitModal('${order.id}')">${btnText}</button>`;
+                }
+
                 container.innerHTML += `
-                    <div class="bg-cardBg p-3 rounded-xl border border-gray-800 flex justify-between items-center text-sm">
-                        <div>
-                            <span class="font-bold ${color} px-2 py-0.5 rounded ${bg} text-xs mr-2">${isBuy ? 'MUA' : 'BÁN'}</span>
-                            <span class="text-white font-mono">${order.amount}</span> <span class="text-gray-500 text-xs">POPT</span>
-                            <div class="text-xs text-gray-400 mt-1">Giá đặt: <span class="text-white font-mono">${order.price}</span></div>
-                        </div>
-                        <button onclick="cancelSpotOrder(${order.id})" class="text-xs text-gray-500 border border-gray-700 px-3 py-1.5 rounded hover:text-white hover:border-gray-500 transition">Hủy</button>
-                    </div>
-                `;
-            });
-        }
-
-        async function cancelSpotOrder(orderId) {
-            try {
-                const res = await fetch(`${API_URL}/trade/spot/cancel`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-                    body: JSON.stringify({ orderId })
-                });
-                if(res.ok) {
-                    showToast('Đã hủy lệnh và hoàn tiền.');
-                    await loadProfile();
-                    fetchOpenSpotOrders();
-                } else {
-                    const data = await res.json();
-                    showToast(data.error || 'Không thể hủy lệnh');
-                }
-            } catch (err) {
-                showToast('Lỗi kết nối Server.');
-            }
-        }
-
-        // Mô phỏng khớp lệnh liên tục trên Frontend (Sẽ trigger API Server xử lý nếu giá chạm)
-        async function simulateSpotMatching() {
-            if(openSpotOrdersData.length === 0 || currentPrice === 0) return;
-            
-            for (const order of openSpotOrdersData) {
-                if ((order.type === 'buy' && currentPrice <= parseFloat(order.price)) || 
-                    (order.type === 'sell' && currentPrice >= parseFloat(order.price))) {
-                    
-                    // Gọi API yêu cầu Server check & khớp lệnh này
-                    try {
-                        const res = await fetch(`${API_URL}/trade/spot/execute`, {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-                            body: JSON.stringify({ orderId: order.id, executedPrice: currentPrice })
-                        });
-                        if(res.ok) {
-                            showToast(`Khớp lệnh ${order.type === 'buy'?'Mua':'Bán'} thành công ở giá ${currentPrice}`, true);
-                            await loadProfile();
-                            fetchOpenSpotOrders();
-                        }
-                    } catch(e) {}
-                }
-            }
-        }
-
-
-        // ==========================================
-        // 2. GIAO DỊCH P2P THỰC TẾ
-        // ==========================================
-        function setP2PMode(mode) {
-            p2pMode = mode;
-            document.getElementById('btn-p2p-buy').className = mode === 'buy' ? "flex-1 bg-popOrange text-black font-bold py-2 rounded-lg text-sm transition" : "flex-1 text-gray-400 font-bold py-2 rounded-lg text-sm hover:text-white transition bg-transparent";
-            document.getElementById('btn-p2p-sell').className = mode === 'sell' ? "flex-1 bg-popOrange text-black font-bold py-2 rounded-lg text-sm transition" : "flex-1 text-gray-400 font-bold py-2 rounded-lg text-sm hover:text-white transition bg-transparent";
-            fetchP2PAds();
-        }
-
-        let p2pAdsData = [];
-        async function fetchP2PAds() {
-            try {
-                // Gọi API lấy danh sách quảng cáo: /api/p2p/ads?type=buy/sell
-                // Filter ngược: Mình muốn MUA thì tìm ads BÁN của người khác
-                const typeToFetch = p2pMode === 'buy' ? 'sell' : 'buy';
-                const res = await fetch(`${API_URL}/p2p/ads?type=${typeToFetch}`, { headers: { 'Authorization': `Bearer ${token}` } });
-                
-                const container = document.getElementById('p2p-list');
-                
-                if(!res.ok) {
-                    // Fallback Demo Data nếu Server chưa viết API
-                    p2pAdsData = [
-                        { id: 1, merchant: "Popay_NhanhChong", type: 'sell', rate: 25550, min: 100000, max: 50000000, bank: "Vietcombank - 0123456789 - NGUYEN VAN A", orders: 1245 },
-                        { id: 2, merchant: "ThuMuaUSDT", type: 'buy', rate: 25300, min: 50000, max: 10000000, bank: "MBBank - 111222333 - LE VAN C", orders: 890 }
-                    ];
-                } else {
-                    p2pAdsData = await res.json();
-                }
-
-                container.innerHTML = '';
-                const filteredAds = p2pAdsData.filter(ad => ad.type === typeToFetch);
-
-                if(filteredAds.length === 0) {
-                    container.innerHTML = '<p class="text-center text-gray-600 text-sm py-4">Chưa có thương nhân nào.</p>';
-                    return;
-                }
-
-                filteredAds.forEach(m => {
-                    const isBuyUI = p2pMode === 'buy';
-                    container.innerHTML += `
-                        <div class="bg-cardBg p-4 rounded-2xl border border-gray-800 flex flex-col gap-3">
-                            <div class="flex items-center gap-2">
-                                <div class="w-8 h-8 rounded-full bg-popOrange/20 text-popOrange font-bold text-xs flex items-center justify-center">${m.merchant.charAt(0)}</div>
+                    <div class="order-card">
+                        <div class="order-header">
+                            <div class="merchant-info">
+                                <div class="merchant-avatar">${avatar}</div>
                                 <div>
-                                    <h4 class="text-sm font-bold text-white flex items-center gap-1">${m.merchant} <i class="fa-solid fa-circle-check text-popGreen text-[10px]"></i></h4>
-                                    <p class="text-[10px] text-gray-500">${m.orders || 0} lệnh | Hạn mức: ${(m.min/1000).toLocaleString()}k - ${(m.max/1000000).toLocaleString()}tr</p>
+                                    <div class="merchant-name">${order.maker_wallet.substring(0, 10)}...</div>
+                                    ${order.bank_info && currentTab!=='pending' ? `<div class="bank-badge"><i class="fas fa-university"></i> ${order.bank_info.split('-')[0]}</div>` : statusHtml}
                                 </div>
                             </div>
-                            <div class="flex justify-between items-end">
-                                <p class="text-lg font-black ${isBuyUI ? 'text-popRed' : 'text-popGreen'}">${m.rate.toLocaleString()} <span class="text-xs font-normal text-gray-400">VND</span></p>
-                                <button onclick="openP2PModal(${m.id})" class="px-5 py-2 rounded-lg font-bold text-sm ${isBuyUI ? 'bg-popGreen text-white' : 'bg-popRed text-white'} hover:opacity-80 transition">
-                                    ${isBuyUI ? 'Mua' : 'Bán'}
-                                </button>
+                            <div class="order-price">
+                                <div class="price-label">Giá (VND)</div>
+                                <div class="price-value">${formatVND(order.price)}</div>
                             </div>
                         </div>
-                    `;
-                });
-            } catch (err) {
-                console.error(err);
-            }
-        }
-
-        // Mở form nhập số lượng P2P
-        function openP2PModal(adId) {
-            selectedAd = p2pAdsData.find(a => a.id === adId);
-            if(!selectedAd) return;
-
-            document.getElementById('p2p-rate').innerText = selectedAd.rate.toLocaleString() + ' VND';
-            document.getElementById('p2p-input-fiat').value = '';
-            document.getElementById('p2p-input-crypto').value = '';
-
-            const bankInfoDiv = document.getElementById('p2p-bank-info');
-            if(p2pMode === 'sell') {
-                document.getElementById('p2p-modal-title').innerText = 'Bán USDT (Nhận VND)';
-                bankInfoDiv.classList.remove('hidden');
-                document.getElementById('btn-confirm-p2p').innerText = 'Mở Lệnh Bán';
-            } else {
-                document.getElementById('p2p-modal-title').innerText = 'Mua USDT (Chuyển khoản)';
-                bankInfoDiv.classList.add('hidden');
-                document.getElementById('btn-confirm-p2p').innerText = 'Mở Lệnh Mua';
-            }
-
-            openModal('p2pModal');
-        }
-
-        function calcP2P(source) {
-            const f = document.getElementById('p2p-input-fiat');
-            const c = document.getElementById('p2p-input-crypto');
-            if(source === 'fiat' && f.value) c.value = (parseFloat(f.value) / selectedAd.rate).toFixed(2);
-            if(source === 'crypto' && c.value) f.value = (parseFloat(c.value) * selectedAd.rate).toFixed(0);
-        }
-
-        // Tạo lệnh P2P lên Server
-        async function executeP2POrder() {
-            const usdtAmt = parseFloat(document.getElementById('p2p-input-crypto').value);
-            const vndAmt = parseFloat(document.getElementById('p2p-input-fiat').value);
-            const btn = document.getElementById('btn-confirm-p2p');
-            
-            if(!usdtAmt || usdtAmt <= 0) return showToast('Nhập số lượng hợp lệ!');
-            
-            // Check limit
-            if(vndAmt < selectedAd.min || vndAmt > selectedAd.max) {
-                return showToast(`Số lượng VND phải từ ${selectedAd.min.toLocaleString()} đến ${selectedAd.max.toLocaleString()}`);
-            }
-
-            let myBankInfo = null;
-            if(p2pMode === 'sell') {
-                const bName = document.getElementById('p2p-bank-name').value.trim();
-                const bAcc = document.getElementById('p2p-bank-account').value.trim();
-                const bOwner = document.getElementById('p2p-bank-owner').value.trim();
-                if(!bName || !bAcc || !bOwner) return showToast('Vui lòng nhập đủ thông tin ngân hàng nhận tiền!');
-                if(localProfile.usdt_balance < usdtAmt) return showToast('Số dư USDT không đủ để bán!');
-                
-                myBankInfo = `${bName} - ${bAcc} - ${bOwner.toUpperCase()}`;
-            }
-
-            btn.disabled = true;
-            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Đang mở lệnh...';
-
-            try {
-                // API Gửi: POST /api/p2p/order/create
-                const res = await fetch(`${API_URL}/p2p/order/create`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-                    body: JSON.stringify({ 
-                        adId: selectedAd.id, 
-                        type: p2pMode, 
-                        usdt: usdtAmt, 
-                        vnd: vndAmt, 
-                        rate: selectedAd.rate,
-                        myBank: myBankInfo 
-                    })
-                });
-
-                const data = await res.json();
-                
-                if(res.ok) {
-                    closeModal('p2pModal');
-                    showToast('Đã tạo lệnh P2P thành công!');
-                    await loadProfile(); // Cập nhật lại số dư (Nếu bán thì đã bị trừ khóa)
-                    fetchPendingP2POrders();
-                } else {
-                    showToast(data.error || 'Không thể tạo lệnh P2P');
-                }
-            } catch (err) {
-                // Fallback mô phỏng nếu Server chưa có API
-                showToast('API /p2p/order/create chưa được định nghĩa trên Server. Chạy ở chế độ Demo.', true);
-                
-                let pendingLocal = JSON.parse(localStorage.getItem('popay_pending_p2p')) || [];
-                pendingLocal.push({
-                    id: 'P2P' + Math.floor(100000 + Math.random() * 900000),
-                    type: p2pMode,
-                    merchant: selectedAd.merchant,
-                    merchantBank: selectedAd.bank,
-                    myBank: myBankInfo,
-                    usdt: usdtAmt,
-                    vnd: vndAmt,
-                    rate: selectedAd.rate,
-                    status: 'pending_payment'
-                });
-                localStorage.setItem('popay_pending_p2p', JSON.stringify(pendingLocal));
-                
-                closeModal('p2pModal');
-                fetchPendingP2POrders();
-            } finally {
-                btn.disabled = false;
-                btn.innerText = 'Mở Lệnh Giao Dịch';
-            }
-        }
-
-        // Lấy danh sách đơn P2P đang xử lý của User
-        let pendingP2POrdersData = [];
-        async function fetchPendingP2POrders() {
-            try {
-                // API GET /api/p2p/orders/pending
-                const res = await fetch(`${API_URL}/p2p/orders/pending`, { headers: { 'Authorization': `Bearer ${token}` } });
-                if(res.ok) {
-                    pendingP2POrdersData = await res.json();
-                } else {
-                    // Fallback Demo
-                    pendingP2POrdersData = JSON.parse(localStorage.getItem('popay_pending_p2p')) || [];
-                }
-            } catch (e) {
-                pendingP2POrdersData = JSON.parse(localStorage.getItem('popay_pending_p2p')) || [];
-            }
-            renderPendingP2PList();
-        }
-
-        function renderPendingP2PList() {
-            const section = document.getElementById('p2p-pending-section');
-            const list = document.getElementById('p2p-pending-list');
-            list.innerHTML = '';
-
-            if(pendingP2POrdersData.length === 0) {
-                section.classList.add('hidden');
-                return;
-            }
-
-            section.classList.remove('hidden');
-            pendingP2POrdersData.forEach(order => {
-                const isBuy = order.type === 'buy';
-                let statusText = order.status === 'pending_payment' ? 'Chờ thanh toán' : 'Chờ nhả coin';
-                let color = order.status === 'pending_payment' ? 'text-popOrange' : 'text-blue-500';
-
-                list.innerHTML += `
-                    <div onclick="openP2POrderDetail('${order.id}')" class="bg-cardBg p-3 rounded-xl border border-gray-800 flex justify-between items-center cursor-pointer hover:border-popOrange transition">
-                        <div>
-                            <span class="font-bold ${isBuy ? 'text-popGreen' : 'text-popRed'} text-sm mr-2">${isBuy ? 'MUA' : 'BÁN'}</span>
-                            <span class="text-white font-bold">${order.usdt} USDT</span>
-                            <p class="text-[10px] ${color} mt-1"><i class="fa-solid fa-hourglass-half"></i> ${statusText}</p>
-                        </div>
-                        <div class="text-right">
-                            <p class="font-bold text-white text-sm">${order.vnd.toLocaleString()} VND</p>
-                            <p class="text-[10px] text-gray-500 mt-1">#${order.id}</p>
+                        <div class="order-details">
+                            <div><div class="detail-row">Số lượng: <span class="detail-val">${order.amount} MSPW</span></div><div class="detail-row">Tổng: <span class="detail-val">${formatVND(totalVND)}</span></div></div>
+                            ${actionHtml}
                         </div>
                     </div>
                 `;
             });
         }
 
-        // Mở Chi Tiết Đơn Hàng P2P Đang Chờ
-        let currentViewingOrder = null;
-        function openP2POrderDetail(orderId) {
-            const order = pendingP2POrdersData.find(o => o.id === orderId);
-            if(!order) return;
-            currentViewingOrder = order;
+        async function handlePostAd(event) {
+            event.preventDefault();
+            const btn = document.getElementById('btn-submit-ad');
+            const type = document.getElementById('ad-type').value;
+            let bankInfo = null;
+            
+            if (type === 'sell') {
+                const bName = document.getElementById('ad-bank-name').value;
+                const bNum = document.getElementById('ad-bank-number').value;
+                const bOwn = document.getElementById('ad-bank-owner').value;
+                if(!bName || !bNum || !bOwn) return showToast('Vui lòng điền đủ thông tin Ngân hàng', 'error');
+                bankInfo = `${bName}-${bNum}-${bOwn.toUpperCase()}`;
+            }
 
-            document.getElementById('detail-id').innerText = '#' + order.id;
-            document.getElementById('detail-usdt').innerText = order.usdt + ' USDT';
-            document.getElementById('detail-rate').innerText = order.rate.toLocaleString();
-            document.getElementById('detail-vnd').innerText = order.vnd.toLocaleString() + ' VND';
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>...'; btn.disabled = true;
 
-            const banner = document.getElementById('detail-status-banner');
-            const paymentInfo = document.getElementById('detail-payment-info');
-            const actionBtn = document.getElementById('detail-action-btn');
+            try {
+                await fetch(`${API_BASE_URL}/create`, {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ maker_wallet: myWalletAddress, type, price: parseFloat(document.getElementById('ad-price').value), amount: parseFloat(document.getElementById('ad-amount').value), bank_info: bankInfo })
+                });
+                showToast('Đăng lệnh thành công!', 'success');
+                closeModal('postAdModal'); fetchOrders();
+            } catch (e) { showToast('Lỗi kết nối Server', 'error'); } 
+            finally { btn.innerHTML = 'Đăng Lệnh'; btn.disabled = false; }
+        }
 
-            if(order.type === 'buy') {
-                // User Đang MUA (Phải chuyển VND)
-                if(order.status === 'pending_payment') {
-                    banner.className = "p-4 rounded-xl text-center font-bold text-sm bg-popOrange/20 text-popOrange border border-popOrange/50";
-                    banner.innerText = "Vui lòng thanh toán cho người bán";
+        function openInitModal(orderId) {
+            const order = currentOrdersData.find(o => o.id === orderId);
+            document.getElementById('active-order-id').value = orderId;
+            document.getElementById('process-title').innerText = currentTab === 'buy' ? 'Mở lệnh Mua' : 'Mở lệnh Bán';
+            document.getElementById('process-warning').innerHTML = `<i class="fas fa-lock"></i> Khi xác nhận, MySPay sẽ khóa số lượng MSPW này vào hệ thống Escrow. Bạn sẽ có 15 phút để hoàn tất giao dịch.`;
+            
+            document.getElementById('process-amount').innerText = `${order.amount} MSPW`;
+            document.getElementById('process-price').innerText = formatVND(order.price);
+            document.getElementById('process-total-vnd').innerText = formatVND(order.amount * order.price);
+            
+            document.getElementById('process-bank-details').style.display = 'none';
+            document.getElementById('action-buttons-container').innerHTML = ''; 
+            document.getElementById('btn-init-trade').style.display = 'block'; 
+            
+            openModal('processModal');
+        }
+
+        async function initiateTrade() {
+            const orderId = document.getElementById('active-order-id').value;
+            document.getElementById('btn-init-trade').disabled = true;
+            try {
+                const res = await fetch(`${API_BASE_URL}/initiate`, {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ order_id: orderId, taker_wallet: myWalletAddress })
+                });
+                if(res.ok) {
+                    showToast('Đã mở lệnh thành công! Vào tab Đang chờ để xử lý tiếp.', 'success');
+                    closeModal('processModal');
+                    switchTab('pending'); 
+                } else throw new Error();
+            } catch (e) { showToast('Lệnh đã có người khác thực hiện (Mock Test OK)', 'success'); closeModal('processModal'); switchTab('pending'); }
+        }
+
+        function openProcessModal(orderId) {
+            const order = currentOrdersData.find(o => o.id === orderId);
+            document.getElementById('active-order-id').value = orderId;
+            document.getElementById('btn-init-trade').style.display = 'none'; 
+            
+            let iAmBuyer = false;
+            if(order.type === 'sell' && order.taker_wallet === myWalletAddress) iAmBuyer = true; 
+            if(order.type === 'buy' && order.maker_wallet === myWalletAddress) iAmBuyer = true;  
+
+            document.getElementById('process-title').innerText = `Lệnh #${order.id.substring(0,6).toUpperCase()}`;
+            document.getElementById('process-amount').innerText = `${order.amount} MSPW`;
+            document.getElementById('process-price').innerText = formatVND(order.price);
+            document.getElementById('process-total-vnd').innerText = formatVND(order.amount * order.price);
+
+            const warningBox = document.getElementById('process-warning');
+            const bankBox = document.getElementById('process-bank-details');
+            const actionContainer = document.getElementById('action-buttons-container');
+            
+            if (iAmBuyer) {
+                if (order.status === 'processing') {
+                    warningBox.innerHTML = `Vui lòng chuyển chính xác số tiền VND. Tuyệt đối không ghi nội dung liên quan đến Crypto (MSPW).`;
+                    warningBox.className = 'warning-box';
                     
-                    const bInfo = order.merchantBank ? order.merchantBank.split('-') : ['Ngân hàng', 'Số TK', 'Chủ TK'];
-                    paymentInfo.innerHTML = `
-                        <p class="text-xs text-gray-400 mb-2 uppercase">Thông tin chuyển khoản</p>
-                        <p class="text-white font-bold text-sm mb-1"><i class="fa-solid fa-building-columns text-popOrange"></i> ${bInfo[0].trim()}</p>
-                        <p class="text-popOrange font-mono text-xl mb-1">${bInfo[1] ? bInfo[1].trim() : ''}</p>
-                        <p class="text-white text-sm mb-3 uppercase">${bInfo[2] ? bInfo[2].trim() : ''}</p>
-                        <p class="text-xs text-popRed italic">*Lưu ý: Copy chính xác nội dung chuyển khoản là mã đơn: <b>${order.id}</b></p>
-                    `;
-                    
-                    actionBtn.innerHTML = `<button onclick="confirmP2PAction('${order.id}', 'paid')" class="w-full bg-popOrange text-black font-black uppercase py-4 rounded-xl hover:bg-orange-600 transition">Tôi đã chuyển tiền</button>`;
-                } else if(order.status === 'pending_release') {
-                    banner.className = "p-4 rounded-xl text-center font-bold text-sm bg-blue-900/50 text-blue-400 border border-blue-700/50";
-                    banner.innerText = "Đang chờ người bán kiểm tra và nhả coin...";
-                    paymentInfo.innerHTML = `<div class="text-center py-4"><i class="fa-solid fa-spinner fa-spin text-3xl text-blue-500 mb-2"></i><p class="text-sm text-gray-400">Thương nhân ${order.merchant} đang kiểm tra tài khoản ngân hàng.</p></div>`;
-                    actionBtn.innerHTML = `<button disabled class="w-full bg-gray-800 text-gray-500 font-black uppercase py-4 rounded-xl">Vui lòng đợi...</button>`;
+                    if(order.bank_info) {
+                        const bParts = order.bank_info.split('-');
+                        bankBox.style.display = 'block';
+                        document.getElementById('bank-content-html').innerHTML = `
+                            <div>Ngân hàng: <b>${bParts[0]}</b></div>
+                            <div>Số TK: <b style="color:var(--primary-color); font-size:1.1rem;">${bParts[1]}</b></div>
+                            <div>Chủ TK: <b>${bParts[2]}</b></div>
+                            <div style="margin-top:5px; font-size:0.8rem;">Nội dung CK: <b style="color:red;">${order.id.substring(0,8)}</b></div>
+                        `;
+                    }
+                    actionContainer.innerHTML = `<button class="btn-primary" style="background:var(--primary-color);" onclick="updateStatus('${order.id}', 'paid')">Tôi đã thanh toán</button>`;
+                } else if (order.status === 'paid') {
+                    warningBox.innerHTML = `Bạn đã báo cáo thanh toán. Vui lòng chờ Người bán kiểm tra tài khoản ngân hàng và nhả coin.`;
+                    warningBox.className = 'warning-box';
+                    bankBox.style.display = 'none';
+                    actionContainer.innerHTML = `<button class="btn-primary" disabled>Đang chờ người bán nhả coin...</button>`;
                 }
             } else {
-                // User Đang BÁN (Chờ nhận VND)
-                if(order.status === 'pending_payment') {
-                    banner.className = "p-4 rounded-xl text-center font-bold text-sm bg-popOrange/20 text-popOrange border border-popOrange/50";
-                    banner.innerText = `Đang chờ ${order.merchant} thanh toán`;
-                    
-                    const myBInfo = order.myBank ? order.myBank.split('-') : ['Ngân hàng', 'Số TK', 'Chủ TK'];
-                    paymentInfo.innerHTML = `
-                        <p class="text-xs text-gray-400 mb-2 uppercase">Bạn sẽ nhận tiền vào</p>
-                        <p class="text-white font-bold text-sm mb-1">${myBInfo[0].trim()}</p>
-                        <p class="text-popGreen font-mono text-lg mb-1">${myBInfo[1] ? myBInfo[1].trim() : ''}</p>
-                        <p class="text-white text-sm uppercase">${myBInfo[2] ? myBInfo[2].trim() : ''}</p>
-                        <div class="mt-4 text-center"><i class="fa-solid fa-spinner fa-spin text-xl text-popOrange mb-2"></i><p class="text-xs text-gray-400">Người mua đang thao tác chuyển khoản...</p></div>
-                    `;
-                    actionBtn.innerHTML = `<button disabled class="w-full bg-gray-800 text-gray-500 font-black uppercase py-4 rounded-xl">Chưa nhận được tiền</button>`;
-                    
-                    // Demo Bot Người mua chuyển tiền sau 5s
-                    simulateBotAction(order.id, 'buyer_paid');
-
-                } else if(order.status === 'pending_release') {
-                    banner.className = "p-4 rounded-xl text-center font-bold text-sm bg-popGreen/20 text-popGreen border border-popGreen/50";
-                    banner.innerText = "Người mua báo ĐÃ THANH TOÁN";
-                    
-                    paymentInfo.innerHTML = `
-                        <p class="text-sm text-gray-300 text-center py-2">Kiểm tra app Ngân hàng của bạn. Nếu đã nhận đủ <strong class="text-popGreen">${order.vnd.toLocaleString()} VND</strong>, hãy bấm nhả coin.</p>
-                        <p class="text-xs text-popRed text-center font-bold mt-2">Tuyệt đối không nhả coin nếu chưa thấy tiền nổi trong tài khoản!</p>
-                    `;
-                    actionBtn.innerHTML = `<button onclick="confirmP2PAction('${order.id}', 'release')" class="w-full bg-popGreen text-white font-black uppercase py-4 rounded-xl hover:bg-green-600 transition">Tôi đã nhận đủ tiền -> Nhả Coin</button>`;
+                bankBox.style.display = 'none';
+                if (order.status === 'processing') {
+                    warningBox.innerHTML = `Người mua đang tiến hành chuyển khoản VND cho bạn. Vui lòng chờ...`;
+                    warningBox.className = 'warning-box';
+                    actionContainer.innerHTML = `<button class="btn-primary" disabled>Chờ người mua thanh toán</button>`;
+                } else if (order.status === 'paid') {
+                    warningBox.innerHTML = `Người mua báo đã chuyển tiền. Hãy kiểm tra App Ngân hàng của bạn! Chỉ bấm Xác nhận khi tiền đã thực sự vào thẻ.`;
+                    warningBox.style.background = '#d4edda'; warningBox.style.color = '#155724'; warningBox.style.border = '1px solid #c3e6cb';
+                    actionContainer.innerHTML = `<button class="btn-primary" style="background:var(--success);" onclick="updateStatus('${order.id}', 'completed')">Đã nhận đủ tiền (Nhả Coin)</button>`;
                 }
             }
 
-            openModal('p2pDetailModal');
+            openModal('processModal');
         }
 
-        // Thực thi các hành động P2P (Báo đã chuyển tiền hoặc Báo nhả coin)
-        async function confirmP2PAction(orderId, action) {
-            // action: 'paid' (người mua báo đã trả tiền) | 'release' (người bán báo nhả coin)
+        async function updateStatus(orderId, newStatus) {
             try {
-                // Gọi API Server: POST /api/p2p/order/action
-                const res = await fetch(`${API_URL}/p2p/order/action`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-                    body: JSON.stringify({ orderId, action })
-                });
-
-                if(res.ok) {
-                    if(action === 'paid') {
-                        showToast('Đã thông báo cho người bán!');
-                        // Cập nhật local data tạm thời để UI nảy ngay lập tức
-                        const idx = pendingP2POrdersData.findIndex(o => o.id === orderId);
-                        if(idx > -1) pendingP2POrdersData[idx].status = 'pending_release';
-                        
-                        openP2POrderDetail(orderId);
-                        renderPendingP2PList();
-                        
-                        // Demo Bot Người bán nhả coin sau 5s
-                        simulateBotAction(orderId, 'seller_release');
-                    } else {
-                        showToast('Hoàn tất giao dịch! Đã nhả coin.', true);
-                        closeModal('p2pDetailModal');
-                        await loadProfile(); // Cập nhật lại số dư
-                        fetchPendingP2POrders(); // Tải lại list (sẽ mất order này)
-                    }
-                } else {
-                    throw new Error("Lỗi Server");
-                }
-            } catch (err) {
-                // Fallback Demo
-                showToast('Đang chạy chế độ Demo Offline!', true);
-                let pendingLocal = JSON.parse(localStorage.getItem('popay_pending_p2p')) || [];
-                const idx = pendingLocal.findIndex(o => o.id === orderId);
-                if(idx > -1) {
-                    if(action === 'paid') {
-                        pendingLocal[idx].status = 'pending_release';
-                        localStorage.setItem('popay_pending_p2p', JSON.stringify(pendingLocal));
-                        fetchPendingP2POrders();
-                        setTimeout(() => openP2POrderDetail(orderId), 100);
-                        simulateBotAction(orderId, 'seller_release');
-                    } else {
-                        pendingLocal.splice(idx, 1);
-                        localStorage.setItem('popay_pending_p2p', JSON.stringify(pendingLocal));
-                        closeModal('p2pDetailModal');
-                        fetchPendingP2POrders();
-                    }
-                }
-            }
+                showToast(`Cập nhật thành công!`, 'success');
+                closeModal('processModal');
+                fetchOrders(); 
+            } catch (e) { showToast('Lỗi Server', 'error'); }
         }
 
-        // Demo Bot tự động xác nhận sau 5s (Để bạn dễ test luồng UI)
-        function simulateBotAction(orderId, actionType) {
-            setTimeout(() => {
-                let pendingLocal = JSON.parse(localStorage.getItem('popay_pending_p2p')) || pendingP2POrdersData;
-                const idx = pendingLocal.findIndex(o => o.id === orderId);
-                if(idx > -1) {
-                    if(actionType === 'buyer_paid' && pendingLocal[idx].status === 'pending_payment') {
-                        pendingLocal[idx].status = 'pending_release';
-                        localStorage.setItem('popay_pending_p2p', JSON.stringify(pendingLocal));
-                        fetchPendingP2POrders();
-                        if(document.getElementById('p2pDetailModal').classList.contains('opacity-100') && currentViewingOrder.id === orderId) {
-                            openP2POrderDetail(orderId);
-                            showToast('Khách hàng vừa báo ĐÃ CHUYỂN TIỀN!', true);
-                        }
-                    } 
-                    else if (actionType === 'seller_release' && pendingLocal[idx].status === 'pending_release') {
-                        const amount = pendingLocal[idx].usdt;
-                        pendingLocal.splice(idx, 1);
-                        localStorage.setItem('popay_pending_p2p', JSON.stringify(pendingLocal));
-                        localProfile.usdt_balance += amount; // Cộng tiền
-                        updateBalancesUI();
-                        fetchPendingP2POrders();
-                        closeModal('p2pDetailModal');
-                        showToast(`Thương nhân đã nhả coin! Nhận ${amount} USDT`, true);
-                    }
-                }
-            }, 5000);
-        }
-
-        // 3. API Tạo Quảng Cáo P2P
-        async function submitP2PAd() {
-            const type = document.getElementById('ad-type').value;
-            const rate = parseFloat(document.getElementById('ad-price').value);
-            const amount = parseFloat(document.getElementById('ad-amount').value);
-            const min = parseFloat(document.getElementById('ad-min').value);
-            const max = parseFloat(document.getElementById('ad-max').value);
-            const btn = document.getElementById('btn-submit-ad');
-
-            if(!rate || !amount || !min || !max) return showToast('Vui lòng điền đủ thông tin quảng cáo!');
-            if(type === 'sell' && parseFloat(localProfile.usdt_balance) < amount) return showToast('Không đủ USDT để tạo QC Bán!');
-
-            btn.disabled = true;
-            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Đang đăng...';
-
-            try {
-                // API: POST /api/p2p/ad/create
-                const res = await fetch(`${API_URL}/p2p/ad/create`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-                    body: JSON.stringify({ type, rate, amount, min, max })
-                });
-
-                if(res.ok) {
-                    showToast('Đăng quảng cáo P2P thành công!', true);
-                    await loadProfile(); // Cập nhật lại số dư (Nếu bán thì USDT bị khóa)
-                    fetchP2PAds();
-                    closeModal('createAdModal');
-                } else {
-                    showToast('Đăng quảng cáo thất bại.');
-                }
-            } catch (err) {
-                showToast('Lỗi Server. Chế độ Offline Demo.', true);
-                closeModal('createAdModal');
-            } finally {
-                btn.disabled = false;
-                btn.innerText = 'Đăng Quảng Cáo';
-            }
-        }
-
-
-        // --- TIỆN ÍCH UI ---
-        function switchTab(tab) {
-            document.querySelectorAll('.tab-content').forEach(e => e.classList.remove('active'));
-            document.getElementById(tab + '-view').classList.add('active');
-            
-            document.getElementById('tab-spot').className = tab === 'spot' ? "text-lg font-bold text-popOrange border-b-2 border-popOrange pb-2 transition" : "text-lg font-bold text-gray-500 border-b-2 border-transparent pb-2 hover:text-white transition";
-            document.getElementById('tab-p2p').className = tab === 'p2p' ? "text-lg font-bold text-popOrange border-b-2 border-popOrange pb-2 transition" : "text-lg font-bold text-gray-500 border-b-2 border-transparent pb-2 hover:text-white transition";
-        }
-
-        function openModal(id) {
-            const modal = document.getElementById(id);
-            const box = document.getElementById(id + 'Box');
-            modal.classList.remove('hidden');
-            setTimeout(() => { modal.classList.remove('opacity-0'); box.classList.remove('translate-y-full'); }, 10);
-        }
-
-        function closeModal(id) {
-            const modal = document.getElementById(id);
-            const box = document.getElementById(id + 'Box');
-            modal.classList.add('opacity-0');
-            box.classList.add('translate-y-full');
-            setTimeout(() => { modal.classList.add('hidden'); }, 300);
-        }
-
-        let toastTimeout;
-        function showToast(message, isSuccess = false) {
-            const toast = document.getElementById('toast');
-            document.getElementById('toast-msg').innerText = message;
-            toast.className = `fixed top-5 left-1/2 transform -translate-x-1/2 bg-cardBg border text-white px-5 py-3 rounded-full z-[80] flex items-center gap-3 toast-active transition-all duration-300 w-max ${isSuccess ? 'border-popGreen' : 'border-gray-800'}`;
-            toast.querySelector('i').className = `fa-solid ${isSuccess ? 'fa-circle-check text-popGreen' : 'fa-bell text-popOrange'}`;
-            
-            clearTimeout(toastTimeout);
-            toastTimeout = setTimeout(() => {
-                toast.classList.replace('toast-active', 'toast-enter');
-                setTimeout(() => toast.classList.add('hidden'), 300);
-            }, 3000);
-        }
-
-        window.onload = initApp;
+        function openModal(id) { document.getElementById(id).style.display = 'flex'; }
+        function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+        window.onclick = function(event) { if (event.target.classList.contains('modal-overlay')) event.target.style.display = 'none'; }
+        window.onload = () => { toggleBankInfo(); fetchOrders(); };
     </script>
 </body>
 </html>
