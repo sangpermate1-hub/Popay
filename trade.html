@@ -31,9 +31,9 @@
         /* Tabs */
         .p2p-tabs { display: flex; background: var(--card-bg); margin: -30px 20px 20px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); overflow: hidden; border: 1px solid var(--border-color); }
         .tab-btn { flex: 1; padding: 15px 5px; text-align: center; border: none; background: none; font-size: 0.95rem; font-weight: 600; color: var(--text-muted); cursor: pointer; border-bottom: 3px solid transparent; transition: 0.3s; white-space: nowrap; }
-        .tab-btn.active.buy-tab { color: var(--success); border-bottom-color: var(--success); }
-        .tab-btn.active.sell-tab { color: var(--danger); border-bottom-color: var(--danger); }
-        .tab-btn.active.pending-tab { color: var(--warning); border-bottom-color: var(--warning); }
+        .tab-btn.active.buy-tab { color: var(--success); border-bottom-color: var(--success); background: #f0fdf4; }
+        .tab-btn.active.sell-tab { color: var(--danger); border-bottom-color: var(--danger); background: #fef2f2;}
+        .tab-btn.active.pending-tab { color: var(--warning); border-bottom-color: var(--warning); background: #fffbeb;}
 
         /* Order List */
         .order-list { padding: 0 20px; display: flex; flex-direction: column; gap: 15px; }
@@ -58,9 +58,9 @@
         .action-btn:disabled { background: var(--border-color); color: var(--text-muted); cursor: not-allowed; }
 
         /* Status Badge */
-        .status-badge { padding: 5px 12px; border-radius: 12px; font-size: 0.75rem; font-weight: bold; }
-        .status-processing { background: #fef3c7; color: #b45309; }
-        .status-paid { background: #d1fae5; color: #047857; }
+        .status-badge { padding: 5px 12px; border-radius: 12px; font-size: 0.75rem; font-weight: bold; display: inline-block; margin-top: 5px;}
+        .status-processing { background: #fef3c7; color: #b45309; border: 1px solid #fde68a; }
+        .status-paid { background: #d1fae5; color: #047857; border: 1px solid #a7f3d0; }
 
         /* Modal */
         .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.6); display: none; justify-content: center; align-items: flex-end; z-index: 1000; backdrop-filter: blur(2px); }
@@ -82,7 +82,7 @@
         .warning-box { background: #fef3c7; color: #b45309; padding: 12px; border-radius: 10px; font-size: 0.85rem; margin-bottom: 15px; border: 1px solid #fde68a; line-height: 1.4; }
         .info-box { background: var(--bg-color); padding: 15px; border-radius: 12px; margin-bottom: 15px; border: 1px solid var(--border-color); }
 
-        /* Bottom Nav - Chuẩn 65px */
+        /* Bottom Nav */
         .bottom-nav { position: fixed; bottom: 0; left: 0; width: 100%; background: var(--card-bg); display: flex; justify-content: space-around; align-items: center; padding: 12px 0; box-shadow: 0 -5px 15px rgba(0,0,0,0.03); border-top: 1px solid var(--border-color); z-index: 900; height: 65px; }
         .nav-item { text-decoration: none; color: var(--text-muted); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; font-size: 0.75rem; width: 33.33%; font-weight: 500; }
         .nav-item.active { color: var(--primary-color); }
@@ -184,9 +184,7 @@
             </div>
 
             <input type="hidden" id="active-order-id">
-            
             <div id="action-buttons-container"></div>
-            
             <button class="btn-primary btn-buy" id="btn-init-trade" style="display: none;" onclick="initiateTrade()">Xác nhận Mở lệnh</button>
         </div>
     </div>
@@ -200,7 +198,7 @@
         if (!userToken || !myWalletAddress) window.location.href = 'login.html';
 
         // ============================================================
-        // NHẬN DIỆN DOMAIN TỰ ĐỘNG ĐỂ GỌI API (Đã cập nhật)
+        // NHẬN DIỆN DOMAIN TỰ ĐỘNG ĐỂ GỌI API
         // ============================================================
         let API_BASE_URL = '';
         const currentHost = window.location.hostname;
@@ -209,9 +207,6 @@
             API_BASE_URL = 'http://localhost:3000/api/p2p';
         } else {
             API_BASE_URL = `https://${currentHost}/api/p2p`; 
-            
-            // Nếu bạn dùng Railway cho backend nhưng Frontend ở domain khác, hãy sửa dòng dưới:
-            // API_BASE_URL = 'https://app-name.up.railway.app/api/p2p';
         }
 
         let currentTab = 'buy'; 
@@ -238,62 +233,46 @@
             fetchOrders();
         }
 
-        // --- FETCH VÀ RENDER DANH SÁCH LỆNH ---
+        // --- FETCH VÀ RENDER DANH SÁCH LỆNH (100% REAL DATA) ---
         async function fetchOrders() {
             const container = document.getElementById('order-container');
             container.innerHTML = '<div class="empty-state"><i class="fas fa-spinner fa-spin"></i> Đang tải dữ liệu thị trường...</div>';
             
             try {
+                // Tab Mua (Buy) MPT tức là xem các lệnh Bán (Sell) của người khác
                 let url = `${API_BASE_URL}/orders?type=${currentTab === 'buy' ? 'sell' : 'buy'}`;
                 if (currentTab === 'pending') url = `${API_BASE_URL}/my-pending?wallet=${myWalletAddress}`;
                 
                 const response = await fetch(url);
-                if (!response.ok) throw new Error();
+                if (!response.ok) throw new Error('Không thể lấy dữ liệu từ Server');
                 currentOrdersData = await response.json();
                 
                 renderOrders(currentOrdersData);
                 updatePendingCount(); 
             } catch (error) {
-                console.warn(`Lỗi API: ${API_BASE_URL}. Hiển thị dữ liệu giả lập (Mock Data)`);
-                // Mock Data 
-                if(currentTab === 'buy') currentOrdersData = [
-                    { id: '1', maker_wallet: 'M7B9XYZ123', type: 'sell', price: 25500, amount: 100, bank_info: 'Vietcombank-0123456789-NGUYEN VAN A', status: 'open' },
-                    { id: '3', maker_wallet: 'M9A1DEF456', type: 'sell', price: 25550, amount: 500, bank_info: 'MBBank-987654321-TRAN THI B', status: 'open' }
-                ];
-                else if(currentTab === 'sell') currentOrdersData = [
-                    { id: '4', maker_wallet: 'M5C2GHI789', type: 'buy', price: 25000, amount: 200, status: 'open' }
-                ];
-                else if(currentTab === 'pending') currentOrdersData = [
-                    { id: '2', maker_wallet: 'M7B9XYZ123', taker_wallet: myWalletAddress, type: 'sell', price: 25500, amount: 50, bank_info: 'Vietcombank-0123456789-NGUYEN VAN A', status: 'processing' } // Mình đang mua, chờ chuyển tiền
-                ];
-                else currentOrdersData = [];
-                renderOrders(currentOrdersData);
+                container.innerHTML = '<div class="empty-state" style="color: var(--danger);"><i class="fas fa-exclamation-triangle"></i> Không thể kết nối Server. Vui lòng thử lại sau.</div>';
             }
         }
 
         async function updatePendingCount() {
             try {
                 const res = await fetch(`${API_BASE_URL}/my-pending-count?wallet=${myWalletAddress}`);
-                if (!res.ok) throw new Error();
+                if (!res.ok) return;
                 const count = (await res.json()).count;
                 const badge = document.getElementById('pending-count');
                 if (count > 0) { badge.style.display = 'inline-block'; badge.innerText = count; } 
                 else { badge.style.display = 'none'; }
-            } catch(e) {
-                // Mock badge
-                const badge = document.getElementById('pending-count');
-                badge.style.display = 'inline-block'; badge.innerText = '1';
-            }
+            } catch(e) { console.error('Lỗi lấy số lượng pending'); }
         }
 
         function renderOrders(orders) {
             const container = document.getElementById('order-container');
             container.innerHTML = '';
 
-            if (orders.length === 0) return container.innerHTML = '<div class="empty-state">Hiện không có lệnh nào.</div>';
+            if (orders.length === 0) return container.innerHTML = '<div class="empty-state">Hiện không có lệnh nào phù hợp.</div>';
 
             orders.forEach(order => {
-                // Tab Mua/Bán: Ẩn lệnh do chính mình tạo
+                // Ẩn lệnh do chính mình tạo ra ở tab Market (Chỉ hiện ở tab Đang chờ nếu khớp)
                 if (currentTab !== 'pending' && order.maker_wallet === myWalletAddress) return;
 
                 const avatar = order.maker_wallet.charAt(1).toUpperCase(); // Lấy ký tự thứ 2 sau chữ M
@@ -304,15 +283,14 @@
 
                 // Hiển thị khác nhau tùy theo Tab
                 if (currentTab === 'pending') {
-                    // Xác định vai trò
                     let role = ''; 
                     if(order.type === 'sell' && order.taker_wallet === myWalletAddress) role = 'buyer';
                     else if(order.type === 'buy' && order.taker_wallet === myWalletAddress) role = 'seller';
                     else if(order.maker_wallet === myWalletAddress && order.type === 'sell') role = 'seller';
                     else if(order.maker_wallet === myWalletAddress && order.type === 'buy') role = 'buyer';
 
-                    if(order.status === 'processing') statusHtml = `<span class="status-badge status-processing">Chờ thanh toán</span>`;
-                    if(order.status === 'paid') statusHtml = `<span class="status-badge status-paid">Người mua đã CK</span>`;
+                    if(order.status === 'processing') statusHtml = `<span class="status-badge status-processing"><i class="fas fa-clock"></i> Chờ thanh toán</span>`;
+                    if(order.status === 'paid') statusHtml = `<span class="status-badge status-paid"><i class="fas fa-check-circle"></i> Đã CK</span>`;
 
                     actionHtml = `<button class="action-btn btn-pending" style="width: 100px; font-size:0.85rem;" onclick="openProcessModal('${order.id}')">Xử lý ngay</button>`;
                 } else {
@@ -343,6 +321,9 @@
                     </div>
                 `;
             });
+            
+            // Fix UI bug: Nếu mảng toàn lệnh của mình, nó sẽ trống
+            if(container.innerHTML === '') container.innerHTML = '<div class="empty-state">Bạn chưa có lệnh đang chờ nào.</div>';
         }
 
         // --- ĐĂNG QUẢNG CÁO MỚI ---
@@ -367,13 +348,16 @@
                     method: 'POST', headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ maker_wallet: myWalletAddress, type, price: parseFloat(document.getElementById('ad-price').value), amount: parseFloat(document.getElementById('ad-amount').value), bank_info: bankInfo })
                 });
-                if(!response.ok) throw new Error();
                 
-                showToast('Đăng lệnh thành công!', 'success');
-                closeModal('postAdModal'); fetchOrders();
-            } catch (e) { 
-                showToast('Lỗi mạng. Đã lưu lệnh vào chế độ Offline.', 'info'); 
+                const data = await response.json();
+                if(!response.ok) throw new Error(data.message || 'Lỗi không xác định');
+                
+                showToast('Đăng lệnh thành công! MPT đã được khóa.', 'success');
                 closeModal('postAdModal'); 
+                document.getElementById('postAdForm').reset();
+                fetchOrders();
+            } catch (e) { 
+                showToast(e.message, 'error'); 
             } finally { btn.innerHTML = 'Đăng Lệnh'; btn.disabled = false; }
         }
 
@@ -382,7 +366,7 @@
             const order = currentOrdersData.find(o => o.id === orderId);
             document.getElementById('active-order-id').value = orderId;
             document.getElementById('process-title').innerText = currentTab === 'buy' ? 'Xác nhận Mua MPT' : 'Xác nhận Bán MPT';
-            document.getElementById('process-warning').innerHTML = `<i class="fas fa-lock"></i> MetahashPay sẽ tạm khóa số lượng MPT này vào hệ thống Escrow an toàn. Bạn có 15 phút để hoàn tất giao dịch.`;
+            document.getElementById('process-warning').innerHTML = `<i class="fas fa-lock"></i> MetahashPay sẽ bảo vệ giao dịch qua hệ thống Escrow. Bạn có 15 phút để hoàn tất thanh toán.`;
             
             document.getElementById('process-amount').innerText = `${order.amount} MPT`;
             document.getElementById('process-price').innerText = formatVND(order.price);
@@ -399,18 +383,28 @@
 
         async function initiateTrade() {
             const orderId = document.getElementById('active-order-id').value;
-            document.getElementById('btn-init-trade').disabled = true;
+            const btn = document.getElementById('btn-init-trade');
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Đang khớp lệnh...';
+            btn.disabled = true;
+
             try {
-                const res = await fetch(`${API_BASE_URL}/initiate`, {
+                const response = await fetch(`${API_BASE_URL}/initiate`, {
                     method: 'POST', headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ order_id: orderId, taker_wallet: myWalletAddress })
                 });
-                if(res.ok) {
-                    showToast('Khởi tạo lệnh thành công!', 'success');
-                    closeModal('processModal');
-                    switchTab('pending'); 
-                } else throw new Error();
-            } catch (e) { showToast('Đã khởi tạo lệnh (Chế độ Offline)', 'info'); closeModal('processModal'); switchTab('pending'); }
+                
+                const data = await response.json();
+                if(!response.ok) throw new Error(data.message || 'Lỗi khớp lệnh');
+                
+                showToast('Khởi tạo lệnh thành công!', 'success');
+                closeModal('processModal');
+                switchTab('pending'); 
+            } catch (e) { 
+                showToast(e.message, 'error'); 
+            } finally {
+                btn.innerHTML = 'Tiến hành Giao dịch';
+                btn.disabled = false;
+            }
         }
 
         // --- BƯỚC 2: XỬ LÝ LỆNH PENDING (NGƯỜI MUA CHUYỂN TIỀN / NGƯỜI BÁN XÁC NHẬN) ---
@@ -420,7 +414,9 @@
             document.getElementById('btn-init-trade').style.display = 'none'; 
             
             let iAmBuyer = false;
+            // Nếu mình là Taker và lệnh là Sell (nghĩa là thằng Maker đang bán) -> Mình đang Mua
             if(order.type === 'sell' && order.taker_wallet === myWalletAddress) iAmBuyer = true; 
+            // Nếu mình là Maker và lệnh là Buy (nghĩa là mình đăng lệnh Mua) -> Mình đang Mua
             if(order.type === 'buy' && order.maker_wallet === myWalletAddress) iAmBuyer = true;  
 
             document.getElementById('process-title').innerText = `Lệnh #${order.id.substring(0,8).toUpperCase()}`;
@@ -433,7 +429,7 @@
             const actionContainer = document.getElementById('action-buttons-container');
             
             if (iAmBuyer) {
-                // GIAO DIỆN NGƯỜI MUA
+                // GIAO DIỆN DÀNH CHO NGƯỜI ĐI CHUYỂN TIỀN (NGƯỜI MUA)
                 if (order.status === 'processing') {
                     warningBox.innerHTML = `<b>LƯU Ý QUAN TRỌNG:</b> Tuyệt đối không ghi nội dung liên quan đến MPT, Tiền ảo. Chỉ ghi đúng Nội dung chuyển khoản bên dưới.`;
                     warningBox.className = 'warning-box';
@@ -447,8 +443,15 @@
                             <div>Chủ TK: <b>${bParts[2]}</b></div>
                             <div style="margin-top:10px; padding: 10px; background: #e0e7ff; border-radius: 8px;">Nội dung CK: <b style="color:var(--danger); font-size:1.1rem; letter-spacing:1px;">${order.id.substring(0,8).toUpperCase()}</b></div>
                         `;
+                    } else {
+                        // Trường hợp Maker tạo lệnh Buy, người mua chuyển khoản thì phải yêu cầu bank của Maker (hoặc Taker chat)
+                        // Trong mô hình này, nếu Maker tạo lệnh Buy thì Taker là người nhận VND, bank info lấy từ đâu?
+                        // Chỗ này mình bổ sung cho logic hoàn chỉnh:
+                        bankBox.style.display = 'block';
+                        document.getElementById('bank-content-html').innerHTML = `<i>Đang đợi đối tác cung cấp Ngân hàng qua Chat P2P</i>`;
                     }
-                    actionContainer.innerHTML = `<button class="btn-primary" style="background:var(--primary-color);" onclick="updateStatus('${order.id}', 'paid')">Tôi đã chuyển khoản</button>`;
+
+                    actionContainer.innerHTML = `<button class="btn-primary" style="background:var(--primary-color);" onclick="updateStatus('${order.id}', 'paid', this)">Tôi đã chuyển khoản</button>`;
                 } else if (order.status === 'paid') {
                     warningBox.innerHTML = `<i class="fas fa-clock"></i> Bạn đã báo cáo thanh toán. Vui lòng chờ Người bán kiểm tra tài khoản ngân hàng và nhả coin MPT.`;
                     warningBox.style.background = '#d1fae5'; warningBox.style.color = '#047857'; warningBox.style.border = '1px solid #a7f3d0';
@@ -456,7 +459,7 @@
                     actionContainer.innerHTML = `<button class="btn-primary" style="background:var(--text-muted);" disabled>Đang chờ nhả coin...</button>`;
                 }
             } else {
-                // GIAO DIỆN NGƯỜI BÁN
+                // GIAO DIỆN DÀNH CHO NGƯỜI NHẬN TIỀN VND (NGƯỜI BÁN MPT)
                 bankBox.style.display = 'none';
                 if (order.status === 'processing') {
                     warningBox.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Người mua đang tiến hành chuyển khoản VND cho bạn. Vui lòng chờ...`;
@@ -465,25 +468,37 @@
                 } else if (order.status === 'paid') {
                     warningBox.innerHTML = `<b>NGƯỜI MUA BÁO ĐÃ CHUYỂN TIỀN:</b> Hãy mở App Ngân hàng của bạn kiểm tra. Chỉ bấm xác nhận khi tiền đã thực sự nổi trong tài khoản.`;
                     warningBox.style.background = '#fef2f2'; warningBox.style.color = '#dc2626'; warningBox.style.border = '1px solid #fecaca';
-                    actionContainer.innerHTML = `<button class="btn-primary" style="background:var(--success);" onclick="updateStatus('${order.id}', 'completed')">Đã nhận đủ VND (Nhả Coin)</button>`;
+                    actionContainer.innerHTML = `<button class="btn-primary" style="background:var(--success);" onclick="updateStatus('${order.id}', 'completed', this)">Đã nhận đủ VND (Nhả Coin)</button>`;
                 }
             }
 
             openModal('processModal');
         }
 
-        async function updateStatus(orderId, newStatus) {
+        async function updateStatus(orderId, newStatus, btnElement) {
+            const originalText = btnElement.innerText;
+            btnElement.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Đang xử lý...';
+            btnElement.disabled = true;
+
             try {
-                const res = await fetch(`${API_BASE_URL}/update-status`, {
+                const response = await fetch(`${API_BASE_URL}/update-status`, {
                     method: 'POST', headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ order_id: orderId, status: newStatus })
                 });
-                if(!res.ok) throw new Error();
                 
-                showToast(`Đã xác nhận thành công!`, 'success');
+                const data = await response.json();
+                if(!response.ok) throw new Error(data.message || 'Lỗi cập nhật');
+                
+                if(newStatus === 'completed') showToast(`Tuyệt vời! Giao dịch hoàn tất.`, 'success');
+                else showToast(`Đã xác nhận thanh toán! Đợi nhả coin.`, 'success');
+                
                 closeModal('processModal');
                 fetchOrders(); 
-            } catch (e) { showToast('Đã xác nhận (Chế độ Offline)', 'info'); closeModal('processModal'); fetchOrders(); }
+            } catch (e) { 
+                showToast(e.message, 'error'); 
+                btnElement.innerHTML = originalText;
+                btnElement.disabled = false;
+            }
         }
 
         function openModal(id) { document.getElementById(id).style.display = 'flex'; }
