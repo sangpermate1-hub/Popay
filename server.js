@@ -3,533 +3,307 @@ const express = require('express');
 const cors = require('cors');
 const { Pool } = require('pg');
 const bcrypt = require('bcrypt');
-const jwt = require('jsonwebtoken');
-const crypto = require('crypto');
+const multer = require('multer');
 
 const app = express();
-app.use(cors()); // Cho phép tất cả các nguồn truy cập
+app.use(cors());
 app.use(express.json());
 
-// ==========================================
-// 1. KẾT NỐI DATABASE (NEON.TECH)
-// ==========================================
+const upload = multer({ dest: 'uploads/' });
+
+// Kết nối Database
 const pool = new Pool({
     connectionString: process.env.DATABASE_URL,
+    ssl: { rejectUnauthorized: false }
 });
 
-// Tự động khởi tạo cấu trúc dữ liệu nếu chưa có
-async function initDB() {
-    try {
-        await pool.query(`
-            CREATE TABLE IF NOT EXISTS users (
-                id SERIAL PRIMARY KEY,
-                username VARCHAR(100) UNIQUE NOT NULL,
-                password VARCHAR(255) NOT NULL,
-                wallet_address VARCHAR(50) UNIQUE NOT NULL,
-                ref_code VARCHAR(20) UNIQUE NOT NULL,
-                referred_by VARCHAR(20),
-                usdt_balance DECIMAL(15, 2) DEFAULT 0.00,
-                popt_balance DECIMAL(15, 2) DEFAULT 0.00,
-                kyc_status VARCHAR(20) DEFAULT 'unverified',
-                airdrop_last_claim DATE,
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-            );
-
-            CREATE TABLE IF NOT EXISTS transactions (
-                id SERIAL PRIMARY KEY,
-                user_id INTEGER REFERENCES users(id),
-                user_address VARCHAR(50),
-                type VARCHAR(20), -- 'send', 'receive'
-                title VARCHAR(255),
-                amount DECIMAL(15, 2),
-                asset VARCHAR(10),
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-            );
-
-            CREATE TABLE IF NOT EXISTS spot_orders (
-                id SERIAL PRIMARY KEY,
-                user_id INTEGER REFERENCES users(id),
-                type VARCHAR(10), -- 'buy', 'sell'
-                price DECIMAL(15, 4),
-                amount DECIMAL(15, 2),
-                status VARCHAR(20) DEFAULT 'open', -- 'open', 'filled', 'cancelled'
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-            );
-
-            CREATE TABLE IF NOT EXISTS p2p_ads (
-                id SERIAL PRIMARY KEY,
-                user_id INTEGER REFERENCES users(id),
-                merchant VARCHAR(100),
-                type VARCHAR(10), -- 'buy', 'sell'
-                rate DECIMAL(15, 2),
-                amount DECIMAL(15, 2),
-                min_limit DECIMAL(15, 2),
-                max_limit DECIMAL(15, 2),
-                orders_count INTEGER DEFAULT 0,
-                status VARCHAR(20) DEFAULT 'active',
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-            );
-
-            CREATE TABLE IF NOT EXISTS p2p_orders (
-                id VARCHAR(20) PRIMARY KEY,
-                ad_id INTEGER REFERENCES p2p_ads(id),
-                user_id INTEGER REFERENCES users(id),
-                merchant_name VARCHAR(100),
-                type VARCHAR(10), -- User's action: 'buy' or 'sell'
-                usdt_amount DECIMAL(15, 2),
-                vnd_amount DECIMAL(15, 2),
-                rate DECIMAL(15, 2),
-                my_bank VARCHAR(255),
-                merchant_bank VARCHAR(255) DEFAULT 'Vietcombank - 0123456789 - POPAY MERCHANT',
-                status VARCHAR(20) DEFAULT 'pending_payment', -- 'pending_payment', 'pending_release', 'completed'
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-            );
-
-            CREATE TABLE IF NOT EXISTS tickets (
-                id VARCHAR(20) PRIMARY KEY,
-                user_id INTEGER REFERENCES users(id),
-                user_address VARCHAR(50),
-                subject VARCHAR(255),
-                message TEXT,
-                status VARCHAR(20) DEFAULT 'open',
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-            );
-            
-            CREATE TABLE IF NOT EXISTS kyc_requests (
-                id SERIAL PRIMARY KEY,
-                user_id INTEGER REFERENCES users(id),
-                wallet_address VARCHAR(50),
-                status VARCHAR(20) DEFAULT 'pending',
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-            );
-        `);
-        console.log("✅ Đã đồng bộ cấu trúc Database Popay (Neon.tech)");
-    } catch (err) {
-        console.error("❌ Lỗi khởi tạo Database:", err);
-    }
+// ==========================================
+// HÀM TIỆN ÍCH DÙNG CHUNG
+// ==========================================
+function generateWallet() {
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    let randomPart = '';
+    for (let i = 0; i < 30; i++) randomPart += chars.charAt(Math.floor(Math.random() * chars.length));
+    return 'MSPW-0x' + randomPart;
 }
-initDB();
+
+// Ghi chép giao dịch (Ledger)
+async function recordTx(client, type, from, to, amount, currency) {
+    await client.query(
+        `INSERT INTO transaction_history (type, from_wallet, to_wallet, amount, currency) VALUES ($1, $2, $3, $4, $5)`,
+        [type, from, to, amount, currency]
+    );
+}
+
+// Tính số dư ví động từ Sổ cái
+async function getBalance(wallet, currency) {
+    const res = await pool.query(`
+        SELECT 
+            SUM(CASE WHEN to_wallet = $1 THEN amount ELSE 0 END) - 
+            SUM(CASE WHEN from_wallet = $1 THEN amount ELSE 0 END) as balance
+        FROM transaction_history WHERE (to_wallet = $1 OR from_wallet = $1) AND currency = $2
+    `, [wallet, currency]);
+    return parseFloat(res.rows[0].balance || 0);
+}
 
 // ==========================================
-// 2. MIDDLEWARE BẢO MẬT
-// ==========================================
-const authenticateToken = (req, res, next) => {
-    const authHeader = req.header('Authorization');
-    if (!authHeader) return res.status(401).json({ error: 'Truy cập bị từ chối' });
-    
-    const token = authHeader.split(' ')[1];
-    try {
-        const verified = jwt.verify(token, process.env.JWT_SECRET);
-        req.user = verified;
-        next();
-    } catch (err) {
-        res.status(400).json({ error: 'Token không hợp lệ hoặc đã hết hạn' });
-    }
-};
-
-const authenticateAdmin = (req, res, next) => {
-    const authHeader = req.header('Authorization');
-    const token = authHeader && authHeader.split(' ')[1];
-    if (token === process.env.ADMIN_TOKEN) next();
-    else res.status(403).json({ error: 'Không có quyền quản trị' });
-};
-
-// ==========================================
-// 3. API TÀI KHOẢN & VÍ
+// 1. MODULE XÁC THỰC & VÍ (AUTH & WALLET)
 // ==========================================
 app.post('/api/auth/register', async (req, res) => {
-    const { username, password, refCode } = req.body;
+    const { full_name, email, password, referred_by } = req.body;
     try {
-        const hashedPassword = await bcrypt.hash(password, 10);
-        // Địa chỉ ví 22 ký tự (POPT + 18 hex)
-        const walletAddress = "POPT" + crypto.randomBytes(9).toString('hex').toUpperCase(); 
-        const myRefCode = crypto.randomBytes(3).toString('hex').toUpperCase();
-
-        const newUser = await pool.query(
-            `INSERT INTO users (username, password, wallet_address, ref_code, referred_by, usdt_balance, popt_balance) 
-             VALUES ($1, $2, $3, $4, $5, 500.00, 1000.00) RETURNING id, wallet_address`,
-            [username, hashedPassword, walletAddress, myRefCode, refCode || null]
-        );
+        const hash = await bcrypt.hash(password, 10);
+        const wallet = generateWallet();
+        const ref = Math.random().toString(36).substring(2, 10).toUpperCase();
 
         await pool.query(
-            `INSERT INTO transactions (user_id, user_address, type, title, amount, asset) VALUES 
-            ($1, $2, 'receive', 'Quà tặng tân thủ', 500, 'USDT'), 
-            ($1, $2, 'receive', 'Quà tặng tân thủ', 1000, 'POPT')`,
-            [newUser.rows[0].id, walletAddress]
+            `INSERT INTO users (wallet_address, full_name, email, password_hash, referral_code, referred_by) VALUES ($1, $2, $3, $4, $5, $6)`,
+            [wallet, full_name, email, hash, ref, referred_by]
         );
-
-        res.status(201).json({ message: "Đăng ký thành công", wallet: walletAddress });
-    } catch (err) {
-        if (err.code === '23505') return res.status(400).json({ error: "Tài khoản đã tồn tại" });
-        res.status(500).json({ error: err.message });
-    }
+        res.status(201).json({ message: 'Thành công', wallet_address: wallet });
+    } catch (e) { res.status(400).json({ message: 'Email đã tồn tại' }); }
 });
 
 app.post('/api/auth/login', async (req, res) => {
-    const { username, password } = req.body;
+    const { email, password } = req.body;
     try {
-        const user = await pool.query(`SELECT * FROM users WHERE username = $1`, [username]);
-        if (user.rows.length === 0) return res.status(400).json({ error: "Sai tài khoản hoặc mật khẩu" });
+        const user = await pool.query(`SELECT * FROM users WHERE email = $1`, [email]);
+        if (user.rows.length === 0) return res.status(401).json({ message: 'Sai thông tin' });
 
-        const validPassword = await bcrypt.compare(password, user.rows[0].password);
-        if (!validPassword) return res.status(400).json({ error: "Sai tài khoản hoặc mật khẩu" });
+        const match = await bcrypt.compare(password, user.rows[0].password_hash);
+        if (!match) return res.status(401).json({ message: 'Sai thông tin' });
 
-        const token = jwt.sign({ id: user.rows[0].id, address: user.rows[0].wallet_address, username: user.rows[0].username }, process.env.JWT_SECRET, { expiresIn: '7d' });
-        res.json({ token });
-    } catch (err) {
-        res.status(500).json({ error: err.message });
-    }
+        res.json({ token: 'jwt-token-mock', wallet_address: user.rows[0].wallet_address });
+    } catch (e) { res.status(500).send('Lỗi Server'); }
 });
 
-app.get('/api/user/profile', authenticateToken, async (req, res) => {
+app.get('/api/wallet/assets', async (req, res) => {
+    const { wallet } = req.query;
     try {
-        const user = await pool.query(`SELECT username, wallet_address, ref_code, usdt_balance, popt_balance, kyc_status FROM users WHERE id = $1`, [req.user.id]);
-        res.json(user.rows[0]);
-    } catch (err) { res.status(500).json({ error: err.message }); }
+        // Tính toán số dư thực tế cho từng loại coin
+        const mspw = await getBalance(wallet, 'MSPW');
+        const usdt = await getBalance(wallet, 'USDT');
+        res.json({ MSPW: mspw, USDT: usdt, BTC: 0, ETH: 0, VNDW: 0 }); // Có thể mở rộng thêm
+    } catch (e) { res.status(500).send(); }
 });
 
-app.get('/api/user/history', authenticateToken, async (req, res) => {
-    try {
-        const history = await pool.query(`SELECT * FROM transactions WHERE user_id = $1 ORDER BY created_at DESC LIMIT 50`, [req.user.id]);
-        res.json(history.rows);
-    } catch (err) { res.status(500).json({ error: err.message }); }
-});
-
-// Gửi Tiền & Hệ Thống Referral
-app.post('/api/transaction/send', authenticateToken, async (req, res) => {
-    const { receiverAddress, amount, asset } = req.body;
+// API Chuyển tiền (Send) trong index.html
+app.post('/api/wallet/send', async (req, res) => {
+    const { from_wallet, to_wallet, amount, currency } = req.body;
     const client = await pool.connect();
     try {
         await client.query('BEGIN');
-        const balanceField = asset === 'USDT' ? 'usdt_balance' : 'popt_balance';
+        const balance = await getBalance(from_wallet, currency);
+        if(balance < amount) throw new Error('Số dư không đủ');
+
+        await recordTx(client, 'transfer', from_wallet, to_wallet, amount, currency);
+        await client.query('COMMIT');
+        res.json({ success: true });
+    } catch (e) {
+        await client.query('ROLLBACK');
+        res.status(400).json({ message: e.message });
+    } finally { client.release(); }
+});
+
+// ==========================================
+// 2. MODULE P2P ESCROW
+// ==========================================
+app.get('/api/p2p/orders', async (req, res) => {
+    const { type } = req.query;
+    const result = await pool.query(`SELECT * FROM p2p_orders WHERE type = $1 AND status = 'open' ORDER BY created_at DESC`, [type]);
+    res.json(result.rows);
+});
+
+app.get('/api/p2p/my-pending', async (req, res) => {
+    const { wallet } = req.query;
+    const result = await pool.query(`SELECT * FROM p2p_orders WHERE (maker_wallet = $1 OR taker_wallet = $1) AND status IN ('processing', 'paid')`, [wallet]);
+    res.json(result.rows);
+});
+
+app.post('/api/p2p/create', async (req, res) => {
+    const { maker_wallet, type, price, amount, bank_info } = req.body;
+    const client = await pool.connect();
+    try {
+        await client.query('BEGIN');
+        // Nếu Bán MSPW, phải khóa số MSPW của Maker vào Escrow
+        if(type === 'sell') {
+            const bal = await getBalance(maker_wallet, 'MSPW');
+            if(bal < amount) throw new Error('Không đủ MSPW để đăng bán');
+            await recordTx(client, 'p2p_lock', maker_wallet, 'SYSTEM_ESCROW', amount, 'MSPW');
+        }
+        await client.query(`INSERT INTO p2p_orders (maker_wallet, type, price, amount, bank_info) VALUES ($1, $2, $3, $4, $5)`, [maker_wallet, type, price, amount, bank_info]);
+        await client.query('COMMIT');
+        res.json({ success: true });
+    } catch (e) { await client.query('ROLLBACK'); res.status(400).json({ message: e.message }); 
+    } finally { client.release(); }
+});
+
+app.post('/api/p2p/initiate', async (req, res) => {
+    const { order_id, taker_wallet } = req.body;
+    const client = await pool.connect();
+    try {
+        await client.query('BEGIN');
+        const order = (await client.query(`SELECT * FROM p2p_orders WHERE id = $1 AND status = 'open' FOR UPDATE`, [order_id])).rows[0];
+        if(!order) throw new Error('Lệnh đã bị lấy');
+
+        // Nếu Maker Mua (Nghĩa là Taker vào Bán). Taker phải bị khóa MSPW
+        if(order.type === 'buy') {
+            const bal = await getBalance(taker_wallet, 'MSPW');
+            if(bal < order.amount) throw new Error('Bạn không đủ MSPW để bán');
+            await recordTx(client, 'p2p_lock', taker_wallet, 'SYSTEM_ESCROW', order.amount, 'MSPW');
+        }
+
+        await client.query(`UPDATE p2p_orders SET status = 'processing', taker_wallet = $1 WHERE id = $2`, [taker_wallet, order_id]);
+        await client.query('COMMIT');
+        res.json({ success: true });
+    } catch (e) { await client.query('ROLLBACK'); res.status(400).json({ message: e.message }); 
+    } finally { client.release(); }
+});
+
+app.post('/api/p2p/update-status', async (req, res) => {
+    const { order_id, status } = req.body; // processing -> paid -> completed
+    const client = await pool.connect();
+    try {
+        await client.query('BEGIN');
+        const order = (await client.query(`SELECT * FROM p2p_orders WHERE id = $1 FOR UPDATE`, [order_id])).rows[0];
         
-        const sender = await client.query(`SELECT ${balanceField}, referred_by FROM users WHERE id = $1 FOR UPDATE`, [req.user.id]);
-        if (parseFloat(sender.rows[0][balanceField]) < amount) throw new Error("Số dư không đủ");
+        await client.query(`UPDATE p2p_orders SET status = $1 WHERE id = $2`, [status, order_id]);
 
-        const receiver = await client.query(`SELECT id FROM users WHERE wallet_address = $1 FOR UPDATE`, [receiverAddress]);
-        if (receiver.rows.length === 0) throw new Error("Không tìm thấy địa chỉ ví nhận");
-
-        await client.query(`UPDATE users SET ${balanceField} = ${balanceField} - $1 WHERE id = $2`, [amount, req.user.id]);
-        await client.query(`UPDATE users SET ${balanceField} = ${balanceField} + $1 WHERE id = $2`, [amount, receiver.rows[0].id]);
-
-        await client.query(`INSERT INTO transactions (user_id, user_address, type, title, amount, asset) VALUES ($1, $2, 'send', $3, $4, $5)`, [req.user.id, req.user.address, `Gửi tới ${receiverAddress.substring(0,8)}`, amount, asset]);
-        await client.query(`INSERT INTO transactions (user_id, user_address, type, title, amount, asset) VALUES ($1, $2, 'receive', $3, $4, $5)`, [receiver.rows[0].id, receiverAddress, `Nhận từ ${req.user.address.substring(0,8)}`, amount, asset]);
-
-        // Affiliate Reward
-        const txCount = await client.query(`SELECT COUNT(*) FROM transactions WHERE user_id = $1 AND type = 'send'`, [req.user.id]);
-        if (parseInt(txCount.rows[0].count) === 1 && sender.rows[0].referred_by) {
-            const referrer = await client.query(`SELECT id, wallet_address FROM users WHERE ref_code = $1`, [sender.rows[0].referred_by]);
-            if (referrer.rows.length > 0) {
-                await client.query(`UPDATE users SET popt_balance = popt_balance + 1 WHERE id = $1`, [referrer.rows[0].id]);
-                await client.query(`INSERT INTO transactions (user_id, user_address, type, title, amount, asset) VALUES ($1, $2, 'receive', 'Thưởng giới thiệu', 1, 'POPT')`, [referrer.rows[0].id, referrer.rows[0].wallet_address]);
-            }
+        // Nếu hoàn tất, nhả coin từ Escrow cho người Mua
+        if (status === 'completed') {
+            const buyer = order.type === 'sell' ? order.taker_wallet : order.maker_wallet;
+            await recordTx(client, 'p2p_release', 'SYSTEM_ESCROW', buyer, order.amount, 'MSPW');
         }
         await client.query('COMMIT');
         res.json({ success: true });
-    } catch (err) {
-        await client.query('ROLLBACK');
-        res.status(400).json({ error: err.message });
-    } finally { client.release(); }
+    } catch (e) { await client.query('ROLLBACK'); res.status(500).send(); } 
+    finally { client.release(); }
 });
 
 // ==========================================
-// 4. API SPOT TRADING
+// 3. MODULE STAKING
 // ==========================================
-app.get('/api/trade/spot/open', authenticateToken, async (req, res) => {
+app.get('/api/staking/info', async (req, res) => {
+    const { wallet } = req.query;
     try {
-        const orders = await pool.query(`SELECT * FROM spot_orders WHERE user_id = $1 AND status = 'open' ORDER BY created_at DESC`, [req.user.id]);
-        res.json(orders.rows);
-    } catch (err) { res.status(500).json({ error: err.message }); }
+        let result = await pool.query(`SELECT * FROM user_staking WHERE wallet_address = $1`, [wallet]);
+        if (result.rows.length === 0) {
+            await pool.query(`INSERT INTO user_staking (wallet_address) VALUES ($1)`, [wallet]);
+            result = await pool.query(`SELECT * FROM user_staking WHERE wallet_address = $1`, [wallet]);
+        }
+        const availableUsdt = await getBalance(wallet, 'USDT');
+        res.json({ staked_usdt: result.rows[0].staked_usdt, earned_mspw: result.rows[0].earned_mspw, available_usdt: availableUsdt });
+    } catch (e) { res.status(500).send(); }
 });
 
-app.post('/api/trade/spot/order', authenticateToken, async (req, res) => {
-    const { type, price, amount } = req.body;
+app.post('/api/staking/sync-reward', async (req, res) => {
+    const { wallet, new_reward } = req.body;
+    await pool.query(`UPDATE user_staking SET earned_mspw = $1, last_updated = CURRENT_TIMESTAMP WHERE wallet_address = $2`, [new_reward, wallet]);
+    res.json({ success: true });
+});
+
+app.post('/api/staking/deposit', async (req, res) => {
+    const { wallet, amount } = req.body;
     const client = await pool.connect();
     try {
         await client.query('BEGIN');
-        const user = await client.query(`SELECT usdt_balance, popt_balance FROM users WHERE id = $1 FOR UPDATE`, [req.user.id]);
+        const bal = await getBalance(wallet, 'USDT');
+        if(bal < amount) throw new Error('Không đủ USDT');
+
+        await recordTx(client, 'stake', wallet, 'SYSTEM_STAKING', amount, 'USDT');
+        await client.query(`UPDATE user_staking SET staked_usdt = staked_usdt + $1, last_updated = CURRENT_TIMESTAMP WHERE wallet_address = $2`, [amount, wallet]);
+        await client.query('COMMIT');
+        res.json({ success: true });
+    } catch (e) { await client.query('ROLLBACK'); res.status(400).json({ message: e.message }); } 
+    finally { client.release(); }
+});
+
+app.post('/api/staking/withdraw', async (req, res) => {
+    const { wallet, amount } = req.body;
+    const client = await pool.connect();
+    try {
+        await client.query('BEGIN');
+        const stk = (await client.query(`SELECT * FROM user_staking WHERE wallet_address = $1 FOR UPDATE`, [wallet])).rows[0];
+        if(stk.staked_usdt < amount) throw new Error('Vượt quá số tiền Staking');
+
+        // Trả gốc USDT
+        await recordTx(client, 'unstake', 'SYSTEM_STAKING', wallet, amount, 'USDT');
+        // Trả lãi MSPW
+        if(stk.earned_mspw > 0) await recordTx(client, 'reward', 'SYSTEM_STAKING', wallet, stk.earned_mspw, 'MSPW');
         
-        if (type === 'buy') {
-            const totalUSDT = price * amount;
-            if (parseFloat(user.rows[0].usdt_balance) < totalUSDT) throw new Error("Số dư USDT không đủ");
-            await client.query(`UPDATE users SET usdt_balance = usdt_balance - $1 WHERE id = $2`, [totalUSDT, req.user.id]);
-        } else {
-            if (parseFloat(user.rows[0].popt_balance) < amount) throw new Error("Số dư POPT không đủ");
-            await client.query(`UPDATE users SET popt_balance = popt_balance - $1 WHERE id = $2`, [amount, req.user.id]);
-        }
-
-        await client.query(`INSERT INTO spot_orders (user_id, type, price, amount) VALUES ($1, $2, $3, $4)`, [req.user.id, type, price, amount]);
+        await client.query(`UPDATE user_staking SET staked_usdt = staked_usdt - $1, earned_mspw = 0 WHERE wallet_address = $2`, [amount, wallet]);
         await client.query('COMMIT');
         res.json({ success: true });
-    } catch (err) {
-        await client.query('ROLLBACK');
-        res.status(400).json({ error: err.message });
-    } finally { client.release(); }
-});
-
-app.post('/api/trade/spot/cancel', authenticateToken, async (req, res) => {
-    const client = await pool.connect();
-    try {
-        await client.query('BEGIN');
-        const order = await client.query(`SELECT * FROM spot_orders WHERE id = $1 AND user_id = $2 AND status = 'open' FOR UPDATE`, [req.body.orderId, req.user.id]);
-        if (order.rows.length === 0) throw new Error("Lệnh không tồn tại hoặc đã khớp");
-
-        const o = order.rows[0];
-        if (o.type === 'buy') {
-            await client.query(`UPDATE users SET usdt_balance = usdt_balance + $1 WHERE id = $2`, [o.price * o.amount, req.user.id]);
-        } else {
-            await client.query(`UPDATE users SET popt_balance = popt_balance + $1 WHERE id = $2`, [o.amount, req.user.id]);
-        }
-
-        await client.query(`UPDATE spot_orders SET status = 'cancelled' WHERE id = $1`, [o.id]);
-        await client.query('COMMIT');
-        res.json({ success: true });
-    } catch (err) {
-        await client.query('ROLLBACK');
-        res.status(400).json({ error: err.message });
-    } finally { client.release(); }
-});
-
-app.post('/api/trade/spot/execute', authenticateToken, async (req, res) => {
-    // API mô phỏng khớp lệnh (Triggered by frontend when price matches)
-    const { orderId } = req.body;
-    const client = await pool.connect();
-    try {
-        await client.query('BEGIN');
-        const order = await client.query(`SELECT * FROM spot_orders WHERE id = $1 AND user_id = $2 AND status = 'open' FOR UPDATE`, [orderId, req.user.id]);
-        if (order.rows.length === 0) throw new Error("Lệnh không hợp lệ");
-
-        const o = order.rows[0];
-        if (o.type === 'buy') {
-            await client.query(`UPDATE users SET popt_balance = popt_balance + $1 WHERE id = $2`, [o.amount, req.user.id]);
-            await client.query(`INSERT INTO transactions (user_id, user_address, type, title, amount, asset) VALUES ($1, $2, 'receive', 'Khớp lệnh Mua Spot', $3, 'POPT')`, [req.user.id, req.user.address, o.amount]);
-        } else {
-            const usdtEarned = o.price * o.amount;
-            await client.query(`UPDATE users SET usdt_balance = usdt_balance + $1 WHERE id = $2`, [usdtEarned, req.user.id]);
-            await client.query(`INSERT INTO transactions (user_id, user_address, type, title, amount, asset) VALUES ($1, $2, 'receive', 'Khớp lệnh Bán Spot', $3, 'USDT')`, [req.user.id, req.user.address, usdtEarned]);
-        }
-
-        await client.query(`UPDATE spot_orders SET status = 'filled' WHERE id = $1`, [o.id]);
-        await client.query('COMMIT');
-        res.json({ success: true });
-    } catch (err) {
-        await client.query('ROLLBACK');
-        res.status(400).json({ error: err.message });
-    } finally { client.release(); }
+    } catch (e) { await client.query('ROLLBACK'); res.status(400).json({ message: e.message }); } 
+    finally { client.release(); }
 });
 
 // ==========================================
-// 5. API P2P TRADING (ESCROW LOGIC)
+// 4. MODULE USER SETTINGS & TICKETS
 // ==========================================
-app.get('/api/p2p/ads', authenticateToken, async (req, res) => {
-    const { type } = req.query; // 'buy' or 'sell'
-    try {
-        const ads = await pool.query(`SELECT * FROM p2p_ads WHERE status = 'active' AND type = $1 ORDER BY rate ${type === 'buy' ? 'DESC' : 'ASC'}`, [type]);
-        res.json(ads.rows);
-    } catch (err) { res.status(500).json({ error: err.message }); }
+app.get('/api/users/tickets', async (req, res) => {
+    const result = await pool.query(`SELECT * FROM support_tickets WHERE wallet = $1 ORDER BY created_at DESC`, [req.query.wallet]);
+    res.json(result.rows);
 });
 
-app.post('/api/p2p/ad/create', authenticateToken, async (req, res) => {
-    const { type, rate, amount, min, max } = req.body;
+app.post('/api/admin/tickets', async (req, res) => {
+    const { wallet, title, content } = req.body;
+    await pool.query(`INSERT INTO support_tickets (wallet, title, content) VALUES ($1, $2, $3)`, [wallet, title, content]);
+    res.json({ success: true });
+});
+
+// ==========================================
+// 5. MODULE ADMIN (DASHBOARD & QUẢN LÝ)
+// ==========================================
+app.get('/api/admin/dashboard', async (req, res) => {
+    try {
+        const u = await pool.query(`SELECT COUNT(*) FROM users`);
+        const s = await pool.query(`SELECT SUM(staked_usdt) FROM user_staking`);
+        const p = await pool.query(`SELECT COUNT(*) FROM p2p_orders WHERE status IN ('processing', 'paid')`);
+        const t = await pool.query(`SELECT COUNT(*) FROM support_tickets WHERE status = 'open'`);
+        res.json({ total_users: u.rows[0].count, total_staking: s.rows[0].sum || 0, pending_p2p: p.rows[0].count, open_tickets: t.rows[0].count });
+    } catch(e) { res.status(500).send(); }
+});
+
+app.get('/api/admin/users', async (req, res) => {
+    const result = await pool.query(`
+        SELECT u.wallet_address, u.email, u.created_at, COALESCE(k.status, 'unverified') as kyc_status 
+        FROM users u LEFT JOIN user_kyc k ON u.wallet_address = k.wallet
+    `);
+    res.json(result.rows);
+});
+
+app.get('/api/admin/p2p/all', async (req, res) => {
+    const result = await pool.query(`SELECT * FROM p2p_orders ORDER BY created_at DESC`);
+    res.json(result.rows);
+});
+
+// API Giải quyết tranh chấp
+app.post('/api/admin/p2p/resolve', async (req, res) => {
+    const { id, action } = req.body; // force_complete hoặc cancel
     const client = await pool.connect();
     try {
         await client.query('BEGIN');
-        if (type === 'sell') {
-            const user = await client.query(`SELECT usdt_balance FROM users WHERE id = $1 FOR UPDATE`, [req.user.id]);
-            if (parseFloat(user.rows[0].usdt_balance) < amount) throw new Error("Không đủ USDT để khóa");
-            await client.query(`UPDATE users SET usdt_balance = usdt_balance - $1 WHERE id = $2`, [amount, req.user.id]);
-        }
+        const order = (await client.query(`SELECT * FROM p2p_orders WHERE id = $1 FOR UPDATE`, [id])).rows[0];
         
-        await client.query(`INSERT INTO p2p_ads (user_id, merchant, type, rate, amount, min_limit, max_limit) VALUES ($1, $2, $3, $4, $5, $6, $7)`, [req.user.id, req.user.username, type, rate, amount, min, max]);
-        await client.query('COMMIT');
-        res.json({ success: true });
-    } catch (err) {
-        await client.query('ROLLBACK');
-        res.status(400).json({ error: err.message });
-    } finally { client.release(); }
-});
-
-app.get('/api/p2p/orders/pending', authenticateToken, async (req, res) => {
-    try {
-        const orders = await pool.query(`SELECT * FROM p2p_orders WHERE user_id = $1 AND status != 'completed' AND status != 'cancelled' ORDER BY created_at DESC`, [req.user.id]);
-        res.json(orders.rows);
-    } catch (err) { res.status(500).json({ error: err.message }); }
-});
-
-app.post('/api/p2p/order/create', authenticateToken, async (req, res) => {
-    const { adId, type, usdt, vnd, rate, myBank } = req.body;
-    const orderId = 'P2P' + Math.floor(100000 + Math.random() * 900000);
-    const client = await pool.connect();
-    try {
-        await client.query('BEGIN');
-        
-        if (type === 'sell') {
-            // User is selling USDT, lock it now
-            const user = await client.query(`SELECT usdt_balance FROM users WHERE id = $1 FOR UPDATE`, [req.user.id]);
-            if (parseFloat(user.rows[0].usdt_balance) < usdt) throw new Error("Không đủ USDT");
-            await client.query(`UPDATE users SET usdt_balance = usdt_balance - $1 WHERE id = $2`, [usdt, req.user.id]);
-        }
-
-        const ad = await pool.query(`SELECT merchant FROM p2p_ads WHERE id = $1`, [adId]);
-        const merchantName = ad.rows.length > 0 ? ad.rows[0].merchant : 'Merchant';
-
-        await client.query(
-            `INSERT INTO p2p_orders (id, ad_id, user_id, merchant_name, type, usdt_amount, vnd_amount, rate, my_bank) 
-             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
-            [orderId, adId, req.user.id, merchantName, type, usdt, vnd, rate, myBank]
-        );
-        
-        await client.query('COMMIT');
-        res.json({ success: true, orderId });
-    } catch (err) {
-        await client.query('ROLLBACK');
-        res.status(400).json({ error: err.message });
-    } finally { client.release(); }
-});
-
-app.post('/api/p2p/order/action', authenticateToken, async (req, res) => {
-    const { orderId, action } = req.body; // action: 'paid' or 'release'
-    const client = await pool.connect();
-    try {
-        await client.query('BEGIN');
-        const order = await client.query(`SELECT * FROM p2p_orders WHERE id = $1 AND user_id = $2 FOR UPDATE`, [orderId, req.user.id]);
-        if (order.rows.length === 0) throw new Error("Đơn hàng không hợp lệ");
-        
-        const o = order.rows[0];
-        if (action === 'paid' && o.status === 'pending_payment') {
-            await client.query(`UPDATE p2p_orders SET status = 'pending_release' WHERE id = $1`, [orderId]);
-        } else if (action === 'release' && o.status === 'pending_release') {
-            await client.query(`UPDATE p2p_orders SET status = 'completed' WHERE id = $1`, [orderId]);
-            // If user was selling, merchant paid, user releases. USDT was already locked, transaction done.
-            // If user was buying, user paid, merchant releases. Add USDT to user.
-            if (o.type === 'buy') {
-                await client.query(`UPDATE users SET usdt_balance = usdt_balance + $1 WHERE id = $2`, [o.usdt_amount, req.user.id]);
-                await client.query(`INSERT INTO transactions (user_id, user_address, type, title, amount, asset) VALUES ($1, $2, 'receive', 'P2P Mua USDT', $3, 'USDT')`, [req.user.id, req.user.address, o.usdt_amount]);
-            } else {
-                 await client.query(`INSERT INTO transactions (user_id, user_address, type, title, amount, asset) VALUES ($1, $2, 'send', 'P2P Bán USDT', $3, 'USDT')`, [req.user.id, req.user.address, o.usdt_amount]);
-            }
+        if (action === 'force_complete') {
+            const buyer = order.type === 'sell' ? order.taker_wallet : order.maker_wallet;
+            await recordTx(client, 'p2p_release', 'SYSTEM_ESCROW', buyer, order.amount, 'MSPW');
+            await client.query(`UPDATE p2p_orders SET status = 'completed' WHERE id = $1`, [id]);
+        } else if (action === 'cancel') {
+            const seller = order.type === 'sell' ? order.maker_wallet : order.taker_wallet;
+            await recordTx(client, 'p2p_refund', 'SYSTEM_ESCROW', seller, order.amount, 'MSPW');
+            await client.query(`UPDATE p2p_orders SET status = 'cancelled' WHERE id = $1`, [id]);
         }
         await client.query('COMMIT');
         res.json({ success: true });
-    } catch (err) {
-        await client.query('ROLLBACK');
-        res.status(400).json({ error: err.message });
-    } finally { client.release(); }
+    } catch(e) { await client.query('ROLLBACK'); res.status(500).send(); } 
+    finally { client.release(); }
 });
 
-// ==========================================
-// 6. CÁC API PHỤ (AIRDROP, KYC, TICKET)
-// ==========================================
-app.post('/api/airdrop/claim', authenticateToken, async (req, res) => {
-    const today = new Date().toISOString().split('T')[0];
-    const client = await pool.connect();
-    try {
-        await client.query('BEGIN');
-        const user = await client.query(`SELECT airdrop_last_claim FROM users WHERE id = $1 FOR UPDATE`, [req.user.id]);
-        const lastClaimStr = user.rows[0].airdrop_last_claim ? user.rows[0].airdrop_last_claim.toISOString().split('T')[0] : null;
-
-        if (lastClaimStr === today) throw new Error("Bạn đã điểm danh hôm nay rồi.");
-
-        await client.query(`UPDATE users SET popt_balance = popt_balance + 0.2, airdrop_last_claim = CURRENT_DATE WHERE id = $1`, [req.user.id]);
-        await client.query(`INSERT INTO transactions (user_id, user_address, type, title, amount, asset) VALUES ($1, $2, 'receive', 'Airdrop Toàn Cầu', 0.2, 'POPT')`, [req.user.id, req.user.address]);
-        
-        await client.query('COMMIT');
-        res.json({ success: true });
-    } catch (err) {
-        await client.query('ROLLBACK');
-        res.status(400).json({ error: err.message });
-    } finally { client.release(); }
-});
-
-app.post('/api/ticket/create', authenticateToken, async (req, res) => {
-    const { subject, message } = req.body;
-    const ticketId = 'TK' + Math.floor(1000 + Math.random() * 9000);
-    try {
-        await pool.query(`INSERT INTO tickets (id, user_id, user_address, subject, message) VALUES ($1, $2, $3, $4, $5)`, [ticketId, req.user.id, req.user.address, subject, message]);
-        res.json({ success: true });
-    } catch (err) { res.status(500).json({ error: err.message }); }
-});
-
-app.post('/api/kyc/submit', authenticateToken, async (req, res) => {
-    try {
-        await pool.query(`UPDATE users SET kyc_status = 'pending' WHERE id = $1`, [req.user.id]);
-        await pool.query(`INSERT INTO kyc_requests (user_id, wallet_address) VALUES ($1, $2)`, [req.user.id, req.user.address]);
-        res.json({ success: true });
-    } catch (err) { res.status(500).json({ error: err.message }); }
-});
-
-// ==========================================
-// 7. API ADMIN QUYỀN LỰC
-// ==========================================
-app.get('/api/admin/stats', authenticateAdmin, async (req, res) => {
-    try {
-        const users = await pool.query(`SELECT COUNT(*) FROM users`);
-        const sums = await pool.query(`SELECT SUM(usdt_balance) as total_usdt, SUM(popt_balance) as total_popt FROM users`);
-        const history = await pool.query(`SELECT * FROM transactions ORDER BY created_at DESC LIMIT 20`);
-        res.json({ totalUsers: users.rows[0].count, totalUSDT: sums.rows[0].total_usdt || 0, totalPOPT: sums.rows[0].total_popt || 0, history: history.rows });
-    } catch (err) { res.status(500).json({ error: err.message }); }
-});
-
-app.get('/api/admin/user/:address', authenticateAdmin, async (req, res) => {
-    try {
-        const user = await pool.query(`SELECT wallet_address, usdt_balance, popt_balance, kyc_status FROM users WHERE wallet_address = $1`, [req.params.address]);
-        if (user.rows.length === 0) return res.status(404).json({ error: "Không tìm thấy" });
-        res.json(user.rows[0]);
-    } catch (err) { res.status(500).json({ error: err.message }); }
-});
-
-app.post('/api/admin/fund', authenticateAdmin, async (req, res) => {
-    const { targetAddress, amount, asset, action } = req.body;
-    const balanceField = asset === 'USDT' ? 'usdt_balance' : 'popt_balance';
-    try {
-        const user = await pool.query(`SELECT id FROM users WHERE wallet_address = $1`, [targetAddress]);
-        if (user.rows.length === 0) return res.status(404).json({ error: "Không tìm thấy user" });
-
-        if (action === 'add') {
-            await pool.query(`UPDATE users SET ${balanceField} = ${balanceField} + $1 WHERE id = $2`, [amount, user.rows[0].id]);
-            await pool.query(`INSERT INTO transactions (user_id, user_address, type, title, amount, asset) VALUES ($1, $2, 'receive', 'Admin Bơm Tiền', $3, $4)`, [user.rows[0].id, targetAddress, amount, asset]);
-        } else {
-            await pool.query(`UPDATE users SET ${balanceField} = ${balanceField} - $1 WHERE id = $2`, [amount, user.rows[0].id]);
-            await pool.query(`INSERT INTO transactions (user_id, user_address, type, title, amount, asset) VALUES ($1, $2, 'send', 'Admin Trừ Tiền', $3, $4)`, [user.rows[0].id, targetAddress, amount, asset]);
-        }
-        res.json({ success: true });
-    } catch (err) { res.status(500).json({ error: err.message }); }
-});
-
-app.get('/api/admin/kyc/pending', authenticateAdmin, async (req, res) => {
-    try {
-        const list = await pool.query(`SELECT * FROM kyc_requests WHERE status = 'pending' ORDER BY created_at ASC`);
-        res.json(list.rows);
-    } catch (err) { res.status(500).json({ error: err.message }); }
-});
-
-app.post('/api/admin/kyc/process', authenticateAdmin, async (req, res) => {
-    const { userId, status } = req.body; 
-    try {
-        await pool.query(`UPDATE users SET kyc_status = $1 WHERE id = $2`, [status, userId]);
-        await pool.query(`UPDATE kyc_requests SET status = $1 WHERE user_id = $2`, [status, userId]);
-        res.json({ success: true });
-    } catch (err) { res.status(500).json({ error: err.message }); }
-});
-
-app.get('/api/admin/tickets', authenticateAdmin, async (req, res) => {
-    try {
-        const tickets = await pool.query(`SELECT * FROM tickets ORDER BY created_at DESC`);
-        res.json(tickets.rows);
-    } catch (err) { res.status(500).json({ error: err.message }); }
-});
-
-app.post('/api/admin/ticket/close', authenticateAdmin, async (req, res) => {
-    try {
-        await pool.query(`UPDATE tickets SET status = 'closed' WHERE id = $1`, [req.body.ticketId]);
-        res.json({ success: true });
-    } catch (err) { res.status(500).json({ error: err.message }); }
-});
-
-// ==========================================
-// START SERVER
-// ==========================================
+// Khởi chạy Server
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, "0.0.0.0", () => {
-    console.log(`🚀 Popay Server is running on port ${PORT}`);
+app.listen(PORT, () => {
+    console.log(`🚀 Server MySPay đang chạy tại http://localhost:${PORT}`);
+    console.log(`🔌 Đã thiết lập cơ chế Ledger và Escrow`);
 });
