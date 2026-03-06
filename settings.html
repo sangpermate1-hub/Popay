@@ -3,61 +3,64 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Cài đặt - MySPay Wallet</title>
+    <title>Cài đặt - MetahashPay</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
         :root {
-            --primary-color: #007bff;
-            --primary-light: #e6f2ff;
-            --bg-color: #f8faff;
+            --primary-color: #0066ff;
+            --primary-light: #e6f0ff;
+            --bg-color: #f5f8fa;
             --card-bg: #ffffff;
-            --text-main: #2c3e50;
-            --text-muted: #7f8c8d;
-            --border-color: #e1e8ed;
-            --success: #2ecc71;
-            --danger: #e74c3c;
-            --warning: #f1c40f;
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --border-color: #e2e8f0;
+            --success: #10b981;
+            --danger: #ef4444;
+            --warning: #f59e0b;
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
 
-        /* Cập nhật padding-bottom để nhường chỗ cho Bottom Nav mới */
         body { background-color: var(--bg-color); color: var(--text-main); padding-bottom: 75px; }
 
         /* Header */
-        .header { background: var(--primary-color); padding: 20px; color: white; border-bottom-left-radius: 25px; border-bottom-right-radius: 25px; box-shadow: 0 4px 15px rgba(0, 123, 255, 0.2); text-align: center; }
-        .header-title { font-size: 1.3rem; font-weight: 600; margin-bottom: 10px; }
-        .wallet-badge { display: inline-block; background: rgba(255, 255, 255, 0.2); padding: 5px 15px; border-radius: 20px; font-size: 0.85rem; }
+        .header { background: var(--primary-color); padding: 20px; color: white; border-bottom-left-radius: 20px; border-bottom-right-radius: 20px; box-shadow: 0 4px 15px rgba(0, 102, 255, 0.2); text-align: center; }
+        .header-title { font-size: 1.3rem; font-weight: 700; margin-bottom: 10px; letter-spacing: 0.5px; }
+        .wallet-badge { display: inline-block; background: rgba(255, 255, 255, 0.2); padding: 6px 16px; border-radius: 20px; font-size: 0.85rem; backdrop-filter: blur(5px); font-family: monospace; font-size: 0.9rem; }
 
         /* Settings List */
-        .settings-container { padding: 20px; display: flex; flex-direction: column; gap: 15px; margin-top: 10px; }
+        .settings-container { padding: 20px; display: flex; flex-direction: column; gap: 15px; margin-top: 5px; }
         
-        .setting-group-title { font-size: 0.9rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase; margin-bottom: -5px; padding-left: 10px; }
+        .setting-group-title { font-size: 0.85rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: -5px; padding-left: 10px; letter-spacing: 0.5px; }
 
-        .setting-card { background: var(--card-bg); border-radius: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.03); overflow: hidden; }
+        .setting-card { background: var(--card-bg); border-radius: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.02); overflow: hidden; border: 1px solid var(--border-color); }
         
-        .setting-item { display: flex; align-items: center; justify-content: space-between; padding: 15px 20px; text-decoration: none; color: var(--text-main); border-bottom: 1px solid var(--border-color); cursor: pointer; transition: background 0.2s; }
+        .setting-item { display: flex; align-items: center; justify-content: space-between; padding: 16px 20px; text-decoration: none; color: var(--text-main); border-bottom: 1px solid var(--border-color); cursor: pointer; transition: background 0.2s; }
         .setting-item:last-child { border-bottom: none; }
         .setting-item:active { background: var(--bg-color); }
         
         .setting-left { display: flex; align-items: center; gap: 15px; }
-        .setting-icon { width: 35px; height: 35px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; }
+        .setting-icon { width: 38px; height: 38px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.15rem; }
         
-        .icon-kyc { background: #e8f5e9; color: #2e7d32; }
-        .icon-security { background: #ffebee; color: #c62828; }
-        .icon-support { background: #e3f2fd; color: #1565c0; }
-        .icon-explore { background: #fff3e0; color: #ef6c00; }
-        .icon-staking { background: #f3e5f5; color: #6a1b9a; }
-        .icon-message { background: #e8eaf6; color: #3f51b5; } /* Icon cho Tin nhắn */
+        .icon-kyc { background: #dcfce7; color: #047857; }
+        .icon-security { background: #fee2e2; color: #b91c1c; }
+        .icon-support { background: #e0e7ff; color: #4338ca; }
+        .icon-explore { background: #fef3c7; color: #b45309; }
+        .icon-staking { background: #f3e8ff; color: #6d28d9; }
+        .icon-message { background: #e0f2fe; color: #1d4ed8; }
+        .icon-logout { background: #f1f5f9; color: var(--text-muted); }
 
-        .setting-text { font-weight: 500; font-size: 1rem; }
-        .setting-status { font-size: 0.8rem; color: var(--warning); font-weight: 600; }
+        .setting-text { font-weight: 600; font-size: 0.95rem; }
+        .setting-status { font-size: 0.8rem; color: var(--warning); font-weight: 600; margin-top: 2px; }
+        .status-verified { color: var(--success); }
+
+        .setting-right { color: var(--text-muted); }
         
         /* Badge thông báo số lượng tin nhắn mới */
-        .msg-badge { background: var(--danger); color: white; padding: 2px 8px; border-radius: 10px; font-size: 0.75rem; font-weight: bold; }
+        .msg-badge { background: var(--danger); color: white; padding: 3px 8px; border-radius: 12px; font-size: 0.75rem; font-weight: bold; }
 
         /* Modals & Forms */
-        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: none; justify-content: center; align-items: flex-end; z-index: 1000; }
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.6); display: none; justify-content: center; align-items: flex-end; z-index: 1000; backdrop-filter: blur(2px); }
         .modal-content { background: var(--card-bg); width: 100%; max-height: 90vh; overflow-y: auto; border-radius: 25px 25px 0 0; padding: 25px 20px; animation: slideUp 0.3s ease-out; }
         @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
         
@@ -65,59 +68,36 @@
         .close-btn { background: none; border: none; font-size: 1.5rem; color: var(--text-muted); cursor: pointer; }
         
         .form-group { margin-bottom: 15px; }
-        .form-group label { display: block; margin-bottom: 8px; font-size: 0.9rem; color: var(--text-muted); }
-        .form-control { width: 100%; padding: 12px; border: 1px solid var(--border-color); border-radius: 10px; font-size: 1rem; outline: none; background: var(--bg-color); }
+        .form-group label { display: block; margin-bottom: 8px; font-size: 0.9rem; color: var(--text-muted); font-weight: 500; }
+        .form-control { width: 100%; padding: 14px; border: 1px solid var(--border-color); border-radius: 12px; font-size: 1rem; outline: none; background: var(--bg-color); }
         .form-control:focus { border-color: var(--primary-color); background: white; }
         textarea.form-control { resize: vertical; min-height: 100px; }
         
-        .file-upload-box { border: 2px dashed var(--border-color); border-radius: 10px; padding: 20px; text-align: center; color: var(--text-muted); cursor: pointer; margin-bottom: 10px; background: var(--bg-color); }
-        .file-upload-box i { font-size: 2rem; color: var(--primary-color); margin-bottom: 10px; }
+        .file-upload-box { border: 2px dashed var(--border-color); border-radius: 12px; padding: 25px; text-align: center; color: var(--text-muted); cursor: pointer; margin-bottom: 10px; background: var(--bg-color); transition: 0.2s; }
+        .file-upload-box:hover { border-color: var(--primary-color); background: var(--primary-light); }
+        .file-upload-box i { font-size: 2.5rem; color: var(--primary-color); margin-bottom: 10px; }
         .file-input { display: none; }
 
-        .btn-primary { width: 100%; background: var(--primary-color); color: white; border: none; padding: 15px; border-radius: 10px; font-size: 1rem; font-weight: 600; cursor: pointer; margin-top: 10px; transition: 0.2s; }
+        .btn-primary { width: 100%; background: var(--primary-color); color: white; border: none; padding: 15px; border-radius: 12px; font-size: 1rem; font-weight: bold; cursor: pointer; margin-top: 10px; transition: 0.2s; }
         .btn-primary:active { transform: scale(0.98); }
         .btn-primary:disabled { background: var(--text-muted); cursor: not-allowed; }
 
         /* Inbox List Styles */
-        .message-item { background: var(--bg-color); border: 1px solid var(--border-color); border-radius: 10px; padding: 15px; margin-bottom: 15px; }
+        .message-item { background: var(--bg-color); border: 1px solid var(--border-color); border-radius: 12px; padding: 15px; margin-bottom: 15px; }
         .message-title { font-weight: bold; color: var(--primary-color); font-size: 0.95rem; margin-bottom: 5px; }
-        .message-admin-reply { background: white; padding: 10px; border-left: 3px solid var(--success); border-radius: 5px; font-size: 0.9rem; color: var(--text-main); margin-top: 10px; }
-        .message-date { font-size: 0.75rem; color: var(--text-muted); text-align: right; margin-top: 5px; }
-        .empty-inbox { text-align: center; padding: 30px 10px; color: var(--text-muted); }
+        .message-admin-reply { background: white; padding: 12px; border-left: 4px solid var(--success); border-radius: 8px; font-size: 0.9rem; color: var(--text-main); margin-top: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.02); }
+        .message-date { font-size: 0.75rem; color: var(--text-muted); text-align: right; margin-top: 8px; }
+        .empty-inbox { text-align: center; padding: 40px 10px; color: var(--text-muted); font-weight: 500; }
 
         /* Toast Notification */
-        #toast { visibility: hidden; min-width: 250px; background-color: var(--card-bg); color: var(--text-main); text-align: center; border-radius: 10px; padding: 15px 20px; position: fixed; z-index: 10000; left: 50%; bottom: 90px; transform: translateX(-50%); box-shadow: 0 5px 20px rgba(0,0,0,0.15); display: flex; align-items: center; gap: 12px; border-left: 5px solid var(--primary-color); opacity: 0; transition: 0.3s; }
+        #toast { visibility: hidden; min-width: 250px; background-color: var(--text-main); color: white; text-align: center; border-radius: 10px; padding: 15px 20px; position: fixed; z-index: 10000; left: 50%; bottom: 90px; transform: translateX(-50%); box-shadow: 0 5px 20px rgba(0,0,0,0.2); display: flex; align-items: center; gap: 12px; opacity: 0; transition: 0.3s; }
         #toast.show { visibility: visible; opacity: 1; bottom: 100px; }
-        #toast.success { border-left-color: var(--success); } #toast.error { border-left-color: var(--danger); }
+        #toast.success { background-color: var(--success); } #toast.error { background-color: var(--danger); }
         #toast i { font-size: 1.2rem; }
 
-        /* Chuẩn hóa Bottom Nav (Giống hệt trade.html) */
-        .bottom-nav { 
-            position: fixed; 
-            bottom: 0; 
-            left: 0;
-            width: 100%; 
-            background: var(--card-bg); 
-            display: flex; 
-            justify-content: space-around; 
-            align-items: center;
-            padding: 12px 0; 
-            box-shadow: 0 -2px 10px rgba(0,0,0,0.05); 
-            border-top: 1px solid var(--border-color); 
-            z-index: 900; 
-            height: 65px; 
-        }
-        .nav-item { 
-            text-decoration: none; 
-            color: var(--text-muted); 
-            display: flex; 
-            flex-direction: column; 
-            align-items: center; 
-            justify-content: center;
-            gap: 4px; 
-            font-size: 0.75rem; 
-            width: 33.33%; 
-        }
+        /* Bottom Nav - Chuẩn 65px */
+        .bottom-nav { position: fixed; bottom: 0; left: 0; width: 100%; background: var(--card-bg); display: flex; justify-content: space-around; align-items: center; padding: 12px 0; box-shadow: 0 -5px 15px rgba(0,0,0,0.03); border-top: 1px solid var(--border-color); z-index: 900; height: 65px; }
+        .nav-item { text-decoration: none; color: var(--text-muted); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; font-size: 0.75rem; width: 33.33%; font-weight: 500; }
         .nav-item.active { color: var(--primary-color); }
         .nav-item i { font-size: 1.3rem; }
     </style>
@@ -158,7 +138,7 @@
             <a href="staking.html" class="setting-item">
                 <div class="setting-left">
                     <div class="setting-icon icon-staking"><i class="fas fa-layer-group"></i></div>
-                    <div class="setting-text">Staking MSPW</div>
+                    <div class="setting-text">Staking MPT</div>
                 </div>
                 <div class="setting-right"><i class="fas fa-chevron-right"></i></div>
             </a>
@@ -288,11 +268,11 @@
                 <h3>Gửi Ticket Hỗ Trợ</h3>
                 <button class="close-btn" onclick="closeModal('ticketModal')">&times;</button>
             </div>
-            <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 15px; text-align: center;">Đội ngũ Support Metahash / MySPay sẽ phản hồi bạn sớm nhất qua hệ thống.</p>
+            <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 15px; text-align: center; line-height: 1.5;">Đội ngũ Support của MetahashPay sẽ tiếp nhận và phản hồi bạn sớm nhất qua hệ thống hộp thư.</p>
             <form id="ticketForm" onsubmit="submitTicket(event)">
                 <div class="form-group">
                     <label>Tiêu đề vấn đề</label>
-                    <input type="text" class="form-control" id="ticket-title" required placeholder="Ví dụ: Lỗi không nhận được MSPW">
+                    <input type="text" class="form-control" id="ticket-title" required placeholder="Ví dụ: Lỗi không nhận được token MPT">
                 </div>
                 <div class="form-group">
                     <label>Mô tả chi tiết</label>
@@ -303,12 +283,12 @@
         </div>
     </div>
 
-    <div id="toast"><i class="fas fa-info-circle"></i><span id="toast-message"></span></div>
+    <div id="toast"><i class="fas fa-info-circle"></i><span id="toast-message">Thông báo</span></div>
 
     <script>
         // --- 0. BẢO MẬT: YÊU CẦU ĐĂNG NHẬP ---
-        const userToken = localStorage.getItem('myspay_token');
-        let myWalletAddress = localStorage.getItem('myspay_address');
+        const userToken = localStorage.getItem('metahashpay_token');
+        let myWalletAddress = localStorage.getItem('metahashpay_address');
 
         if (!userToken || !myWalletAddress) {
             window.location.href = 'login.html';
@@ -316,7 +296,19 @@
         
         document.getElementById('display-wallet').innerText = myWalletAddress.substring(0, 10) + '...' + myWalletAddress.substring(myWalletAddress.length - 4);
 
-        const API_BASE_URL = 'http://localhost:3000/api'; 
+        // ============================================================
+        // NHẬN DIỆN DOMAIN TỰ ĐỘNG ĐỂ GỌI API 
+        // ============================================================
+        let API_BASE_URL = '';
+        const currentHost = window.location.hostname;
+
+        if (currentHost === 'localhost' || currentHost === '127.0.0.1') {
+            API_BASE_URL = 'http://localhost:3000/api';
+        } else {
+            API_BASE_URL = `https://${currentHost}/api`; 
+            // Nếu dùng host khác cho Backend (vd: Railway), đổi dòng trên thành:
+            // API_BASE_URL = 'https://app-name.up.railway.app/api';
+        }
 
         // Toast
         function showToast(message, type = 'info') {
@@ -337,20 +329,19 @@
             if (fileInput.files.length > 0) {
                 display.innerText = fileInput.files[0].name;
                 display.style.color = "var(--primary-color)";
+                display.style.fontWeight = "bold";
             }
         }
 
         // --- FETCH DỮ LIỆU HỘP THƯ (INBOX) ---
         async function fetchInbox() {
             try {
-                // Gọi API lấy lịch sử ticket của User này
                 const res = await fetch(`${API_BASE_URL}/users/tickets?wallet=${myWalletAddress}`);
                 if (!res.ok) throw new Error();
                 const data = await res.json();
                 
                 renderInbox(data);
                 
-                // Đếm số ticket đã được admin phản hồi (status = 'closed')
                 const unread = data.filter(t => t.status === 'closed' && t.admin_reply).length;
                 if(unread > 0) {
                     const badge = document.getElementById('unread-count');
@@ -358,10 +349,10 @@
                     badge.innerText = unread;
                 }
             } catch (error) {
-                // Mock Data nếu server chưa bật
+                // Mock Data cho UI
                 const mockData = [
-                    { id: '1', title: 'Lỗi nạp tiền bị chậm', content: 'Tôi đã chuyển VND nhưng chưa nhận được MSPW', admin_reply: 'Chào bạn, hệ thống ngân hàng đang bảo trì, tiền của bạn sẽ được cộng trong 30 phút nữa. Cảm ơn.', status: 'closed', created_at: new Date().toISOString() },
-                    { id: '2', title: 'Hỏi về biểu phí Staking', content: 'Phí rút staking là bao nhiêu?', admin_reply: null, status: 'open', created_at: new Date().toISOString() }
+                    { id: '1', title: 'Lỗi nạp tiền bị chậm', content: 'Tôi đã chuyển VND mua MPT nhưng chưa nhận được token', admin_reply: 'Chào bạn, hệ thống ngân hàng đang bảo trì. MetahashPay đã kiểm tra và tiến hành nhả MPT cho bạn. Cảm ơn.', status: 'closed', created_at: new Date().toISOString() },
+                    { id: '2', title: 'Hỏi về biểu phí Staking', content: 'Phí rút vốn khỏi bể Staking là bao nhiêu?', admin_reply: null, status: 'open', created_at: new Date().toISOString() }
                 ];
                 renderInbox(mockData);
                 document.getElementById('unread-count').style.display = 'inline-block';
@@ -374,22 +365,22 @@
             container.innerHTML = '';
             
             if(tickets.length === 0) {
-                container.innerHTML = '<div class="empty-inbox"><i class="fas fa-inbox" style="font-size:2rem; margin-bottom:10px;"></i><br>Bạn chưa có tin nhắn nào.</div>';
+                container.innerHTML = '<div class="empty-inbox"><i class="fas fa-inbox" style="font-size:2.5rem; margin-bottom:15px; color: var(--border-color);"></i><br>Hộp thư trống.<br><span style="font-size:0.85rem;">Bạn chưa có tin nhắn hoặc phản hồi nào.</span></div>';
                 return;
             }
 
             tickets.forEach(t => {
                 let replyHtml = '';
                 if(t.admin_reply) {
-                    replyHtml = `<div class="message-admin-reply"><b>Admin:</b> ${t.admin_reply}</div>`;
+                    replyHtml = `<div class="message-admin-reply"><b><i class="fas fa-headset"></i> Đội ngũ Hỗ trợ:</b><br>${t.admin_reply}</div>`;
                 } else {
-                    replyHtml = `<div style="font-size: 0.8rem; color: var(--warning); margin-top: 5px;"><i class="fas fa-clock"></i> Đang chờ Admin phản hồi...</div>`;
+                    replyHtml = `<div style="font-size: 0.8rem; color: var(--warning); margin-top: 8px;"><i class="fas fa-clock"></i> Đang chờ MetahashPay phản hồi...</div>`;
                 }
 
                 container.innerHTML += `
                     <div class="message-item">
                         <div class="message-title">Q: ${t.title}</div>
-                        <div style="font-size: 0.85rem; color: var(--text-muted);">${t.content}</div>
+                        <div style="font-size: 0.9rem; color: var(--text-muted);">${t.content}</div>
                         ${replyHtml}
                         <div class="message-date">${new Date(t.created_at).toLocaleDateString('vi-VN')}</div>
                     </div>
@@ -399,7 +390,6 @@
 
         function openInbox() {
             openModal('inboxModal');
-            // Ẩn badge thông báo khi đã xem
             document.getElementById('unread-count').style.display = 'none';
         }
 
@@ -429,7 +419,7 @@
                     closeModal('kycModal');
                 } else throw new Error();
             } catch (error) {
-                showToast('Đã ghi nhận yêu cầu KYC (Mock).', 'success');
+                showToast('Chưa kết nối Server. (Mock Data)', 'info');
                 document.getElementById('kyc-status').innerText = 'Đang xử lý';
                 closeModal('kycModal');
             } finally { btn.innerHTML = 'Gửi yêu cầu KYC'; btn.disabled = false; }
@@ -442,7 +432,7 @@
             const newPass = document.getElementById('new-pass').value;
             if (newPass !== document.getElementById('confirm-pass').value) return showToast('Mật khẩu xác nhận không khớp!', 'error');
 
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>...'; btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Đang cập nhật...'; btn.disabled = true;
 
             try {
                 const response = await fetch(`${API_BASE_URL}/users/change-password`, {
@@ -451,7 +441,7 @@
                 });
                 if (response.ok) { showToast('Đổi mật khẩu thành công!', 'success'); closeModal('passwordModal'); } 
                 else throw new Error();
-            } catch (error) { showToast('Đã đổi mật khẩu (Mock).', 'success'); closeModal('passwordModal'); } 
+            } catch (error) { showToast('Chưa kết nối Server. (Mock Data)', 'info'); closeModal('passwordModal'); } 
             finally { btn.innerHTML = 'Cập nhật Mật Khẩu'; btn.disabled = false; document.getElementById('passwordForm').reset(); }
         }
 
@@ -459,7 +449,7 @@
         async function submitTicket(event) {
             event.preventDefault();
             const btn = document.getElementById('btn-ticket');
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>...'; btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Đang gửi...'; btn.disabled = true;
 
             try {
                 const response = await fetch(`${API_BASE_URL}/admin/tickets`, {
@@ -468,15 +458,15 @@
                 });
                 if (response.ok) { showToast('Đã gửi Ticket. Vui lòng check Hộp thư.', 'success'); closeModal('ticketModal'); fetchInbox(); } 
                 else throw new Error();
-            } catch (error) { showToast('Gửi Ticket thành công (Mock).', 'success'); closeModal('ticketModal'); } 
+            } catch (error) { showToast('Chưa kết nối Server. (Mock Data)', 'info'); closeModal('ticketModal'); } 
             finally { btn.innerHTML = 'Gửi Ticket'; btn.disabled = false; document.getElementById('ticketForm').reset(); }
         }
 
         // --- ĐĂNG XUẤT ---
         function handleLogout() {
-            if(confirm('Bạn có chắc chắn muốn đăng xuất khỏi MySPay Wallet?')) {
-                localStorage.removeItem('myspay_token');
-                localStorage.removeItem('myspay_address');
+            if(confirm('Bạn có chắc chắn muốn đăng xuất khỏi MetahashPay?')) {
+                localStorage.removeItem('metahashpay_token');
+                localStorage.removeItem('metahashpay_address');
                 window.location.href = 'login.html';
             }
         }
